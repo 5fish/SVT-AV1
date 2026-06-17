@@ -6236,15 +6236,13 @@ EB_API const char *svt_av1_get_version(void) {
     return SVT_AV1_CVS_VERSION;
 }
 
-EB_API const char *svt_psy_get_version(void) {
-    return SVT_AV1_PSY_RELEASE;
-}
-
 EB_API void svt_av1_print_version(void) {
     SVT_INFO("-------------------------------------------\n");
-    SVT_INFO("SVT [version]: SVT-AV1-PSY [5fish:main] %s\n", SVT_AV1_CVS_VERSION);
+    SVT_INFO("SVT [version]: SVT-AV1 [5fish] %s\n", SVT_AV1_CVS_VERSION);
     const char *compiler =
 #if defined(__clang__) && defined(__apple_build_version__)
+    "Apple LLVM " CONVERT_TO_STR_COMPILE_TIME(__clang_major__) "." CONVERT_TO_STR_COMPILE_TIME(__clang_minor__) "." CONVERT_TO_STR_COMPILE_TIME(__clang_patchlevel__)
+#elif defined(__clang__) && defined(__INTEL_LLVM_COMPILER)
     __VERSION__
 #elif defined(__clang__)
     "Clang " CONVERT_TO_STR_COMPILE_TIME(__clang_major__) "." CONVERT_TO_STR_COMPILE_TIME(__clang_minor__) "." CONVERT_TO_STR_COMPILE_TIME(__clang_patchlevel__)
@@ -6265,10 +6263,9 @@ EB_API void svt_av1_print_version(void) {
 #endif
     ;
 #if !REPRODUCIBLE_BUILDS
-    SVT_INFO("SVT [build]  : %s %zu bit / %s %s\n", compiler, sizeof(void*) * 8,
-             __DATE__, __TIME__);
+    SVT_INFO("SVT [build]  : %s / %06d\n", compiler, PF_BUILD_DATE);
 #else
-    SVT_INFO("SVT [build]  : %s %zu bit\n", compiler, sizeof(void*) * 8);
+    SVT_INFO("SVT [build]  : %s\n", compiler);
 #endif
     SVT_INFO("-------------------------------------------\n");
 }
