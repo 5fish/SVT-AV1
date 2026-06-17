@@ -332,7 +332,7 @@ typedef struct EbSvtAv1EncConfiguration {
      * 8 = 8 bit.
      * 10 = 10 bit.
      *
-     * Default is 10 for SVT-AV1-PSY, mainline default is 8. */
+     * Default is 10 for 5fish/SVT-AV1 (inherited from -PSY), mainline default is 8. */
     uint32_t encoder_bit_depth;
 
     /**
@@ -626,7 +626,7 @@ typedef struct EbSvtAv1EncConfiguration {
     * @brief Determines how much denoising is used.
     * Only applicable when film grain is ON.
     *
-    * 0 is no denoising (default in SVT-AV1-PSY)
+    * 0 is no denoising (default in 5fish/SVT-AV1, inherited from -PSY)
     * 1 is full denoising
     *
     * Default is 0. */
@@ -714,7 +714,7 @@ typedef struct EbSvtAv1EncConfiguration {
     /**
      * @brief Tune for a particular metric; 0: VQ, 1: PSNR, 2: SSIM, 3: Subjective SSIM, 4: Still Picture.
      *
-     * Default is 0 for 5fish/SVT-AV1-PSY.
+     * Default is 0 for 5fish/SVT-AV1.
      * In original SVT-AV1-PSY v2.3.0-B it was 2. In mainline SVT-AV1 it is 1.
      */
     uint8_t tune;
@@ -845,7 +845,7 @@ typedef struct EbSvtAv1EncConfiguration {
     /**
      * @brief Signal to the library to enable quantisation matrices
      *
-     * Default is true in SVT-AV1-PSY.
+     * Default is true in 5fish/SVT-AV1 (inherited from -PSY).
      */
     Bool enable_qm;
     /**
@@ -943,7 +943,7 @@ typedef struct EbSvtAv1EncConfiguration {
      * @brief Variance boost
      * false = disable variance boost
      * true = enable variance boost
-     * Default is true in SVT-AV1-PSY.
+     * Default is true in 5fish/SVT-AV1 (inherited from -PSY).
      */
     uint8_t enable_variance_boost;
 

@@ -2484,7 +2484,7 @@ static int32_t compute_default_intra_period(
         mini_gop_size = 16;
     }
 
-    /* Use a 10-sec GOP by default (SVT-AV1-PSY) */
+    /* Use a 10-sec GOP by default (inherited from -PSY) */
     intra_period                       = (((int)(fps * 10 + mini_gop_size - 1) / mini_gop_size) * (mini_gop_size));
 
     // Cap intra period to the nearest one that has at least 300 frames that doesn't break the minigop
@@ -4534,7 +4534,7 @@ static void set_param_based_on_input(SequenceControlSet *scs)
 
     // Throws a warning when scene change is on, as the feature is not optimal and may produce false detections
     if (scs->static_config.scene_change_detection == 1)
-        SVT_WARN("SCD has been optimized on SVT-AV1-Essential defaults. Accuracy cannot be guaranteed on 5fish/SVT-AV1-PSY.\n");
+        SVT_WARN("SCD has been optimized on SVT-AV1-Essential defaults. Accuracy cannot be guaranteed on 5fish/SVT-AV1.\n");
 
     // MRP level
     uint8_t mrp_level;

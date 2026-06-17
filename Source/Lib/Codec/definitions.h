@@ -65,7 +65,7 @@ void svt_aom_assert_err(uint32_t condition, char *err_msg);
 
 #define DS_SC_FACT 23
 
-#define VQ_NOISE_LVL_TH 16000 // Changed from 15000 to 16000 in 5fish/SVT-AV1-PSY
+#define VQ_NOISE_LVL_TH 16000 // Changed from 15000 to 16000 in 5fish/SVT-AV1
 #define VQ_STABILITY_ME_VAR_TH 750
 #define VQ_PIC_AVG_VARIANCE_TH 1000
 

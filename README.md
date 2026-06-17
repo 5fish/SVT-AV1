@@ -1,4 +1,4 @@
-## 5fish/SVT-AV1-PSY
+## 5fish/SVT-AV1
 
 This fork is based on the unreleased [SVT-AV1-PSY 2.3.0-C](https://github.com/psy-ex/svt-av1-psy/tree/testing-2.3.0-C), and includes backports of features, changes and improvements made in 3.x+ versions of SVT-AV1-PSY and its continuations by the original developers, [SVT-AV1-PSYEX](https://github.com/BlueSwordM/svt-av1-psyex) and [SVT-AV1-HDR](https://github.com/juliobbv-p/svt-av1-hdr).
 
@@ -60,7 +60,7 @@ Please note that this fork may not be a 1-to-1 copy of changes made in 3.x+, and
 
 - `--sharpness` *-14 to 14* (**Modified Implementation**)
 
-    A parameter for modifying rate distortion to improve visual fidelity. The default is 2. Deblocking loopfilter sharpness is decoupled in 5fish/SVT-AV1-PSY and controllable with `--dlf-sharpness` *(-7 to 7)*, with a default of 1.
+    A parameter for modifying rate distortion to improve visual fidelity. The default is 2. Deblocking loopfilter sharpness is decoupled in 5fish/SVT-AV1 and controllable with `--dlf-sharpness` *(-7 to 7)*, with a default of 1.
 
 ><details>
 ><summary><b>Features from SVT-AV1-PSY</b></summary>
@@ -166,7 +166,7 @@ Please note that this fork may not be a 1-to-1 copy of changes made in 3.x+, and
 
 ### Modified Defaults
 
-5fish/SVT-AV1-PSY has different defaults than mainline SVT-AV1 in order to provide better visual fidelity out of the box. They include:
+5fish/SVT-AV1 has different defaults than mainline SVT-AV1 in order to provide better visual fidelity out of the box. They include:
 
 - `--tune 0` by default, with an adjusted internal noise threshold to reduce risk of artifacts.
 - `--preset 4` by default.
@@ -190,4 +190,4 @@ Alliance for Open Media Patent License 1.0. See [LICENSE](LICENSE-BSD2.md) and
 under the BSD-3-clause clear license and the Alliance for Open Media Patent
 License 1.0. See [LICENSE](LICENSE.md) and [PATENTS](PATENTS.md) for details.
 
-*SVT-AV1-PSY does not feature license modifications from mainline SVT-AV1.*
+*5fish/SVT-AV1 does not feature license modifications from mainline SVT-AV1.*
