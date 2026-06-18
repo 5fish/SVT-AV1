@@ -1,0 +1,16 @@
+name: macOS build
+
+on: push # testing only
+# on: workflow_dispatch # eventually
+
+jobs:
+  build:
+    runs-on: "macos-latest"
+    steps:
+    - uses: actions/checkout@v6
+    - uses: ilammy/setup-nasm@v1
+    - run: |
+        Build/linux/build.sh --verbose --native --static --release --enable-pgo -- -DCMAKE_C_FLAGS_RELEASE="-flto=full" -DCMAKE_CXX_FLAGS_RELEASE="-flto=full"
+    - uses: actions/upload-artifact@v7
+      with:
+        path: Bin/Release/SvtAv1EncApp
