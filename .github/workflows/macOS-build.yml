@@ -33,7 +33,7 @@ jobs:
     - uses: ConorMacBride/install-package@v1
       with:
         brew: llvm
-    - run: CC=/opt/homebrew/bin/clang CXX=/opt/homebrew/bin/clang++ Build/linux/build.sh --verbose --native --static --release --enable-lto --enable-pgo --pgo-videos="$(realpath SolLevante)"
+    - run: PATH="/opt/homebrew/opt/llvm/bin:$PATH" LDFLAGS="-L/opt/homebrew/opt/llvm/lib" CPPFLAGS="-I/opt/homebrew/opt/llvm/include" CMAKE_PREFIX_PATH="/opt/homebrew/opt/llvm" Build/linux/build.sh --verbose --native --static --release --enable-lto --enable-pgo --pgo-videos="$(realpath SolLevante)"
     - uses: actions/upload-artifact@v7
       with:
         path: Bin/Release/SvtAv1EncApp
