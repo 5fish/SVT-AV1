@@ -15,7 +15,7 @@ jobs:
     - uses: ilammy/setup-nasm@v1
     - run: |
         xz --decompress SolLevante/SolLevante.y4m.xz
-        Build/linux/build.sh --verbose --native --static --release --enable-pgo --pgo-videos=SolLevante -- -DCMAKE_C_FLAGS_RELEASE="-flto=full" -DCMAKE_CXX_FLAGS_RELEASE="-flto=full"
+        Build/linux/build.sh --verbose --native --static --release --enable-pgo --pgo-videos="$(realpath SolLevante)" -- -DCMAKE_C_FLAGS_RELEASE="-flto=full" -DCMAKE_CXX_FLAGS_RELEASE="-flto=full"
     - uses: actions/upload-artifact@v7
       with:
         path: Bin/Release/SvtAv1EncApp
