@@ -14,7 +14,7 @@ jobs:
         ref: sollevante
     - uses: ilammy/setup-nasm@v1
     - run: |
-        xz --decompress SolLevante.y4m.xz
+        xz --decompress SolLevante/SolLevante.y4m.xz
         Build/linux/build.sh --verbose --native --static --release --enable-pgo --pgo-videos=SolLevante/SolLevante.y4m -- -DCMAKE_C_FLAGS_RELEASE="-flto=full" -DCMAKE_CXX_FLAGS_RELEASE="-flto=full"
     - uses: actions/upload-artifact@v7
       with:
