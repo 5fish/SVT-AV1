@@ -1374,7 +1374,7 @@ ConfigEntry config_entry_psy[] = {
     // Adaptive film grain
     {SINGLE_INPUT,
      ADAPTIVE_FILM_GRAIN_TOKEN,
-     "[PSY] Adapts film grain blocksize based on video resolution, default is 1 [0-1]",
+     "[PSY] Adapts film grain blocksize based on video resolution, default is 0 [0-1]",
      set_cfg_generic_token},
     // Temporal filtering strength
     {SINGLE_INPUT,

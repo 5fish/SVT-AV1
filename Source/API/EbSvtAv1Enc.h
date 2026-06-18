@@ -1025,7 +1025,7 @@ typedef struct EbSvtAv1EncConfiguration {
      *  - 8x8 for <4k
      *  - 16x16 for 4k
      *  - 32x32 for 8k+
-     * Default is 1.
+     * Default is 0 for 5fish/SVT-AV1.
      */
     Bool adaptive_film_grain;
 

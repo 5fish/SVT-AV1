@@ -1476,7 +1476,7 @@ EbErrorType svt_av1_set_default_params(EbSvtAv1EncConfiguration *config_ptr) {
     config_ptr->frame_luma_bias                   = 0;
     config_ptr->luminance_qp_bias                 = 0; // alias for frame luma bias
     config_ptr->max_32_tx_size                    = FALSE;
-    config_ptr->adaptive_film_grain               = TRUE;
+    config_ptr->adaptive_film_grain               = FALSE;
     config_ptr->tf_strength                       = 1;
     config_ptr->kf_tf_strength                    = 1;
     config_ptr->noise_norm_strength               = UINT8_DEFAULT;

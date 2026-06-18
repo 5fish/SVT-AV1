@@ -69,7 +69,6 @@ Please note that this fork may not be a 1-to-1 copy of changes made in 3.x+, and
 >
 >   Provides control over our augmented AQ Modes 0 and 2 which can utilize variance information in each frame for more consistent quality under high/low contrast scenes. Four curve options are provided, and the default is curve 2. 1: mild, 2: gentle, 3: medium, 4: aggressive
 >
->
 >- `--variance-octile` *1 to 8* (**[Merged to Mainline](https://gitlab.com/AOMediaCodec/SVT-AV1/-/merge_requests/2195)**)
 >
 >   Controls how "selective" the algorithm is when boosting superblocks, based on their low/high 8x8 variance ratio. A value of 1 is the least selective, and will readily boost a superblock if only 1/8th of the superblock is low variance. Conversely, a value of 8 will only boost if the *entire* superblock is low variance. Lower values increase bitrate. The default value is 5.
@@ -171,7 +170,6 @@ Please note that this fork may not be a 1-to-1 copy of changes made in 3.x+, and
 - `--tune 0` by default, with an adjusted internal noise threshold to reduce risk of artifacts.
 - `--preset 4` by default.
 - Default 10-bit color depth when given a 10-bit input.
-- Disable film grain denoising by default, as it often harms visual fidelity. (**[Merged to Mainline](https://gitlab.com/AOMediaCodec/SVT-AV1/-/commit/8b39b41df9e07bbcdbd19ea618762c5db3353c03)**)
 - Enable quantization matrices by default.
 - `--chroma-qm-min 10` by default to prevent the encoder from picking suboptimal chroma QMs.
 - `--enable-variance-boost` enabled by default.
@@ -181,6 +179,7 @@ Please note that this fork may not be a 1-to-1 copy of changes made in 3.x+, and
 - Sharp transform optimizations (`--sharp-tx 1`) are enabled by default to supercharge AC bias optimizations. It is recommended to disable it if you don't use `--ac-bias`.
 - `--tf-strength 1` by default for much lower alt-ref temporal filtering to decrease blur for cleaner encoding.
 - `--kf-tf-strength 1` controls are available to the user and are set to 1 by default to remove KF artifacts.
+- `--adaptive-film-grain 0` by default.
 
 ## License
 
