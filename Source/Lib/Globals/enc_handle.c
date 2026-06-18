@@ -3967,10 +3967,10 @@ static void set_param_based_on_input(SequenceControlSet *scs)
     }
 
     // `-psy-bias`s PD
-    if (scs->static_config.startup_mg_size == 0) {
-        if (scs->static_config.lineart_psy_bias >= 5.0)
-            scs->static_config.startup_mg_size = CLIP3(2, 4, scs->static_config.hierarchical_levels - 1);
-    }
+    // if (scs->static_config.startup_mg_size == 0) {
+    //     if (scs->static_config.lineart_psy_bias >= 5.0)
+    //         scs->static_config.startup_mg_size = CLIP3(2, 4, scs->static_config.hierarchical_levels - 1);
+    // }
 
     // `-psy-bias`s RC
     if (scs->static_config.balancing_q_bias == UINT8_DEFAULT) {
@@ -4865,8 +4865,8 @@ static void copy_api_from_app(
                 ? 4
                 : 5;
 
-        if (scs->static_config.high_quality_encode_psy_bias)
-            scs->static_config.hierarchical_levels = AOMMIN(scs->static_config.hierarchical_levels, 4);
+        // if (scs->static_config.high_quality_encode_psy_bias)
+        //     scs->static_config.hierarchical_levels = AOMMIN(scs->static_config.hierarchical_levels, 4);
     }
     if (scs->static_config.pass == ENC_SINGLE_PASS && scs->static_config.pred_structure == SVT_AV1_PRED_LOW_DELAY_B) {
         if (scs->static_config.hierarchical_levels != 2) {

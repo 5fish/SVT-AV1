@@ -123,6 +123,7 @@ Do note however, that there is no error checking for duplicate keys and only for
 | **PsyBiasQMBias**                | --psy-bias-qm-bias          | [0-1]                          | 0           | Increase QM level in frames of higher temporal layer                                                          |
 | **PsyBiasSharpnessRounding**     | --psy-bias-sharpness-rounding | [1-256]                      | -2          | Quantization rounding [-2: `64` in every `--tune` but `--tune 3`, which is `48`]                              |
 | **PsyBiasOptimizeB**             | --psy-bias-optimize-b       | [-2,0-2,4]                     | 0           | Optimize quantization using full distortion calculation. Slow. [0: Disabled, 1: Use slow method to optimize eob, and then proceed with normal optimization, 4: Disable normal optimization, and only use slow method to optimize eob, 2: Disable normal optimization, and use slow method to optimize eob and adjust coefficients, -2: Disable normal optimization] |
+| **PsyBiasDG**                    | --psy-bias-dg               | [0-1]                          | 0           | Psy Bias Dynamic GoP.                                                                                         |
 | **TexturePsyBiasOptimizeB**      | --texture-psy-bias-optimize-b | [-2,0-2,4]                   | inherits `--psy-bias-optimize-b` | Optimize quantization using full distortion calculation in low variance region. Using `--texture-variance-thr` |
 | **HighQualityEncodePsyBias**     | --high-quality-encode-psy-bias | [0-1]                       | 0           | Bias various features for high quality encoding. Check below for more description. [Default to `1` when `--crf [<= 24.00]`, and either `--lineart-psy-bias` or `--texture-psy-bias` are set; Default to `0` otherwise] |
 | **HighFidelityEncodePsyBias**    | --high-fidelity-encode-psy-bias | [0-1]                      | 0           | Bias various features for high fidelity encoding. Check below for more description. [Default to `1` when `--crf [<= 16.00]`, and either `--lineart-psy-bias` or `--texture-psy-bias` are set; Default to `0` otherwise] |
@@ -142,7 +143,6 @@ Try not to deviate too much from the default threshold, which is `16000` as of e
 | :-- | :--: | :--: | :--: | :--: | :--: | :--: | :--: | :-- |
 | [global] `--scm 0` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overridden |
 | [global] `--noise-level-thr` default to `20000` | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Applied when `--crf [> 30.00]`; Can be overridden |
-| [pd] `--startup-mg-size` adjustment | ✕ | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | Can be overridden |
 | [me] `--psy-bias-disable-warped-motion 1` | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overridden |
 | [me] `--psy-bias-disable-me-8x8 1` | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overridden |
 | [rc] `--balancing-q-bias 1` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overridden |
@@ -260,7 +260,6 @@ However, apart from this, both parameters have various features such as boosting
 
 #### `--high-quality-encode-psy-bias` Features
 
-* `--hierarchical-levels`: Default changed from `5` to `4`. Can be overridden.  
 * `delta_q_res`: Changed `--balancing-q-bias 1`'s default from `4` to `1`.  
 * `bypass_md_stage_2`: Disabled in `--preset 2` and `1`.  
 * variance cand elimination (`--texture-psy-bias [>= 3]`): Change it from applying only in frames of higher temporals layers to applying to frames of all temporal levels including base frames.  
