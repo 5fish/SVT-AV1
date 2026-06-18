@@ -3,6 +3,22 @@ name: macOS build
 on: push # testing only
 # on: workflow_dispatch # eventually
 
+# jobs:
+#   build:
+#     runs-on: "macos-latest"
+#     steps:
+#     - uses: actions/checkout@v6
+#     - uses: actions/checkout@v6
+#       with:
+#         path: SolLevante
+#         ref: sollevante
+#     - run: xz --decompress SolLevante/SolLevante.y4m.xz
+#     - uses: ilammy/setup-nasm@v1
+#     - run: Build/linux/build.sh --verbose --native --static --release --enable-lto --enable-pgo --pgo-videos="$(realpath SolLevante)"
+#     - uses: actions/upload-artifact@v7
+#       with:
+#         path: Bin/Release/SvtAv1EncApp
+
 jobs:
   build:
     runs-on: "macos-latest"
@@ -12,10 +28,12 @@ jobs:
       with:
         path: SolLevante
         ref: sollevante
+    - run: xz --decompress SolLevante/SolLevante.y4m.xz
     - uses: ilammy/setup-nasm@v1
-    - run: |
-        xz --decompress SolLevante/SolLevante.y4m.xz
-        Build/linux/build.sh --verbose --native --static --release --enable-lto --enable-pgo --pgo-videos="$(realpath SolLevante)"
+    - uses: ConorMacBride/install-package@v1
+      with:
+        brew: llvm
+    - run: CC=/opt/homebrew/bin/clang CXX=/opt/homebrew/bin/clang++ Build/linux/build.sh --verbose --native --static --release --enable-lto --enable-pgo --pgo-videos="$(realpath SolLevante)"
     - uses: actions/upload-artifact@v7
       with:
         path: Bin/Release/SvtAv1EncApp
