@@ -31,7 +31,7 @@ jobs:
         make_latest: "true"
 
   build-macos:
-    needs: create-release
+    needs: release
     runs-on: "macos-latest"
     steps:
     - uses: actions/checkout@v7
@@ -50,7 +50,7 @@ jobs:
         path: Bin/Release/SvtAv1EncApp
     - uses: softprops/action-gh-release@v3
       with:
-        tag_name: ${{ needs.create-release.needs.tag.outputs.tag }}
+        tag_name: ${{ needs.release.needs.tag.outputs.tag }}
         files: Bin/Release/SvtAv1EncApp
 
   # Apple LLVM slightly slower
