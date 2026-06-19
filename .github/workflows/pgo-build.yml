@@ -1,0 +1,70 @@
+name: pgo-build
+
+on: push # testing only
+# on: workflow_dispatch # eventually
+
+jobs:
+  tag:
+    runs-on: "ubuntu-latest"
+    outputs:
+      tag: ${{ steps.generate.outputs.tag }}
+    steps:
+    - uses: actions/checkout@v7
+    - id: generate
+      run: echo tag=v$(git log -1 "--date=format:%y%m%d" "--format=2.3.%ad") >> "$GITHUB_OUTPUT"
+
+  release:
+    needs: tag
+    runs-on: "ubuntu-latest"
+    steps:
+    - uses: actions/checkout@v7
+    - uses: softprops/action-gh-release@v3
+      with:
+        tag_name: ${{ needs.tag.outputs.tag }}
+        target_commitish: ${{ github.sha }}
+        name: 5fish/SVT-AV1 ${{ needs.tag.outputs.tag }}
+        body: |
+          Build for 5fish/SVT-AV1 ${{ needs.tag.outputs.tag }}.  
+          Ref `${{ github.ref }}` / Commit `${{ github.sha }}`  
+          macOS arm64 / Clang & LLD from LLVM Project / armv8.4-a+dotprod + apple-m1 / PGO  
+        prerelease: false
+        make_latest: "true"
+
+  build-macos:
+    needs: create-release
+    runs-on: "macos-latest"
+    steps:
+    - uses: actions/checkout@v7
+    - uses: actions/checkout@v7
+      with:
+        path: SolLevante
+        ref: sollevante
+    - run: xz --decompress SolLevante/SolLevante.y4m.xz
+    - uses: ilammy/setup-nasm@v1
+    - uses: ConorMacBride/install-package@v1
+      with:
+        brew: llvm lld
+    - run: PATH="/opt/homebrew/opt/llvm/bin:$PATH" CMAKE_PREFIX_PATH="/opt/homebrew/opt/llvm" CFLAGS="-I/opt/homebrew/opt/llvm/include -march=armv8.4-a+dotprod -mtune=apple-m1" CPPFLAGS="-I/opt/homebrew/opt/llvm/include -march=armv8.4-a+dotprod -mtune=apple-m1" LDFLAGS="-L/opt/homebrew/opt/llvm/lib -fuse-ld=lld" Build/linux/build.sh --verbose --static --release --enable-pgo --pgo-videos="$(realpath SolLevante)"
+    - uses: actions/upload-artifact@v7
+      with:
+        path: Bin/Release/SvtAv1EncApp
+    - uses: softprops/action-gh-release@v3
+      with:
+        tag_name: ${{ needs.create-release.needs.tag.outputs.tag }}
+        files: Bin/Release/SvtAv1EncApp
+
+  # Apple LLVM slightly slower
+  # build-macos:
+  #   runs-on: "macos-latest"
+  #   steps:
+  #   - uses: actions/checkout@v7
+  #   - uses: actions/checkout@v7
+  #     with:
+  #       path: SolLevante
+  #       ref: sollevante
+  #   - run: xz --decompress SolLevante/SolLevante.y4m.xz
+  #   - uses: ilammy/setup-nasm@v1
+  #   - run: Build/linux/build.sh --verbose --native --static --release --enable-lto --enable-pgo --pgo-videos="$(realpath SolLevante)"
+  #   - uses: actions/upload-artifact@v7
+  #     with:
+  #       path: Bin/Release/SvtAv1EncApp
