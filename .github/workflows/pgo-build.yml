@@ -18,10 +18,13 @@ jobs:
     runs-on: "ubuntu-latest"
     steps:
     - uses: actions/checkout@v7
+      with:
+        fetch-depth: "1000"
+        fetch-tags: "true"
+    - run: git tag -f ${{ needs.tag.outputs.tag }} && git push origin ${{ needs.tag.outputs.tag }}
     - uses: softprops/action-gh-release@v3
       with:
         tag_name: ${{ needs.tag.outputs.tag }}
-        target_commitish: ${{ github.sha }}
         name: 5fish/SVT-AV1 ${{ needs.tag.outputs.tag }}
         body: |
           Build for 5fish/SVT-AV1 ${{ needs.tag.outputs.tag }}.  
