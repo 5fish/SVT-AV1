@@ -52,6 +52,10 @@ jobs:
       with:
         brew: llvm lld
     - run: PATH="/opt/homebrew/opt/llvm/bin:$PATH" clang -print-enabled-extensions
+    - run: PATH="/opt/homebrew/opt/llvm/bin:$PATH" clang -print-enabled-extensions -march=armv8.5-a
+    - run: PATH="/opt/homebrew/opt/llvm/bin:$PATH" clang -print-enabled-extensions -march=armv8.6-a
+    - run: PATH="/opt/homebrew/opt/llvm/bin:$PATH" clang -print-enabled-extensions -march=armv9-a
+    - run: PATH="/opt/homebrew/opt/llvm/bin:$PATH" clang -print-enabled-extensions -march=armv9.2-a
     # - run: PATH="/opt/homebrew/opt/llvm/bin:$PATH" CMAKE_PREFIX_PATH="/opt/homebrew/opt/llvm" CFLAGS="-I/opt/homebrew/opt/llvm/include -march=armv8.5-a+dotprod+i8mm -mtune=apple-m3" CPPFLAGS="-I/opt/homebrew/opt/llvm/include -march=armv8.5-a+dotprod+i8mm -mtune=apple-m3" LDFLAGS="-L/opt/homebrew/opt/llvm/lib -fuse-ld=lld" Build/linux/build.sh --verbose --static --release --enable-pgo --pgo-videos="$(realpath SolLevante)"
     # - run: cd Bin/Release && tar cJf macOS_arm64_armv8.5-a+dotprod+i8mm+apple-m3.tar.xz SvtAv1EncApp && cd ../..
     # - uses: softprops/action-gh-release@v3
