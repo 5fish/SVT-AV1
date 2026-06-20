@@ -70,14 +70,33 @@ jobs:
     - uses: ilammy/setup-nasm@v1
     - uses: ZhongRuoyu/setup-llvm@v0
     - uses: lukka/get-cmake@latest
-    - run: cmake --fresh -B svt_build -G Ninja -DCMAKE_C_COMPILER="clang-cl" -DCMAKE_CXX_COMPILER="clang-cl" -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DBUILD_APPS=ON -DTHREADS_PREFER_PTHREAD_FLAG=OFF -DCMAKE_USE_WIN32_THREADS_INIT=ON -DSVT_AV1_LTO=OFF -DENABLE_AVX512=ON -DCMAKE_C_FLAGS_RELEASE="/clang:-O3 -flto=full -march=znver2 -mtune=znver2 /clang:-mprefer-vector-width=512 /clang:-fno-exceptions /clang:-fno-rtti -DNDEBUG -Wno-unused-command-line-argument -Wno-deprecated /clang:-fprofile-generate /clang:-ftemporal-profile" -DCMAKE_CXX_FLAGS_RELEASE="/clang:-O3 -flto=full -march=znver2 -mtune=znver2 /clang:-mprefer-vector-width=512 /clang:-fno-exceptions /clang:-fno-rtti -DNDEBUG -Wno-unused-command-line-argument -Wno-deprecated /clang:-fprofile-generate /clang:-ftemporal-profile" -DCMAKE_EXE_LINKER_FLAGS_RELEASE="-fuse-ld=lld -flto=full" && ninja -v -C svt_build
+    - run: cmake --fresh -B svt_build -G Ninja -DCMAKE_C_COMPILER="clang-cl" -DCMAKE_CXX_COMPILER="clang-cl" -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DBUILD_APPS=ON -DTHREADS_PREFER_PTHREAD_FLAG=OFF -DCMAKE_USE_WIN32_THREADS_INIT=ON -DSVT_AV1_LTO=OFF -DENABLE_AVX512=ON -DCMAKE_C_FLAGS_RELEASE="/clang:-O3 -flto=full -march=icelake-server -mtune=znver5 /clang:-mprefer-vector-width=512 /clang:-fno-exceptions /clang:-fno-rtti -DNDEBUG -Wno-unused-command-line-argument -Wno-deprecated /clang:-fprofile-generate=SolLevante /clang:-ftemporal-profile" -DCMAKE_CXX_FLAGS_RELEASE="/clang:-O3 -flto=full -march=icelake-server -mtune=znver5 /clang:-mprefer-vector-width=512 /clang:-fno-exceptions /clang:-fno-rtti -DNDEBUG -Wno-unused-command-line-argument -Wno-deprecated /clang:-fprofile-generate=SolLevante /clang:-ftemporal-profile" -DCMAKE_EXE_LINKER_FLAGS_RELEASE="-fuse-ld=lld -flto=full" && ninja -v -C svt_build
+    - id: profile-avx512
+      run: Bin/Release/SvtAv1EncApp.exe -i SolLevante/SolLevante.y4m -b test.ivf --preset 2 --crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5
+    - run: llvm-profdata merge -o SolLevante/default.profdata --sparse=true SolLevante/*.profraw
+      shell: msys2 {0}
+      if: ${{ steps.profile-avx512.outcome != 'failure' }}
+    - run: cmake --fresh -B svt_build -G Ninja -DCMAKE_C_COMPILER="clang-cl" -DCMAKE_CXX_COMPILER="clang-cl" -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DBUILD_APPS=ON -DTHREADS_PREFER_PTHREAD_FLAG=OFF -DCMAKE_USE_WIN32_THREADS_INIT=ON -DSVT_AV1_LTO=OFF -DENABLE_AVX512=ON -DCMAKE_C_FLAGS_RELEASE="/clang:-O3 -flto=full -march=icelake-server -mtune=znver5 /clang:-mprefer-vector-width=512 /clang:-fno-exceptions /clang:-fno-rtti -DNDEBUG -Wno-unused-command-line-argument -Wno-deprecated /clang:-fprofile-use=SolLevante/default.profdata /clang:-fwhole-program-vtables /clang:-fvisibility=hidden /clang:-fvisibility-inlines-hidden" -DCMAKE_CXX_FLAGS_RELEASE="/clang:-O3 -flto=full -march=icelake-server -mtune=znver5 /clang:-mprefer-vector-width=512 /clang:-fno-exceptions /clang:-fno-rtti -DNDEBUG -Wno-unused-command-line-argument -Wno-deprecated /clang:-fprofile-use=SolLevante/default.profdata /clang:-fwhole-program-vtables /clang:-fvisibility=hidden /clang:-fvisibility-inlines-hidden" -DCMAKE_EXE_LINKER_FLAGS_RELEASE="-fuse-ld=lld -flto=full" && ninja -v -C svt_build
+      if: ${{ steps.profile-avx512.outcome != 'failure' }}
+    - run: Bin/Release/SvtAv1EncApp.exe -i SolLevante/SolLevante.y4m -b test.ivf --preset 4 --crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5
+      if: ${{ steps.profile-avx512.outcome != 'failure' }}
+    - run: cd Bin/Release && tar cJf Windows_x86-64_icelake-server+znver5.tar.xz SvtAv1EncApp.exe && cd ../..
+      shell: msys2 {0}
+      if: ${{ steps.profile-avx512.outcome != 'failure' }}
+    - uses: softprops/action-gh-release@v3
+      with:
+        tag_name: ${{ needs.tag.outputs.tag }}
+        files: Bin/Release/Windows_x86-64_icelake-server+znver5.tar.xz
+      if: ${{ steps.profile-avx512.outcome != 'failure' }}
+    - run: rm -rf svt_build SolLevante/*.profraw SolLevante/*.profdata
+      shell: msys2 {0}
+    - run: ls SolLevante
+      shell: msys2 {0}
+    - run: cmake --fresh -B svt_build -G Ninja -DCMAKE_C_COMPILER="clang-cl" -DCMAKE_CXX_COMPILER="clang-cl" -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DBUILD_APPS=ON -DTHREADS_PREFER_PTHREAD_FLAG=OFF -DCMAKE_USE_WIN32_THREADS_INIT=ON -DSVT_AV1_LTO=OFF -DENABLE_AVX512=ON -DCMAKE_C_FLAGS_RELEASE="/clang:-O3 -flto=full -march=znver2 -mtune=znver2 /clang:-mprefer-vector-width=512 /clang:-fno-exceptions /clang:-fno-rtti -DNDEBUG -Wno-unused-command-line-argument -Wno-deprecated /clang:-fprofile-generate=SolLevante /clang:-ftemporal-profile" -DCMAKE_CXX_FLAGS_RELEASE="/clang:-O3 -flto=full -march=znver2 -mtune=znver2 /clang:-mprefer-vector-width=512 /clang:-fno-exceptions /clang:-fno-rtti -DNDEBUG -Wno-unused-command-line-argument -Wno-deprecated /clang:-fprofile-generate=SolLevante /clang:-ftemporal-profile" -DCMAKE_EXE_LINKER_FLAGS_RELEASE="-fuse-ld=lld -flto=full" && ninja -v -C svt_build
     - run: Bin/Release/SvtAv1EncApp.exe -i SolLevante/SolLevante.y4m -b test.ivf --preset 2 --crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5
-    - run: ls
+    - run: llvm-profdata merge -o SolLevante/default.profdata --sparse=true SolLevante/*.profraw
       shell: msys2 {0}
-    - run: ls Bin/Release
-      shell: msys2 {0}
-    - run: llvm-profdata merge -o default.profdata --sparse=true default.profraw
-    - run: cmake --fresh -B svt_build -G Ninja -DCMAKE_C_COMPILER="clang-cl" -DCMAKE_CXX_COMPILER="clang-cl" -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DBUILD_APPS=ON -DTHREADS_PREFER_PTHREAD_FLAG=OFF -DCMAKE_USE_WIN32_THREADS_INIT=ON -DSVT_AV1_LTO=OFF -DENABLE_AVX512=ON -DCMAKE_C_FLAGS_RELEASE="/clang:-O3 -flto=full -march=znver2 -mtune=znver2 /clang:-mprefer-vector-width=512 /clang:-fno-exceptions /clang:-fno-rtti -DNDEBUG -Wno-unused-command-line-argument -Wno-deprecated /clang:-fprofile-use=default.profdata /clang:-fwhole-program-vtables /clang:-fvisibility=hidden /clang:-fvisibility-inlines-hidden" -DCMAKE_CXX_FLAGS_RELEASE="/clang:-O3 -flto=full -march=znver2 -mtune=znver2 /clang:-mprefer-vector-width=512 /clang:-fno-exceptions /clang:-fno-rtti -DNDEBUG -Wno-unused-command-line-argument -Wno-deprecated /clang:-fprofile-use=default.profdata /clang:-fwhole-program-vtables /clang:-fvisibility=hidden /clang:-fvisibility-inlines-hidden" -DCMAKE_EXE_LINKER_FLAGS_RELEASE="-fuse-ld=lld -flto=full" && ninja -v -C svt_build
+    - run: cmake --fresh -B svt_build -G Ninja -DCMAKE_C_COMPILER="clang-cl" -DCMAKE_CXX_COMPILER="clang-cl" -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DBUILD_APPS=ON -DTHREADS_PREFER_PTHREAD_FLAG=OFF -DCMAKE_USE_WIN32_THREADS_INIT=ON -DSVT_AV1_LTO=OFF -DENABLE_AVX512=ON -DCMAKE_C_FLAGS_RELEASE="/clang:-O3 -flto=full -march=znver2 -mtune=znver2 /clang:-mprefer-vector-width=512 /clang:-fno-exceptions /clang:-fno-rtti -DNDEBUG -Wno-unused-command-line-argument -Wno-deprecated /clang:-fprofile-use=SolLevante/default.profdata /clang:-fwhole-program-vtables /clang:-fvisibility=hidden /clang:-fvisibility-inlines-hidden" -DCMAKE_CXX_FLAGS_RELEASE="/clang:-O3 -flto=full -march=znver2 -mtune=znver2 /clang:-mprefer-vector-width=512 /clang:-fno-exceptions /clang:-fno-rtti -DNDEBUG -Wno-unused-command-line-argument -Wno-deprecated /clang:-fprofile-use=SolLevante/default.profdata /clang:-fwhole-program-vtables /clang:-fvisibility=hidden /clang:-fvisibility-inlines-hidden" -DCMAKE_EXE_LINKER_FLAGS_RELEASE="-fuse-ld=lld -flto=full" && ninja -v -C svt_build
     - run: Bin/Release/SvtAv1EncApp.exe -i SolLevante/SolLevante.y4m -b test.ivf --preset 4 --crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5
     - run: cd Bin/Release && tar cJf Windows_x86-64_znver2.tar.xz SvtAv1EncApp.exe && cd ../..
       shell: msys2 {0}
@@ -85,6 +104,10 @@ jobs:
       with:
         tag_name: ${{ needs.tag.outputs.tag }}
         files: Bin/Release/Windows_x86-64_znver2.tar.xz
+    - run: rm -rf svt_build SolLevante/*.profraw SolLevante/*.profdata
+      shell: msys2 {0}
+    - run: ls SolLevante
+      shell: msys2 {0}
 
 
   # build-linux-x86-64:
