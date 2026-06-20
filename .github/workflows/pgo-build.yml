@@ -22,7 +22,7 @@ jobs:
     runs-on: "ubuntu-latest"
     steps:
     - uses: actions/checkout@v7
-    - run: gh release delete ${{ needs.tag.outputs.tag }} --cleanup-tag
+    - run: GH_TOKEN=${{ github.token }} gh release delete ${{ needs.tag.outputs.tag }} --cleanup-tag
     - uses: softprops/action-gh-release@v3
       with:
         tag_name: ${{ needs.tag.outputs.tag }}
