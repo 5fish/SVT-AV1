@@ -67,75 +67,17 @@ jobs:
         ref: sollevante
     - run: xz --decompress SolLevante/SolLevante.y4m.xz
       shell: msys2 {0}
-    - id: install-llvm-30
-      uses: KyleMayes/install-llvm-action@v2
-      with:
-        version: "30"
-      continue-on-error: true
-    - id: install-llvm-29
-      uses: KyleMayes/install-llvm-action@v2
-      if: ${{ steps.install-llvm-30.outcome == 'failure' }}
-      with:
-        version: "29"
-      continue-on-error: true
-    - id: install-llvm-28
-      uses: KyleMayes/install-llvm-action@v2
-      if: ${{ steps.install-llvm-29.outcome == 'failure' }}
-      with:
-        version: "28"
-      continue-on-error: true
-    - id: install-llvm-27
-      uses: KyleMayes/install-llvm-action@v2
-      if: ${{ steps.install-llvm-28.outcome == 'failure' }}
-      with:
-        version: "27"
-      continue-on-error: true
-    - id: install-llvm-26
-      uses: KyleMayes/install-llvm-action@v2
-      if: ${{ steps.install-llvm-27.outcome == 'failure' }}
-      with:
-        version: "26"
-      continue-on-error: true
-    - id: install-llvm-25
-      uses: KyleMayes/install-llvm-action@v2
-      if: ${{ steps.install-llvm-26.outcome == 'failure' }}
-      with:
-        version: "25"
-      continue-on-error: true
-    - id: install-llvm-24
-      uses: KyleMayes/install-llvm-action@v2
-      if: ${{ steps.install-llvm-25.outcome == 'failure' }}
-      with:
-        version: "24"
-      continue-on-error: true
-    - id: install-llvm-23
-      uses: KyleMayes/install-llvm-action@v2
-      if: ${{ steps.install-llvm-24.outcome == 'failure' }}
-      with:
-        version: "23"
-      continue-on-error: true
-    - id: install-llvm-22
-      uses: KyleMayes/install-llvm-action@v2
-      if: ${{ steps.install-llvm-23.outcome == 'failure' }}
-      with:
-        version: "22"
-      continue-on-error: true
-    - id: install-llvm-21
-      uses: KyleMayes/install-llvm-action@v2
-      if: ${{ steps.install-llvm-22.outcome == 'failure' }}
-      with:
-        version: "21"
-      continue-on-error: true
-    - uses: KyleMayes/install-llvm-action@v2
-      if: ${{ steps.install-llvm-21.outcome == 'failure' }}
-      with:
-        version: "20"
     - uses: ilammy/setup-nasm@v1
+    - uses: ZhongRuoyu/setup-llvm@v0
     - uses: lukka/get-cmake@latest
-    - run: cmake --fresh -B svt_build -G Ninja -DCMAKE_C_COMPILER="clang-cl" -DCMAKE_CXX_COMPILER="clang-cl" -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DBUILD_APPS=ON -DTHREADS_PREFER_PTHREAD_FLAG=OFF -DCMAKE_USE_WIN32_THREADS_INIT=ON -DSVT_AV1_LTO=OFF -DENABLE_AVX512=ON -DCMAKE_C_FLAGS_RELEASE="/clang:-O3 -flto=full -march=znver2 -mtune=znver2 /clang:-mprefer-vector-width=512 /clang:-fno-exceptions /clang:-fno-rtti -DNDEBUG -Wno-unused-command-line-argument -Wno-deprecated /clang:-fprofile-generate=SolLevante /clang:-ftemporal-profile" -DCMAKE_CXX_FLAGS_RELEASE="/clang:-O3 -flto=full -march=znver2 -mtune=znver2 /clang:-mprefer-vector-width=512 /clang:-fno-exceptions /clang:-fno-rtti -DNDEBUG -Wno-unused-command-line-argument -Wno-deprecated /clang:-fprofile-generate=SolLevante /clang:-ftemporal-profile" -DCMAKE_EXE_LINKER_FLAGS_RELEASE="-fuse-ld=lld -flto=full" && ninja -v -C svt_build
+    - run: cmake --fresh -B svt_build -G Ninja -DCMAKE_C_COMPILER="clang-cl" -DCMAKE_CXX_COMPILER="clang-cl" -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DBUILD_APPS=ON -DTHREADS_PREFER_PTHREAD_FLAG=OFF -DCMAKE_USE_WIN32_THREADS_INIT=ON -DSVT_AV1_LTO=OFF -DENABLE_AVX512=ON -DCMAKE_C_FLAGS_RELEASE="/clang:-O3 -flto=full -march=znver2 -mtune=znver2 /clang:-mprefer-vector-width=512 /clang:-fno-exceptions /clang:-fno-rtti -DNDEBUG -Wno-unused-command-line-argument -Wno-deprecated /clang:-fprofile-generate /clang:-ftemporal-profile" -DCMAKE_CXX_FLAGS_RELEASE="/clang:-O3 -flto=full -march=znver2 -mtune=znver2 /clang:-mprefer-vector-width=512 /clang:-fno-exceptions /clang:-fno-rtti -DNDEBUG -Wno-unused-command-line-argument -Wno-deprecated /clang:-fprofile-generate /clang:-ftemporal-profile" -DCMAKE_EXE_LINKER_FLAGS_RELEASE="-fuse-ld=lld -flto=full" && ninja -v -C svt_build
     - run: Bin/Release/SvtAv1EncApp.exe -i SolLevante/SolLevante.y4m -b test.ivf --preset 2 --crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5
-    - run: llvm-profdata merge -o "SolLevante/default.profdata" --sparse=true "SolLevante/default.profraw"
-    - run: cmake --fresh -B svt_build -G Ninja -DCMAKE_C_COMPILER="clang-cl" -DCMAKE_CXX_COMPILER="clang-cl" -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DBUILD_APPS=ON -DTHREADS_PREFER_PTHREAD_FLAG=OFF -DCMAKE_USE_WIN32_THREADS_INIT=ON -DSVT_AV1_LTO=OFF -DENABLE_AVX512=ON -DCMAKE_C_FLAGS_RELEASE="/clang:-O3 -flto=full -march=znver2 -mtune=znver2 /clang:-mprefer-vector-width=512 /clang:-fno-exceptions /clang:-fno-rtti -DNDEBUG -Wno-unused-command-line-argument -Wno-deprecated /clang:-fprofile-use=SolLevante/default.profdata /clang:-fwhole-program-vtables /clang:-fvisibility=hidden /clang:-fvisibility-inlines-hidden" -DCMAKE_CXX_FLAGS_RELEASE="/clang:-O3 -flto=full -march=znver2 -mtune=znver2 /clang:-mprefer-vector-width=512 /clang:-fno-exceptions /clang:-fno-rtti -DNDEBUG -Wno-unused-command-line-argument -Wno-deprecated /clang:-fprofile-use=SolLevante/default.profdata /clang:-fwhole-program-vtables /clang:-fvisibility=hidden /clang:-fvisibility-inlines-hidden" -DCMAKE_EXE_LINKER_FLAGS_RELEASE="-fuse-ld=lld -flto=full" && ninja -v -C svt_build
+    - run: ls
+      shell: msys2 {0}
+    - run: ls Bin/Release
+      shell: msys2 {0}
+    - run: llvm-profdata merge -o default.profdata --sparse=true default.profraw
+    - run: cmake --fresh -B svt_build -G Ninja -DCMAKE_C_COMPILER="clang-cl" -DCMAKE_CXX_COMPILER="clang-cl" -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DBUILD_APPS=ON -DTHREADS_PREFER_PTHREAD_FLAG=OFF -DCMAKE_USE_WIN32_THREADS_INIT=ON -DSVT_AV1_LTO=OFF -DENABLE_AVX512=ON -DCMAKE_C_FLAGS_RELEASE="/clang:-O3 -flto=full -march=znver2 -mtune=znver2 /clang:-mprefer-vector-width=512 /clang:-fno-exceptions /clang:-fno-rtti -DNDEBUG -Wno-unused-command-line-argument -Wno-deprecated /clang:-fprofile-use=default.profdata /clang:-fwhole-program-vtables /clang:-fvisibility=hidden /clang:-fvisibility-inlines-hidden" -DCMAKE_CXX_FLAGS_RELEASE="/clang:-O3 -flto=full -march=znver2 -mtune=znver2 /clang:-mprefer-vector-width=512 /clang:-fno-exceptions /clang:-fno-rtti -DNDEBUG -Wno-unused-command-line-argument -Wno-deprecated /clang:-fprofile-use=default.profdata /clang:-fwhole-program-vtables /clang:-fvisibility=hidden /clang:-fvisibility-inlines-hidden" -DCMAKE_EXE_LINKER_FLAGS_RELEASE="-fuse-ld=lld -flto=full" && ninja -v -C svt_build
     - run: Bin/Release/SvtAv1EncApp.exe -i SolLevante/SolLevante.y4m -b test.ivf --preset 4 --crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5
     - run: cd Bin/Release && tar cJf Windows_x86-64_znver2.tar.xz SvtAv1EncApp.exe && cd ../..
       shell: msys2 {0}
@@ -160,69 +102,7 @@ jobs:
   #       ref: sollevante
   #   - run: xz --decompress SolLevante/SolLevante.y4m.xz
   #   - uses: ilammy/setup-nasm@v1
-  #   - id: install-llvm-30
-  #     uses: KyleMayes/install-llvm-action@v2
-  #     with:
-  #       version: "30"
-  #     continue-on-error: true
-  #   - id: install-llvm-29
-  #     uses: KyleMayes/install-llvm-action@v2
-  #     if: ${{ steps.install-llvm-30.outcome == 'failure' }}
-  #     with:
-  #       version: "29"
-  #     continue-on-error: true
-  #   - id: install-llvm-28
-  #     uses: KyleMayes/install-llvm-action@v2
-  #     if: ${{ steps.install-llvm-29.outcome == 'failure' }}
-  #     with:
-  #       version: "28"
-  #     continue-on-error: true
-  #   - id: install-llvm-27
-  #     uses: KyleMayes/install-llvm-action@v2
-  #     if: ${{ steps.install-llvm-28.outcome == 'failure' }}
-  #     with:
-  #       version: "27"
-  #     continue-on-error: true
-  #   - id: install-llvm-26
-  #     uses: KyleMayes/install-llvm-action@v2
-  #     if: ${{ steps.install-llvm-27.outcome == 'failure' }}
-  #     with:
-  #       version: "26"
-  #     continue-on-error: true
-  #   - id: install-llvm-25
-  #     uses: KyleMayes/install-llvm-action@v2
-  #     if: ${{ steps.install-llvm-26.outcome == 'failure' }}
-  #     with:
-  #       version: "25"
-  #     continue-on-error: true
-  #   - id: install-llvm-24
-  #     uses: KyleMayes/install-llvm-action@v2
-  #     if: ${{ steps.install-llvm-25.outcome == 'failure' }}
-  #     with:
-  #       version: "24"
-  #     continue-on-error: true
-  #   - id: install-llvm-23
-  #     uses: KyleMayes/install-llvm-action@v2
-  #     if: ${{ steps.install-llvm-24.outcome == 'failure' }}
-  #     with:
-  #       version: "23"
-  #     continue-on-error: true
-  #   - id: install-llvm-22
-  #     uses: KyleMayes/install-llvm-action@v2
-  #     if: ${{ steps.install-llvm-23.outcome == 'failure' }}
-  #     with:
-  #       version: "22"
-  #     continue-on-error: true
-  #   - id: install-llvm-21
-  #     uses: KyleMayes/install-llvm-action@v2
-  #     if: ${{ steps.install-llvm-22.outcome == 'failure' }}
-  #     with:
-  #       version: "21"
-  #     continue-on-error: true
-  #   - uses: KyleMayes/install-llvm-action@v2
-  #     if: ${{ steps.install-llvm-21.outcome == 'failure' }}
-  #     with:
-  #       version: "20"
+  #   - uses: ZhongRuoyu/setup-llvm@v0
   #   - id: build-avx512
   #     run: CFLAGS="-flto=full -march=icelake-server -mtune=znver5 -fno-exceptions -fno-rtti -DNDEBUG" CPPFLAGS="-flto=full -march=icelake-server -mtune=znver5 -fno-exceptions -fno-rtti -DNDEBUG" LDFLAGS="-fuse-ld=lld -flto=full" Build/linux/build.sh --verbose --static --release --disable-native --enable-avx512 --disable-lto --enable-pgo --pgo-videos="$(realpath SolLevante)"
   #     continue-on-error: true
