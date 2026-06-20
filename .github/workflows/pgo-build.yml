@@ -64,8 +64,8 @@ jobs:
           cmake
           mingw-w64-ucrt-x86_64-fastfetch
           git
-          mingw-w64-ucrt-x86_64-mcfgthread
           nasm
+          mingw-w64-ucrt-x86_64-winpthreads
     - run: fastfetch
     - uses: actions/checkout@v7
     - uses: actions/checkout@v7
