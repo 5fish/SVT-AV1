@@ -55,8 +55,9 @@ jobs:
         msystem: UCRT64
         update: true
         install: >-
-          mingw-w64-ucrt-x86_64-fastfetch
           cmake
+          mingw-w64-ucrt-x86_64-fastfetch
+          git
           nasm
     - run: fastfetch
     - uses: actions/checkout@v7
@@ -65,52 +66,62 @@ jobs:
         path: SolLevante
         ref: sollevante
     - run: xz --decompress SolLevante/SolLevante.y4m.xz
-    - uses: KyleMayes/install-llvm-action@v2
+    - id: install-llvm-30
+      uses: KyleMayes/install-llvm-action@v2
       with:
         version: "30"
       continue-on-error: true
-    - uses: KyleMayes/install-llvm-action@v2
-      if: failure()
+    - id: install-llvm-29
+      uses: KyleMayes/install-llvm-action@v2
+      if: ${{ steps.install-llvm-30.outcome == "failure" }}
       with:
         version: "29"
       continue-on-error: true
-    - uses: KyleMayes/install-llvm-action@v2
-      if: failure()
+    - id: install-llvm-28
+      uses: KyleMayes/install-llvm-action@v2
+      if: ${{ steps.install-llvm-29.outcome == "failure" }}
       with:
         version: "28"
       continue-on-error: true
-    - uses: KyleMayes/install-llvm-action@v2
-      if: failure()
+    - id: install-llvm-27
+      uses: KyleMayes/install-llvm-action@v2
+      if: ${{ steps.install-llvm-28.outcome == "failure" }}
       with:
         version: "27"
       continue-on-error: true
-    - uses: KyleMayes/install-llvm-action@v2
-      if: failure()
+    - id: install-llvm-26
+      uses: KyleMayes/install-llvm-action@v2
+      if: ${{ steps.install-llvm-27.outcome == "failure" }}
       with:
         version: "26"
       continue-on-error: true
-    - uses: KyleMayes/install-llvm-action@v2
-      if: failure()
+    - id: install-llvm-25
+      uses: KyleMayes/install-llvm-action@v2
+      if: ${{ steps.install-llvm-26.outcome == "failure" }}
       with:
         version: "25"
       continue-on-error: true
-    - uses: KyleMayes/install-llvm-action@v2
-      if: failure()
+    - id: install-llvm-24
+      uses: KyleMayes/install-llvm-action@v2
+      if: ${{ steps.install-llvm-25.outcome == "failure" }}
       with:
         version: "24"
       continue-on-error: true
-    - uses: KyleMayes/install-llvm-action@v2
-      if: failure()
+    - id: install-llvm-23
+      uses: KyleMayes/install-llvm-action@v2
+      if: ${{ steps.install-llvm-24.outcome == "failure" }}
       with:
         version: "23"
       continue-on-error: true
-    - uses: KyleMayes/install-llvm-action@v2
-      if: failure()
+    - id: install-llvm-22
+      uses: KyleMayes/install-llvm-action@v2
+      if: ${{ steps.install-llvm-23.outcome == "failure" }}
       with:
         version: "22"
       continue-on-error: true
-    - uses: KyleMayes/install-llvm-action@v2
-      if: failure()
+    - id: install-llvm-21
+      uses: KyleMayes/install-llvm-action@v2
+      if: ${{ steps.install-llvm-22.outcome == "failure" }}
       with:
         version: "21"
     - run: CC=clang-cl CXX=clang-cl CFLAGS="-flto=full -march=znver2 -mtune=znver2 -fno-exceptions -fno-rtti" CPPFLAGS="-flto=full -march=znver2 -mtune=znver2 -fno-exceptions -fno-rtti" LDFLAGS="-fuse-ld=lld" Build/linux/build.sh --verbose --static --release --disable-native --enable-avx512 --disable-lto --enable-pgo --pgo-videos="$(realpath SolLevante)"
@@ -137,52 +148,62 @@ jobs:
         ref: sollevante
     - run: xz --decompress SolLevante/SolLevante.y4m.xz
     - uses: ilammy/setup-nasm@v1
-    - uses: KyleMayes/install-llvm-action@v2
+    - id: install-llvm-30
+      uses: KyleMayes/install-llvm-action@v2
       with:
         version: "30"
       continue-on-error: true
-    - uses: KyleMayes/install-llvm-action@v2
-      if: failure()
+    - id: install-llvm-29
+      uses: KyleMayes/install-llvm-action@v2
+      if: ${{ steps.install-llvm-30.outcome == "failure" }}
       with:
         version: "29"
       continue-on-error: true
-    - uses: KyleMayes/install-llvm-action@v2
-      if: failure()
+    - id: install-llvm-28
+      uses: KyleMayes/install-llvm-action@v2
+      if: ${{ steps.install-llvm-29.outcome == "failure" }}
       with:
         version: "28"
       continue-on-error: true
-    - uses: KyleMayes/install-llvm-action@v2
-      if: failure()
+    - id: install-llvm-27
+      uses: KyleMayes/install-llvm-action@v2
+      if: ${{ steps.install-llvm-28.outcome == "failure" }}
       with:
         version: "27"
       continue-on-error: true
-    - uses: KyleMayes/install-llvm-action@v2
-      if: failure()
+    - id: install-llvm-26
+      uses: KyleMayes/install-llvm-action@v2
+      if: ${{ steps.install-llvm-27.outcome == "failure" }}
       with:
         version: "26"
       continue-on-error: true
-    - uses: KyleMayes/install-llvm-action@v2
-      if: failure()
+    - id: install-llvm-25
+      uses: KyleMayes/install-llvm-action@v2
+      if: ${{ steps.install-llvm-26.outcome == "failure" }}
       with:
         version: "25"
       continue-on-error: true
-    - uses: KyleMayes/install-llvm-action@v2
-      if: failure()
+    - id: install-llvm-24
+      uses: KyleMayes/install-llvm-action@v2
+      if: ${{ steps.install-llvm-25.outcome == "failure" }}
       with:
         version: "24"
       continue-on-error: true
-    - uses: KyleMayes/install-llvm-action@v2
-      if: failure()
+    - id: install-llvm-23
+      uses: KyleMayes/install-llvm-action@v2
+      if: ${{ steps.install-llvm-24.outcome == "failure" }}
       with:
         version: "23"
       continue-on-error: true
-    - uses: KyleMayes/install-llvm-action@v2
-      if: failure()
+    - id: install-llvm-22
+      uses: KyleMayes/install-llvm-action@v2
+      if: ${{ steps.install-llvm-23.outcome == "failure" }}
       with:
         version: "22"
       continue-on-error: true
-    - uses: KyleMayes/install-llvm-action@v2
-      if: failure()
+    - id: install-llvm-21
+      uses: KyleMayes/install-llvm-action@v2
+      if: ${{ steps.install-llvm-22.outcome == "failure" }}
       with:
         version: "21"
     - run: CFLAGS="-flto=full -march=znver2 -mtune=znver2 -fno-exceptions -fno-rtti" CPPFLAGS="-flto=full -march=znver2 -mtune=znver2 -fno-exceptions -fno-rtti" LDFLAGS="-fuse-ld=lld" Build/linux/build.sh --verbose --static --release --disable-native --enable-avx512 --disable-lto --enable-pgo --pgo-videos="$(realpath SolLevante)"
