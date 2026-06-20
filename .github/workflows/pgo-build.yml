@@ -51,7 +51,7 @@ jobs:
     - uses: ConorMacBride/install-package@v1
       with:
         brew: llvm lld
-    - run: PATH="/opt/homebrew/opt/llvm/bin:$PATH" CMAKE_PREFIX_PATH="/opt/homebrew/opt/llvm" CFLAGS="-I/opt/homebrew/opt/llvm/include -march=armv8.7-a -mtune=apple-m3" CPPFLAGS="-I/opt/homebrew/opt/llvm/include -march=armv8.7-a -mtune=apple-m3" LDFLAGS="-L/opt/homebrew/opt/llvm/lib -fuse-ld=lld" Build/linux/build.sh --verbose --static --release --disable-native --disable-lto --enable-pgo --pgo-videos="$(realpath SolLevante)"
+    - run: PATH="/opt/homebrew/opt/llvm/bin:$PATH" CMAKE_PREFIX_PATH="/opt/homebrew/opt/llvm" CFLAGS="-I/opt/homebrew/opt/llvm/include -flto=full -march=armv8.7-a -mtune=apple-m3" CPPFLAGS="-I/opt/homebrew/opt/llvm/include -flto=full -march=armv8.7-a -mtune=apple-m3" LDFLAGS="-L/opt/homebrew/opt/llvm/lib -fuse-ld=lld" Build/linux/build.sh --verbose --static --release --disable-native --disable-lto --enable-pgo --pgo-videos="$(realpath SolLevante)"
     - run: Bin/Release/SvtAv1EncApp -i SolLevante/SolLevante.y4m -b test.ivf --preset 2 --crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5
     - run: cd Bin/Release && tar cJf macOS-arm64_armv8.7-a+apple-m3.tar.xz SvtAv1EncApp && cd ../..
     - uses: softprops/action-gh-release@v3
