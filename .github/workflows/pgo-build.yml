@@ -51,26 +51,22 @@ jobs:
   build-windows-x86-64:
     needs: [tag, release]
     runs-on: "windows-latest"
-    defaults:
-      run:
-        shell: msys2 {0}
     steps:
     - uses: msys2/setup-msys2@v2
       with:
         msystem: UCRT64
         path-type: inherit
-        update: true
         install: >-
-          cmake
           mingw-w64-ucrt-x86_64-fastfetch
-          mingw-w64-ucrt-x86_64-nasm
     - run: fastfetch
+      shell: msys2 {0}
     - uses: actions/checkout@v7
     - uses: actions/checkout@v7
       with:
         path: SolLevante
         ref: sollevante
     - run: xz --decompress SolLevante/SolLevante.y4m.xz
+      shell: msys2 {0}
     - id: install-llvm-30
       uses: KyleMayes/install-llvm-action@v2
       with:
@@ -134,13 +130,19 @@ jobs:
       if: ${{ steps.install-llvm-21.outcome == 'failure' }}
       with:
         version: "20"
-    - run: CC=clang CXX=clang++ CFLAGS="-flto=full -march=znver2 -mtune=znver2 -fno-exceptions -fno-rtti" CPPFLAGS="-flto=full -march=znver2 -mtune=znver2 -fno-exceptions -fno-rtti" LDFLAGS="-fuse-ld=lld -flto=full" Build/linux/build.sh --verbose --static --release --disable-native --enable-avx512 --disable-lto --enable-pgo --pgo-videos="$(realpath SolLevante)"
+    - uses: ilammy/setup-nasm@v1
+    - uses: lukka/get-cmake@latest
+    - run: cmake --fresh -B svt_build -G ninja -DCMAKE_C_COMPILER="clang-cl" -DCMAKE_CXX_COMPILER="clang-cl" -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DBUILD_APPS=ON -DTHREADS_PREFER_PTHREAD_FLAG=OFF -DCMAKE_USE_WIN32_THREADS_INIT=ON -DSVT_AV1_LTO=OFF -DENABLE_AVX512=ON -DCMAKE_C_FLAGS_RELEASE="/clang:-O3 -flto=full -march=icelake-server -mtune=znver5 /clang:-mprefer-vector-width=512 /clang:-fno-exceptions /clang:-fno-rtti -DNDEBUG /clang:-fprofile-generate=SolLevante /clang:-ftemporal-profile" -DCMAKE_CXX_FLAGS_RELEASE="/clang:-O3 -flto=full -march=icelake-server -mtune=znver5 /clang:-mprefer-vector-width=512 /clang:-fno-exceptions /clang:-fno-rtti -DNDEBUG /clang:-fprofile-generate=SolLevante /clang:-ftemporal-profile" -DCMAKE_EXE_LINKER_FLAGS_RELEASE="-fuse-ld=lld -flto=full" && ninja -v -C svt_build
+    - run: Bin/Release/SvtAv1EncApp.exe -i SolLevante/SolLevante.y4m -b test.ivf --preset 2 --crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5
+    - run: llvm-profdata merge -o "SolLevante/default.profdata" --sparse=true "SolLevante/default.profraw"
+    - run: cmake --fresh -B svt_build -G ninja -DCMAKE_C_COMPILER="clang-cl" -DCMAKE_CXX_COMPILER="clang-cl" -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DBUILD_APPS=ON -DTHREADS_PREFER_PTHREAD_FLAG=OFF -DCMAKE_USE_WIN32_THREADS_INIT=ON -DSVT_AV1_LTO=OFF -DENABLE_AVX512=ON -DCMAKE_C_FLAGS_RELEASE="/clang:-O3 -flto=full -march=icelake-server -mtune=znver5 /clang:-mprefer-vector-width=512 /clang:-fno-exceptions /clang:-fno-rtti -DNDEBUG /clang:-fprofile-use=SolLevante/default.profdata /clang:-fwhole-program-vtables /clang:-fvisibility=hidden /clang:-fvisibility-inlines-hidden" -DCMAKE_CXX_FLAGS_RELEASE="/clang:-O3 -flto=full -march=icelake-server -mtune=znver5 /clang:-mprefer-vector-width=512 /clang:-fno-exceptions /clang:-fno-rtti -DNDEBUG /clang:-fprofile-use=SolLevante/default.profdata /clang:-fwhole-program-vtables /clang:-fvisibility=hidden /clang:-fvisibility-inlines-hidden" -DCMAKE_EXE_LINKER_FLAGS_RELEASE="-fuse-ld=lld -flto=full" && ninja -v -C svt_build
     - run: Bin/Release/SvtAv1EncApp.exe -i SolLevante/SolLevante.y4m -b test.ivf --preset 4 --crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5
-    - run: cd Bin/Release && tar cJf Windows_x86-64_znver2.tar.xz SvtAv1EncApp.exe && cd ../..
+    - run: cd Bin/Release && tar cJf Windows_x86-64_icelake-server+znver5.tar.xz SvtAv1EncApp.exe && cd ../..
+      shell: msys2 {0}
     - uses: softprops/action-gh-release@v3
       with:
         tag_name: ${{ needs.tag.outputs.tag }}
-        files: Bin/Release/Windows_x86-64_znver2.tar.xz
+        files: Bin/Release/Windows_x86-64_icelake-server+znver5.tar.xz
 
 
   # build-linux-x86-64:
@@ -222,7 +224,7 @@ jobs:
   #     with:
   #       version: "20"
   #   - id: build-avx512
-  #     run: CFLAGS="-flto=full -march=icelake-server -mtune=znver5 -fno-exceptions -fno-rtti" CPPFLAGS="-flto=full -march=icelake-server -mtune=znver5 -fno-exceptions -fno-rtti" LDFLAGS="-fuse-ld=lld -flto=full" Build/linux/build.sh --verbose --static --release --disable-native --enable-avx512 --disable-lto --enable-pgo --pgo-videos="$(realpath SolLevante)"
+  #     run: CFLAGS="-flto=full -march=icelake-server -mtune=znver5 -fno-exceptions -fno-rtti -DNDEBUG" CPPFLAGS="-flto=full -march=icelake-server -mtune=znver5 -fno-exceptions -fno-rtti -DNDEBUG" LDFLAGS="-fuse-ld=lld -flto=full" Build/linux/build.sh --verbose --static --release --disable-native --enable-avx512 --disable-lto --enable-pgo --pgo-videos="$(realpath SolLevante)"
   #     continue-on-error: true
   #   - run: Bin/Release/SvtAv1EncApp -i SolLevante/SolLevante.y4m -b test.ivf --preset 4 --crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5
   #     if: ${{ steps.build-avx512.outcome != 'failure' }}
@@ -234,7 +236,7 @@ jobs:
   #       files: Bin/Release/Linux_x86-64_icelake-server+znver5.tar.xz
   #     if: ${{ steps.build-avx512.outcome != 'failure' }}
   #   - run: Build/linux/build.sh --clean
-  #   - run: CFLAGS="-flto=full -march=znver2 -mtune=znver2 -fno-exceptions -fno-rtti" CPPFLAGS="-flto=full -march=znver2 -mtune=znver2 -fno-exceptions -fno-rtti" LDFLAGS="-fuse-ld=lld -flto=full" Build/linux/build.sh --verbose --static --release --disable-native --enable-avx512 --disable-lto --enable-pgo --pgo-videos="$(realpath SolLevante)"
+  #   - run: CFLAGS="-flto=full -march=znver2 -mtune=znver2 -fno-exceptions -fno-rtti -DNDEBUG" CPPFLAGS="-flto=full -march=znver2 -mtune=znver2 -fno-exceptions -fno-rtti -DNDEBUG" LDFLAGS="-fuse-ld=lld -flto=full" Build/linux/build.sh --verbose --static --release --disable-native --enable-avx512 --disable-lto --enable-pgo --pgo-videos="$(realpath SolLevante)"
   #   - run: Bin/Release/SvtAv1EncApp -i SolLevante/SolLevante.y4m -b test.ivf --preset 4 --crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5
   #   - run: cd Bin/Release && tar cJf Linux_x86-64_znver2.tar.xz SvtAv1EncApp && cd ../..
   #   - uses: softprops/action-gh-release@v3
@@ -242,7 +244,7 @@ jobs:
   #       tag_name: ${{ needs.tag.outputs.tag }}
   #       files: Bin/Release/Linux_x86-64_znver2.tar.xz
   #   - run: Build/linux/build.sh --clean
-  #   - run: CFLAGS="-flto=full -march=x86-64-v3 -mtune=x86-64 -mno-gather -fno-exceptions -fno-rtti" CPPFLAGS="-flto=full -march=x86-64-v3 -mtune=x86-64 -mno-gather -fno-exceptions -fno-rtti" LDFLAGS="-fuse-ld=lld -flto=full" Build/linux/build.sh --verbose --static --release --disable-native --disable-lto --enable-pgo --pgo-videos="$(realpath SolLevante)"
+  #   - run: CFLAGS="-flto=full -march=x86-64-v3 -mtune=x86-64 -mno-gather -fno-exceptions -fno-rtti -DNDEBUG" CPPFLAGS="-flto=full -march=x86-64-v3 -mtune=x86-64 -mno-gather -fno-exceptions -fno-rtti -DNDEBUG" LDFLAGS="-fuse-ld=lld -flto=full" Build/linux/build.sh --verbose --static --release --disable-native --disable-lto --enable-pgo --pgo-videos="$(realpath SolLevante)"
   #   - run: Bin/Release/SvtAv1EncApp -i SolLevante/SolLevante.y4m -b test.ivf --preset 4 --crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5
   #   - run: cd Bin/Release && tar cJf Linux_x86-64_x86-64-v3.tar.xz SvtAv1EncApp && cd ../..
   #   - uses: softprops/action-gh-release@v3
@@ -268,7 +270,7 @@ jobs:
   #   - uses: ConorMacBride/install-package@v1
   #     with:
   #       brew: llvm lld
-  #   - run: PATH="/opt/homebrew/opt/llvm/bin:$PATH" CMAKE_PREFIX_PATH="/opt/homebrew/opt/llvm" CFLAGS="-I/opt/homebrew/opt/llvm/include -march=armv8.7-a -flto=full -mtune=apple-m3 -fno-exceptions -fno-rtti" CPPFLAGS="-I/opt/homebrew/opt/llvm/include -flto=full -march=armv8.7-a -mtune=apple-m3 -fno-exceptions -fno-rtti" LDFLAGS="-L/opt/homebrew/opt/llvm/lib -fuse-ld=lld -flto=full" Build/linux/build.sh --verbose --static --release --disable-native --enable-lto --enable-pgo --pgo-videos="$(realpath SolLevante)"
+  #   - run: PATH="/opt/homebrew/opt/llvm/bin:$PATH" CMAKE_PREFIX_PATH="/opt/homebrew/opt/llvm" CFLAGS="-I/opt/homebrew/opt/llvm/include -march=armv8.7-a -flto=full -mtune=apple-m3 -fno-exceptions -fno-rtti -DNDEBUG" CPPFLAGS="-I/opt/homebrew/opt/llvm/include -flto=full -march=armv8.7-a -mtune=apple-m3 -fno-exceptions -fno-rtti -DNDEBUG" LDFLAGS="-L/opt/homebrew/opt/llvm/lib -fuse-ld=lld -flto=full" Build/linux/build.sh --verbose --static --release --disable-native --enable-lto --enable-pgo --pgo-videos="$(realpath SolLevante)"
   #   - run: Bin/Release/SvtAv1EncApp -i SolLevante/SolLevante.y4m -b test.ivf --preset 4 --crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5
   #   - run: cd Bin/Release && tar cJf macOS_arm64_armv8.7-a+apple-m3.tar.xz SvtAv1EncApp && cd ../..
   #   - uses: softprops/action-gh-release@v3
@@ -294,7 +296,7 @@ jobs:
   #   - uses: ConorMacBride/install-package@v1
   #     with:
   #       brew: llvm lld
-  #   - run: PATH="/opt/homebrew/opt/llvm/bin:$PATH" CMAKE_PREFIX_PATH="/opt/homebrew/opt/llvm" CFLAGS="-I/opt/homebrew/opt/llvm/include -flto=full -march=skylake -mtune=skylake -mno-gather -fno-exceptions -fno-rtti" CPPFLAGS="-I/opt/homebrew/opt/llvm/include -flto=full -march=skylake -mtune=skylake -mno-gather -fno-exceptions -fno-rtti" LDFLAGS="-L/opt/homebrew/opt/llvm/lib -fuse-ld=lld -flto=full" Build/linux/build.sh --verbose --static --release --disable-native --disable-lto --enable-pgo --pgo-videos="$(realpath SolLevante)"
+  #   - run: PATH="/opt/homebrew/opt/llvm/bin:$PATH" CMAKE_PREFIX_PATH="/opt/homebrew/opt/llvm" CFLAGS="-I/opt/homebrew/opt/llvm/include -flto=full -march=skylake -mtune=skylake -mno-gather -fno-exceptions -fno-rtti -DNDEBUG" CPPFLAGS="-I/opt/homebrew/opt/llvm/include -flto=full -march=skylake -mtune=skylake -mno-gather -fno-exceptions -fno-rtti -DNDEBUG" LDFLAGS="-L/opt/homebrew/opt/llvm/lib -fuse-ld=lld -flto=full" Build/linux/build.sh --verbose --static --release --disable-native --disable-lto --enable-pgo --pgo-videos="$(realpath SolLevante)"
   #   - run: Bin/Release/SvtAv1EncApp -i SolLevante/SolLevante.y4m -b test.ivf --preset 4 --crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5
   #   - run: cd Bin/Release && tar cJf macOS_x86-64_skylake.tar.xz SvtAv1EncApp && cd ../..
   #   - uses: softprops/action-gh-release@v3
