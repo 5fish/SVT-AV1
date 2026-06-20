@@ -16,6 +16,8 @@ jobs:
   release:
     needs: tag
     runs-on: "ubuntu-latest"
+    outputs:
+      tag: ${{ needs.tag.outputs.tag }}
     steps:
     - uses: actions/checkout@v7
     - uses: softprops/action-gh-release@v3
@@ -31,9 +33,7 @@ jobs:
         make_latest: "true"
 
   build-macos:
-    needs: |
-      tag
-      release
+    needs: release
     runs-on: "macos-latest"
     steps:
     - uses: actions/checkout@v7
@@ -52,7 +52,7 @@ jobs:
         path: Bin/Release/SvtAv1EncApp
     - uses: softprops/action-gh-release@v3
       with:
-        tag_name: ${{ needs.tag.outputs.tag }}
+        tag_name: ${{ needs.release.outputs.tag }}
         files: Bin/Release/SvtAv1EncApp
 
   # Apple LLVM slightly slower
