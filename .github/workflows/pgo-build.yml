@@ -61,9 +61,8 @@ jobs:
         path-type: inherit
         update: true
         install: >-
-          mingw-w64-ucrt-x86_64-cmake
+          cmake
           mingw-w64-ucrt-x86_64-fastfetch
-          mingw-w64-ucrt-x86_64-make
           mingw-w64-ucrt-x86_64-nasm
     - run: fastfetch
     - uses: actions/checkout@v7
@@ -135,7 +134,7 @@ jobs:
       if: ${{ steps.install-llvm-21.outcome == 'failure' }}
       with:
         version: "20"
-    - run: CMAKE_GENERATOR="MSYS Makefiles" CC=clang CXX=clang++ CFLAGS="-flto=full -march=znver2 -mtune=znver2 -fno-exceptions -fno-rtti" CPPFLAGS="-flto=full -march=znver2 -mtune=znver2 -fno-exceptions -fno-rtti" LDFLAGS="-fuse-ld=lld -flto=full" Build/linux/build.sh --verbose --static --release --disable-native --enable-avx512 --disable-lto --enable-pgo --pgo-videos="$(realpath SolLevante)"
+    - run: CC=clang CXX=clang++ CFLAGS="-flto=full -march=znver2 -mtune=znver2 -fno-exceptions -fno-rtti" CPPFLAGS="-flto=full -march=znver2 -mtune=znver2 -fno-exceptions -fno-rtti" LDFLAGS="-flto=full" Build/linux/build.sh --verbose --static --release --disable-native --enable-avx512 --disable-lto --enable-pgo --pgo-videos="$(realpath SolLevante)"
     - run: Bin/Release/SvtAv1EncApp.exe -i SolLevante/SolLevante.y4m -b test.ivf --preset 4 --crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5
     - run: cd Bin/Release && tar cJf Windows_x86-64_znver2.tar.xz SvtAv1EncApp.exe && cd ../..
     - uses: softprops/action-gh-release@v3
