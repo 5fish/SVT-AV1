@@ -46,6 +46,7 @@ jobs:
         path: SolLevante
         ref: sollevante
     - run: xz --decompress SolLevante/SolLevante.y4m.xz
+    - run: sysctl -a | grep machdep.cpu
     - uses: ilammy/setup-nasm@v1
     - uses: ConorMacBride/install-package@v1
       with:
