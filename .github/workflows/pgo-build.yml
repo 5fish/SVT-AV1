@@ -1,5 +1,9 @@
 name: pgo-build
 
+# To build it yourself, always use clang over gcc or msvc. It's plain faster.
+# Run `Build/linux/build.sh --native --static --release --enable-lto --enable-pgo` to build a decent binary.
+# For more optimised building, check how we do it below. Everything here is not selected on a whim but tested to indeed produce a faster binary.
+
 on: push # testing only
 # on: workflow_dispatch # eventually
 
@@ -18,15 +22,17 @@ jobs:
     runs-on: "ubuntu-latest"
     steps:
     - uses: actions/checkout@v7
+    - run: gh release delete ${{ needs.tag.outputs.tag }} --cleanup-tag
     - uses: softprops/action-gh-release@v3
       with:
         tag_name: ${{ needs.tag.outputs.tag }}
         target_commitish: ${{ github.sha }}
         name: 5fish/SVT-AV1 ${{ needs.tag.outputs.tag }}
         body: |
-          Build for 5fish/SVT-AV1 ${{ needs.tag.outputs.tag }}.  
           Ref `${{ github.ref }}` / Commit `${{ github.sha }}`  
-          macOS arm64 / Clang & LLD from LLVM Project / armv8.5-a+dotprod + apple-m3 / PGO  
+          macOS arm64 / Clang & LLD from LLVM Project / armv8.6-a+dotprod + apple-m3 / PGO  
+
+          To build it yourself, check [the note](https://github.com/5fish/SVT-AV1/blob/${{ github.sha }}/.github/workflows/pgo-build.yml#L3-L5).  
         prerelease: false
         make_latest: "true"
 
@@ -44,14 +50,12 @@ jobs:
     - uses: ConorMacBride/install-package@v1
       with:
         brew: llvm lld
-    - run: PATH="/opt/homebrew/opt/llvm/bin:$PATH" CMAKE_PREFIX_PATH="/opt/homebrew/opt/llvm" CFLAGS="-I/opt/homebrew/opt/llvm/include -march=armv8.5-a+dotprod -mtune=apple-m3" CPPFLAGS="-I/opt/homebrew/opt/llvm/include -march=armv8.5-a+dotprod -mtune=apple-m3" LDFLAGS="-L/opt/homebrew/opt/llvm/lib -fuse-ld=lld" Build/linux/build.sh --verbose --static --release --enable-pgo --pgo-videos="$(realpath SolLevante)"
-    - uses: actions/upload-artifact@v7
-      with:
-        path: Bin/Release/SvtAv1EncApp
+    - run: PATH="/opt/homebrew/opt/llvm/bin:$PATH" CMAKE_PREFIX_PATH="/opt/homebrew/opt/llvm" CFLAGS="-I/opt/homebrew/opt/llvm/include -march=armv8.6-a+dotprod -mtune=apple-m3" CPPFLAGS="-I/opt/homebrew/opt/llvm/include -march=armv8.6-a+dotprod -mtune=apple-m3" LDFLAGS="-L/opt/homebrew/opt/llvm/lib -fuse-ld=lld" Build/linux/build.sh --verbose --static --release --enable-pgo --pgo-videos="$(realpath SolLevante)"
+    - uses: cd Bin/Release && tar cJf macOS-arm64_armv8.6+dotprod.tar.xz SvtAv1EncApp && prevd
     - uses: softprops/action-gh-release@v3
       with:
         tag_name: ${{ needs.tag.outputs.tag }}
-        files: Bin/Release/SvtAv1EncApp
+        files: Bin/Release/macOS-arm64_armv8.6+dotprod.tar.xz
 
   # Apple LLVM slightly slower
   # build-macos:
