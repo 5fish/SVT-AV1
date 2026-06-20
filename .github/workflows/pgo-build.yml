@@ -63,7 +63,6 @@ jobs:
         install: >-
           base-devel
           mingw-w64-ucrt-x86_64-fastfetch
-          make
           nasm
     - run: fastfetch
     - uses: actions/checkout@v7
@@ -138,7 +137,7 @@ jobs:
     - uses: jwlawson/actions-setup-cmake@v2
       with:
         cmake-version: '3.x.x'
-    - run: PATH="/c/Program Files/LLVM/bin:$PATH" CC=clang-cl CXX=clang-cl CFLAGS="-I\"C:/Program Files/LLVM/include\" -flto=full -march=znver2 -mtune=znver2 /clang:-fno-exceptions /clang:-fno-rtti" CPPFLAGS="-I\"C:/Program Files/LLVM/include\" -flto=full -march=znver2 -mtune=znver2 /clang:-fno-exceptions /clang:-fno-rtti" LDFLAGS="-L\"C:/Program Files/LLVM/lib\" -fuse-ld=lld -flto=full" Build/linux/build.sh --verbose --static --release --disable-native --enable-avx512 --disable-lto --enable-pgo --pgo-videos="$(realpath SolLevante)"
+    - run: CMAKE_GENERATOR=make CC=clang-cl CXX=clang-cl CFLAGS="-flto=full -march=znver2 -mtune=znver2 /clang:-fno-exceptions /clang:-fno-rtti" CPPFLAGS="-flto=full -march=znver2 -mtune=znver2 /clang:-fno-exceptions /clang:-fno-rtti" LDFLAGS="-fuse-ld=lld -flto=full" Build/linux/build.sh --verbose --static --release --disable-native --enable-avx512 --disable-lto --enable-pgo --pgo-videos="$(realpath SolLevante)"
     - run: Bin/Release/SvtAv1EncApp.exe -i SolLevante/SolLevante.y4m -b test.ivf --preset 4 --crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5
     - run: cd Bin/Release && tar cJf Windows_x86-64_znver2.tar.xz SvtAv1EncApp.exe && cd ../..
     - uses: softprops/action-gh-release@v3
