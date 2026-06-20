@@ -32,8 +32,8 @@ jobs:
           Ref `${{ github.ref }}` / Commit `${{ github.sha }}`  
           macOS arm64 / Clang & LLD from LLVM Project / armv8.6-a+dotprod + apple-m3 / PGO  
 
-          To build it yourself, check [the note](https://github.com/5fish/SVT-AV1/blob/${{ github.sha }}/.github/workflows/pgo-build.yml#L1-L4).  
-          Thanks to studies and contributions from afed, Ironclad, Itachi Uchiha, Miss Ashenlight, SwareJonge, Trix, Yiss and other people in the community to discover best method to build the fastest binary.  
+          Thanks to studies and contributions from afed, Ironclad, Itachi Uchiha, Miss Ashenlight, SwareJonge, Trix, Yiss and other people in the community to discover the method to build the fastest binary.  
+          If you need to build it yourself, check [the note](https://github.com/5fish/SVT-AV1/blob/${{ github.sha }}/.github/workflows/pgo-build.yml#L1-L4) in the building script.  
         prerelease: false
         make_latest: "true"
 
@@ -52,7 +52,7 @@ jobs:
       with:
         brew: llvm lld
     - run: PATH="/opt/homebrew/opt/llvm/bin:$PATH" CMAKE_PREFIX_PATH="/opt/homebrew/opt/llvm" CFLAGS="-I/opt/homebrew/opt/llvm/include -march=armv8.6-a+dotprod -mtune=apple-m3" CPPFLAGS="-I/opt/homebrew/opt/llvm/include -march=armv8.6-a+dotprod -mtune=apple-m3" LDFLAGS="-L/opt/homebrew/opt/llvm/lib -fuse-ld=lld" Build/linux/build.sh --verbose --static --release --enable-pgo --pgo-videos="$(realpath SolLevante)"
-    - run: cd Bin/Release && tar cJf macOS-arm64_armv8.6+dotprod.tar.xz SvtAv1EncApp && prevd
+    - run: cd Bin/Release && tar cJf macOS-arm64_armv8.6+dotprod.tar.xz SvtAv1EncApp && cd ../..
     - uses: softprops/action-gh-release@v3
       with:
         tag_name: ${{ needs.tag.outputs.tag }}
