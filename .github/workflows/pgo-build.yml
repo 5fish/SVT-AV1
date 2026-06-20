@@ -65,9 +65,10 @@ jobs:
           mingw-w64-ucrt-x86_64-fastfetch
           git
           nasm
-          mingw-w64-ucrt-x86_64-winpthreads
     - run: fastfetch
     - uses: actions/checkout@v7
+    - run: sed -i "s/set\\(CMAKE_THREAD_PREFER_PTHREADS ON\\)/set\\(CMAKE_THREAD_PREFER_PTHREADS OFF\\)\nset\\(CMAKE_USE_WIN32_THREADS_INIT ON\\)" CMakeLists.txt
+    - run: cat CMakeLists.txt | grep THREAD
     - uses: actions/checkout@v7
       with:
         path: SolLevante
