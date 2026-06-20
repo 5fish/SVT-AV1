@@ -32,12 +32,16 @@ jobs:
         name: 5fish/SVT-AV1 ${{ needs.tag.outputs.tag }}
         body: |
           Ref `${{ github.ref }}` | Commit `${{ github.sha }}`  
+          Windows | x86-64 | LLVM Project `clang-cl` LLD | `icelake-server` + `znver5` | PGO  
           Windows | x86-64 | LLVM Project `clang-cl` LLD | `znver2` | PGO  
           Windows | x86-64 | LLVM Project `clang-cl` LLD | `x86-64-v3` | PGO  
+          Linux | x86-64 | LLVM Project Clang LLD | `icelake-server` + `znver5` | PGO  
           Linux | x86-64 | LLVM Project Clang LLD | `znver2` | PGO  
           Linux | x86-64 | LLVM Project Clang LLD | `x86-64-v3` | PGO  
           macOS | arm64 | LLVM Project Clang LLD | `armv8.7-a` + `apple-m3` | PGO  
           macOS | x86-64 | LLVM Project Clang LLD | `skylake` | PGO  
+
+          On x86-64 systems, no matter if you're using an Intel or AMD CPU, you should try these builds in the order of `icelake-server` + `znver5` ⇒ `znver2` ⇒ `x86-64-v3`. The `icelake-server` + `znver5` version might not be available if the GitHub Actions runner doesn't support AVX512.  
 
           Thanks to studies and contributions from afed, Ironclad, Itachi Uchiha, Miss Ashenlight, SwareJonge, Trix, Yiss and other people in the community to discover the method to build the fastest binary. If you need to build a binary yourself, check [the note](https://github.com/5fish/SVT-AV1/blob/${{ github.sha }}/.github/workflows/pgo-build.yml#L1-L4) in the building script.  
         prerelease: false
@@ -60,6 +64,7 @@ jobs:
           cmake
           mingw-w64-ucrt-x86_64-fastfetch
           git
+          mingw-w64-ucrt-x86_64-mcfgthread
           nasm
     - run: fastfetch
     - uses: actions/checkout@v7
@@ -133,7 +138,7 @@ jobs:
       with:
         version: "20"
     - run: PATH="/c/Program Files/LLVM/bin:$PATH" CC=clang-cl CXX=clang-cl CFLAGS="-I\"C:/Program Files/LLVM/include\" -flto=full -march=znver2 -mtune=znver2 /clang:-fno-exceptions /clang:-fno-rtti" CPPFLAGS="-I\"C:/Program Files/LLVM/include\" -flto=full -march=znver2 -mtune=znver2 /clang:-fno-exceptions /clang:-fno-rtti" LDFLAGS="-L\"C:/Program Files/LLVM/lib\" -fuse-ld=lld -flto=full" Build/linux/build.sh --verbose --static --release --disable-native --enable-avx512 --disable-lto --enable-pgo --pgo-videos="$(realpath SolLevante)"
-    - run: Bin/Release/SvtAv1EncApp.exe -i SolLevante/SolLevante.y4m -b test.ivf --preset 2 --crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5
+    - run: Bin/Release/SvtAv1EncApp.exe -i SolLevante/SolLevante.y4m -b test.ivf --preset 4 --crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5
     - run: cd Bin/Release && tar cJf Windows_x86-64_znver2.tar.xz SvtAv1EncApp.exe && cd ../..
     - uses: softprops/action-gh-release@v3
       with:
@@ -141,113 +146,113 @@ jobs:
         files: Bin/Release/Windows_x86-64_znver2.tar.xz
 
 
-  build-linux-x86-64:
-    needs: [tag, release]
-    runs-on: "ubuntu-latest"
-    steps:
-    - uses: ConorMacBride/install-package@v1
-      with:
-        apt: neofetch
-    - run: neofetch
-    - uses: actions/checkout@v7
-    - uses: actions/checkout@v7
-      with:
-        path: SolLevante
-        ref: sollevante
-    - run: xz --decompress SolLevante/SolLevante.y4m.xz
-    - uses: ilammy/setup-nasm@v1
-    - id: install-llvm-30
-      uses: KyleMayes/install-llvm-action@v2
-      with:
-        version: "30"
-      continue-on-error: true
-    - id: install-llvm-29
-      uses: KyleMayes/install-llvm-action@v2
-      if: ${{ steps.install-llvm-30.outcome == 'failure' }}
-      with:
-        version: "29"
-      continue-on-error: true
-    - id: install-llvm-28
-      uses: KyleMayes/install-llvm-action@v2
-      if: ${{ steps.install-llvm-29.outcome == 'failure' }}
-      with:
-        version: "28"
-      continue-on-error: true
-    - id: install-llvm-27
-      uses: KyleMayes/install-llvm-action@v2
-      if: ${{ steps.install-llvm-28.outcome == 'failure' }}
-      with:
-        version: "27"
-      continue-on-error: true
-    - id: install-llvm-26
-      uses: KyleMayes/install-llvm-action@v2
-      if: ${{ steps.install-llvm-27.outcome == 'failure' }}
-      with:
-        version: "26"
-      continue-on-error: true
-    - id: install-llvm-25
-      uses: KyleMayes/install-llvm-action@v2
-      if: ${{ steps.install-llvm-26.outcome == 'failure' }}
-      with:
-        version: "25"
-      continue-on-error: true
-    - id: install-llvm-24
-      uses: KyleMayes/install-llvm-action@v2
-      if: ${{ steps.install-llvm-25.outcome == 'failure' }}
-      with:
-        version: "24"
-      continue-on-error: true
-    - id: install-llvm-23
-      uses: KyleMayes/install-llvm-action@v2
-      if: ${{ steps.install-llvm-24.outcome == 'failure' }}
-      with:
-        version: "23"
-      continue-on-error: true
-    - id: install-llvm-22
-      uses: KyleMayes/install-llvm-action@v2
-      if: ${{ steps.install-llvm-23.outcome == 'failure' }}
-      with:
-        version: "22"
-      continue-on-error: true
-    - id: install-llvm-21
-      uses: KyleMayes/install-llvm-action@v2
-      if: ${{ steps.install-llvm-22.outcome == 'failure' }}
-      with:
-        version: "21"
-      continue-on-error: true
-    - id: install-llvm-20
-      uses: KyleMayes/install-llvm-action@v2
-      if: ${{ steps.install-llvm-21.outcome == 'failure' }}
-      with:
-        version: "20"
-    - id: build-avx512
-      run: CFLAGS="-flto=full -march=icelake-server -mtune=znver5 -fno-exceptions -fno-rtti" CPPFLAGS="-flto=full -march=icelake-server -mtune=znver5 -fno-exceptions -fno-rtti" LDFLAGS="-fuse-ld=lld -flto=full" Build/linux/build.sh --verbose --static --release --disable-native --enable-avx512 --disable-lto --enable-pgo --pgo-videos="$(realpath SolLevante)"
-      continue-on-error: true
-    - run: Bin/Release/SvtAv1EncApp -i SolLevante/SolLevante.y4m -b test.ivf --preset 2 --crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5
-      if: ${{ steps.build-avx512.outcome != 'failure' }}
-    - run: cd Bin/Release && tar cJf Linux_x86-64_znver2.tar.xz SvtAv1EncApp && cd ../..
-      if: ${{ steps.build-avx512.outcome != 'failure' }}
-    - uses: softprops/action-gh-release@v3
-      with:
-        tag_name: ${{ needs.tag.outputs.tag }}
-        files: Bin/Release/Linux_x86-64_icelake-server+znver5.tar.xz
-      if: ${{ steps.build-avx512.outcome != 'failure' }}
-    - run: Build/linux/build.sh --clean
-    - run: CFLAGS="-flto=full -march=znver2 -mtune=znver2 -fno-exceptions -fno-rtti" CPPFLAGS="-flto=full -march=znver2 -mtune=znver2 -fno-exceptions -fno-rtti" LDFLAGS="-fuse-ld=lld -flto=full" Build/linux/build.sh --verbose --static --release --disable-native --enable-avx512 --disable-lto --enable-pgo --pgo-videos="$(realpath SolLevante)"
-    - run: Bin/Release/SvtAv1EncApp -i SolLevante/SolLevante.y4m -b test.ivf --preset 2 --crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5
-    - run: cd Bin/Release && tar cJf Linux_x86-64_znver2.tar.xz SvtAv1EncApp && cd ../..
-    - uses: softprops/action-gh-release@v3
-      with:
-        tag_name: ${{ needs.tag.outputs.tag }}
-        files: Bin/Release/Linux_x86-64_znver2.tar.xz
-    - run: Build/linux/build.sh --clean
-    - run: CFLAGS="-flto=full -march=x86-64-v3 -mtune=x86-64 -mno-gather -fno-exceptions -fno-rtti" CPPFLAGS="-flto=full -march=x86-64-v3 -mtune=x86-64 -mno-gather -fno-exceptions -fno-rtti" LDFLAGS="-fuse-ld=lld -flto=full" Build/linux/build.sh --verbose --static --release --disable-native --disable-lto --enable-pgo --pgo-videos="$(realpath SolLevante)"
-    - run: Bin/Release/SvtAv1EncApp -i SolLevante/SolLevante.y4m -b test.ivf --preset 2 --crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5
-    - run: cd Bin/Release && tar cJf Linux_x86-64_x86-64-v3.tar.xz SvtAv1EncApp && cd ../..
-    - uses: softprops/action-gh-release@v3
-      with:
-        tag_name: ${{ needs.tag.outputs.tag }}
-        files: Bin/Release/Linux_x86-64_x86-64-v3.tar.xz
+  # build-linux-x86-64:
+  #   needs: [tag, release]
+  #   runs-on: "ubuntu-latest"
+  #   steps:
+  #   - uses: ConorMacBride/install-package@v1
+  #     with:
+  #       apt: neofetch
+  #   - run: neofetch
+  #   - uses: actions/checkout@v7
+  #   - uses: actions/checkout@v7
+  #     with:
+  #       path: SolLevante
+  #       ref: sollevante
+  #   - run: xz --decompress SolLevante/SolLevante.y4m.xz
+  #   - uses: ilammy/setup-nasm@v1
+  #   - id: install-llvm-30
+  #     uses: KyleMayes/install-llvm-action@v2
+  #     with:
+  #       version: "30"
+  #     continue-on-error: true
+  #   - id: install-llvm-29
+  #     uses: KyleMayes/install-llvm-action@v2
+  #     if: ${{ steps.install-llvm-30.outcome == 'failure' }}
+  #     with:
+  #       version: "29"
+  #     continue-on-error: true
+  #   - id: install-llvm-28
+  #     uses: KyleMayes/install-llvm-action@v2
+  #     if: ${{ steps.install-llvm-29.outcome == 'failure' }}
+  #     with:
+  #       version: "28"
+  #     continue-on-error: true
+  #   - id: install-llvm-27
+  #     uses: KyleMayes/install-llvm-action@v2
+  #     if: ${{ steps.install-llvm-28.outcome == 'failure' }}
+  #     with:
+  #       version: "27"
+  #     continue-on-error: true
+  #   - id: install-llvm-26
+  #     uses: KyleMayes/install-llvm-action@v2
+  #     if: ${{ steps.install-llvm-27.outcome == 'failure' }}
+  #     with:
+  #       version: "26"
+  #     continue-on-error: true
+  #   - id: install-llvm-25
+  #     uses: KyleMayes/install-llvm-action@v2
+  #     if: ${{ steps.install-llvm-26.outcome == 'failure' }}
+  #     with:
+  #       version: "25"
+  #     continue-on-error: true
+  #   - id: install-llvm-24
+  #     uses: KyleMayes/install-llvm-action@v2
+  #     if: ${{ steps.install-llvm-25.outcome == 'failure' }}
+  #     with:
+  #       version: "24"
+  #     continue-on-error: true
+  #   - id: install-llvm-23
+  #     uses: KyleMayes/install-llvm-action@v2
+  #     if: ${{ steps.install-llvm-24.outcome == 'failure' }}
+  #     with:
+  #       version: "23"
+  #     continue-on-error: true
+  #   - id: install-llvm-22
+  #     uses: KyleMayes/install-llvm-action@v2
+  #     if: ${{ steps.install-llvm-23.outcome == 'failure' }}
+  #     with:
+  #       version: "22"
+  #     continue-on-error: true
+  #   - id: install-llvm-21
+  #     uses: KyleMayes/install-llvm-action@v2
+  #     if: ${{ steps.install-llvm-22.outcome == 'failure' }}
+  #     with:
+  #       version: "21"
+  #     continue-on-error: true
+  #   - id: install-llvm-20
+  #     uses: KyleMayes/install-llvm-action@v2
+  #     if: ${{ steps.install-llvm-21.outcome == 'failure' }}
+  #     with:
+  #       version: "20"
+  #   - id: build-avx512
+  #     run: CFLAGS="-flto=full -march=icelake-server -mtune=znver5 -fno-exceptions -fno-rtti" CPPFLAGS="-flto=full -march=icelake-server -mtune=znver5 -fno-exceptions -fno-rtti" LDFLAGS="-fuse-ld=lld -flto=full" Build/linux/build.sh --verbose --static --release --disable-native --enable-avx512 --disable-lto --enable-pgo --pgo-videos="$(realpath SolLevante)"
+  #     continue-on-error: true
+  #   - run: Bin/Release/SvtAv1EncApp -i SolLevante/SolLevante.y4m -b test.ivf --preset 4 --crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5
+  #     if: ${{ steps.build-avx512.outcome != 'failure' }}
+  #   - run: cd Bin/Release && tar cJf Linux_x86-64_znver2.tar.xz SvtAv1EncApp && cd ../..
+  #     if: ${{ steps.build-avx512.outcome != 'failure' }}
+  #   - uses: softprops/action-gh-release@v3
+  #     with:
+  #       tag_name: ${{ needs.tag.outputs.tag }}
+  #       files: Bin/Release/Linux_x86-64_icelake-server+znver5.tar.xz
+  #     if: ${{ steps.build-avx512.outcome != 'failure' }}
+  #   - run: Build/linux/build.sh --clean
+  #   - run: CFLAGS="-flto=full -march=znver2 -mtune=znver2 -fno-exceptions -fno-rtti" CPPFLAGS="-flto=full -march=znver2 -mtune=znver2 -fno-exceptions -fno-rtti" LDFLAGS="-fuse-ld=lld -flto=full" Build/linux/build.sh --verbose --static --release --disable-native --enable-avx512 --disable-lto --enable-pgo --pgo-videos="$(realpath SolLevante)"
+  #   - run: Bin/Release/SvtAv1EncApp -i SolLevante/SolLevante.y4m -b test.ivf --preset 4 --crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5
+  #   - run: cd Bin/Release && tar cJf Linux_x86-64_znver2.tar.xz SvtAv1EncApp && cd ../..
+  #   - uses: softprops/action-gh-release@v3
+  #     with:
+  #       tag_name: ${{ needs.tag.outputs.tag }}
+  #       files: Bin/Release/Linux_x86-64_znver2.tar.xz
+  #   - run: Build/linux/build.sh --clean
+  #   - run: CFLAGS="-flto=full -march=x86-64-v3 -mtune=x86-64 -mno-gather -fno-exceptions -fno-rtti" CPPFLAGS="-flto=full -march=x86-64-v3 -mtune=x86-64 -mno-gather -fno-exceptions -fno-rtti" LDFLAGS="-fuse-ld=lld -flto=full" Build/linux/build.sh --verbose --static --release --disable-native --disable-lto --enable-pgo --pgo-videos="$(realpath SolLevante)"
+  #   - run: Bin/Release/SvtAv1EncApp -i SolLevante/SolLevante.y4m -b test.ivf --preset 4 --crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5
+  #   - run: cd Bin/Release && tar cJf Linux_x86-64_x86-64-v3.tar.xz SvtAv1EncApp && cd ../..
+  #   - uses: softprops/action-gh-release@v3
+  #     with:
+  #       tag_name: ${{ needs.tag.outputs.tag }}
+  #       files: Bin/Release/Linux_x86-64_x86-64-v3.tar.xz
 
   # build-macos-arm64:
   #   needs: [tag, release]
@@ -268,7 +273,7 @@ jobs:
   #     with:
   #       brew: llvm lld
   #   - run: PATH="/opt/homebrew/opt/llvm/bin:$PATH" CMAKE_PREFIX_PATH="/opt/homebrew/opt/llvm" CFLAGS="-I/opt/homebrew/opt/llvm/include -march=armv8.7-a -flto=full -mtune=apple-m3 -fno-exceptions -fno-rtti" CPPFLAGS="-I/opt/homebrew/opt/llvm/include -flto=full -march=armv8.7-a -mtune=apple-m3 -fno-exceptions -fno-rtti" LDFLAGS="-L/opt/homebrew/opt/llvm/lib -fuse-ld=lld -flto=full" Build/linux/build.sh --verbose --static --release --disable-native --enable-lto --enable-pgo --pgo-videos="$(realpath SolLevante)"
-  #   - run: Bin/Release/SvtAv1EncApp -i SolLevante/SolLevante.y4m -b test.ivf --preset 2 --crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5
+  #   - run: Bin/Release/SvtAv1EncApp -i SolLevante/SolLevante.y4m -b test.ivf --preset 4 --crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5
   #   - run: cd Bin/Release && tar cJf macOS_arm64_armv8.7-a+apple-m3.tar.xz SvtAv1EncApp && cd ../..
   #   - uses: softprops/action-gh-release@v3
   #     with:
@@ -294,7 +299,7 @@ jobs:
   #     with:
   #       brew: llvm lld
   #   - run: PATH="/opt/homebrew/opt/llvm/bin:$PATH" CMAKE_PREFIX_PATH="/opt/homebrew/opt/llvm" CFLAGS="-I/opt/homebrew/opt/llvm/include -flto=full -march=skylake -mtune=skylake -mno-gather -fno-exceptions -fno-rtti" CPPFLAGS="-I/opt/homebrew/opt/llvm/include -flto=full -march=skylake -mtune=skylake -mno-gather -fno-exceptions -fno-rtti" LDFLAGS="-L/opt/homebrew/opt/llvm/lib -fuse-ld=lld -flto=full" Build/linux/build.sh --verbose --static --release --disable-native --disable-lto --enable-pgo --pgo-videos="$(realpath SolLevante)"
-  #   - run: Bin/Release/SvtAv1EncApp -i SolLevante/SolLevante.y4m -b test.ivf --preset 2 --crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5
+  #   - run: Bin/Release/SvtAv1EncApp -i SolLevante/SolLevante.y4m -b test.ivf --preset 4 --crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5
   #   - run: cd Bin/Release && tar cJf macOS_x86-64_skylake.tar.xz SvtAv1EncApp && cd ../..
   #   - uses: softprops/action-gh-release@v3
   #     with:
