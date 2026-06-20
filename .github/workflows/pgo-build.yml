@@ -63,7 +63,7 @@ jobs:
         install: >-
           base-devel
           mingw-w64-ucrt-x86_64-fastfetch
-          git
+          make
           nasm
     - run: fastfetch
     - uses: actions/checkout@v7
