@@ -26,7 +26,7 @@ jobs:
         body: |
           Build for 5fish/SVT-AV1 ${{ needs.tag.outputs.tag }}.  
           Ref `${{ github.ref }}` / Commit `${{ github.sha }}`  
-          macOS arm64 / Clang & LLD from LLVM Project / armv8.5-a+dotprod + apple-m1 / PGO  
+          macOS arm64 / Clang & LLD from LLVM Project / armv8.5-a+dotprod + apple-m3 / PGO  
         prerelease: false
         make_latest: "true"
 
@@ -44,13 +44,14 @@ jobs:
     - uses: ConorMacBride/install-package@v1
       with:
         brew: llvm lld
-    - run: PATH="/opt/homebrew/opt/llvm/bin:$PATH" CMAKE_PREFIX_PATH="/opt/homebrew/opt/llvm" CFLAGS="-I/opt/homebrew/opt/llvm/include -march=armv8.5-a+dotprod -mtune=apple-m1" CPPFLAGS="-I/opt/homebrew/opt/llvm/include -march=armv8.5-a+dotprod -mtune=apple-m1" LDFLAGS="-L/opt/homebrew/opt/llvm/lib -fuse-ld=lld" Build/linux/build.sh --verbose --static --release --enable-pgo --pgo-videos="$(realpath SolLevante)"
+    - run: PATH="/opt/homebrew/opt/llvm/bin:$PATH" CMAKE_PREFIX_PATH="/opt/homebrew/opt/llvm" CFLAGS="-I/opt/homebrew/opt/llvm/include -march=armv8.5-a+dotprod -mtune=apple-m3" CPPFLAGS="-I/opt/homebrew/opt/llvm/include -march=armv8.5-a+dotprod -mtune=apple-m3" LDFLAGS="-L/opt/homebrew/opt/llvm/lib -fuse-ld=lld" Build/linux/build.sh --verbose --static --release --enable-pgo --pgo-videos="$(realpath SolLevante)"
     - uses: actions/upload-artifact@v7
       with:
         path: Bin/Release/SvtAv1EncApp
     - uses: softprops/action-gh-release@v3
       with:
         tag_name: ${{ needs.release.needs.tag.outputs.tag }}
+        target_commitish: ${{ github.sha }}
         files: Bin/Release/SvtAv1EncApp
 
   # Apple LLVM slightly slower
