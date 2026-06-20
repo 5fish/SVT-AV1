@@ -41,7 +41,7 @@ jobs:
   build-linux-x86-64:
     needs: [tag, release]
     runs-on: "ubuntu-latest"
-    step:
+    steps:
     - run: apt install fastfetch
     - run: fastfetch
     - uses: actions/checkout@v7
