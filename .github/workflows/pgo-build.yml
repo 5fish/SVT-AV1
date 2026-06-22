@@ -68,8 +68,12 @@ jobs:
     - run: xz --decompress SolLevante/SolLevante.y4m.xz
       shell: msys2 {0}
     - uses: ilammy/setup-nasm@v1
-    - run: curl -o sycl_windows.tar.gz https://github.com/intel/llvm/releases/latest/download/sycl_windows.tar.gz
-      shell: msys2 {0}
+    - uses: robinraju/release-downloader@v1
+      with:
+        repository: "intel/llvm"
+        fileName: "sycl_windows.tar.gz"
+        tarBall: false
+        zipBall: false
     - run: tar xzf sycl_windows.tar.gz && export PATH=$(realpath sycl_windows/bin):$PATH
       shell: msys2 {0}
     - uses: lukka/get-cmake@latest
