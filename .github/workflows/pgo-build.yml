@@ -128,7 +128,7 @@ jobs:
     #     files: Bin/Release/Windows_x86-64_x86-64-v3.tar.xz
 
 
-  # build-linux-x86-64:
+  build-linux-x86-64:
     needs: [tag, release]
     runs-on: "ubuntu-latest"
     steps:
