@@ -68,9 +68,9 @@ jobs:
           mingw-w64-clang-x86_64-nasm
           mingw-w64-clang-x86_64-ninja
     - run: fastfetch
-    - run: pacman --no-confirm -S mingw-w64-clang-x86_64-clang
-    - run: pacman --no-confirm -Rdd mingw-w64-clang-x86_64-libwinpthread mingw-w64-clang-x86_64-winpthreads
-    - run: pacman --no-confirm -S mingw-w64-clang-x86_64-mcfgthread mingw-w64-clang-x86_64-mcfgthread-libs
+    - run: pacman --noconfirm -S mingw-w64-clang-x86_64-clang
+    - run: pacman --noconfirm -Rdd mingw-w64-clang-x86_64-libwinpthread mingw-w64-clang-x86_64-winpthreads
+    - run: pacman --noconfirm -S mingw-w64-clang-x86_64-mcfgthread mingw-w64-clang-x86_64-mcfgthread-libs
     - uses: actions/checkout@v7
     - uses: actions/checkout@v7
       with:
