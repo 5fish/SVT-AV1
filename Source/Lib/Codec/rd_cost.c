@@ -313,8 +313,8 @@ static INLINE int32_t av1_cost_coeffs_txb_loop_cost_one_eob(const TranLow *const
     const int32_t level     = abs(v);
     const int32_t coeff_ctx = coeff_contexts[0];
 
-    assert((CLIP3(level, 1, 3) - 1) >= 0);
-    int32_t cost = coeff_costs->base_eob_cost[coeff_ctx][CLIP3(level, 1, 3) - 1];
+    assert((AOMMIN(level, 3) - 1) >= 0);
+    int32_t cost = coeff_costs->base_eob_cost[coeff_ctx][AOMMIN(level, 3) - 1];
 
     if (v != 0) {
         const int32_t sign = (v < 0) ? 1 : 0;
@@ -355,8 +355,8 @@ static INLINE int32_t av1_cost_coeffs_txb_loop_cost_eob(struct ModeDecisionConte
         const int32_t level     = abs(v);
         const int32_t coeff_ctx = coeff_contexts[pos];
 
-        assert((CLIP3(level, 1, 3) - 1) >= 0);
-        cost += coeff_costs->base_eob_cost[coeff_ctx][CLIP3(level, 1, 3) - 1];
+        assert((AOMMIN(level, 3) - 1) >= 0);
+        cost += coeff_costs->base_eob_cost[coeff_ctx][AOMMIN(level, 3) - 1];
 
         if (v != 0) {
             cost += cost_literal;
@@ -380,7 +380,7 @@ static INLINE int32_t av1_cost_coeffs_txb_loop_cost_eob(struct ModeDecisionConte
         const int32_t level     = abs(v);
         const int32_t coeff_ctx = coeff_contexts[0];
 
-        cost += coeff_costs->base_cost[coeff_ctx][CLIP3(level, 1, 3)];
+        cost += coeff_costs->base_cost[coeff_ctx][AOMMIN(level, 3)];
 
         if (v != 0) {
             const int32_t sign = (v < 0) ? 1 : 0;
@@ -501,9 +501,9 @@ uint64_t svt_av1_cost_coeffs_txb(struct ModeDecisionContext *ctx, uint8_t allow_
             const TranLow level     = abs(v);
             if (c == eob - 1) {
                 assert(coeff_ctx < 4);
-                update_cdf(ec_ctx->coeff_base_eob_cdf[txs_ctx][plane_type][coeff_ctx], CLIP3(level, 1, 3) - 1, 3);
+                update_cdf(ec_ctx->coeff_base_eob_cdf[txs_ctx][plane_type][coeff_ctx], AOMMIN(level, 3) - 1, 3);
             } else {
-                update_cdf(ec_ctx->coeff_base_cdf[txs_ctx][plane_type][coeff_ctx], CLIP3(level, 1, 3), 4);
+                update_cdf(ec_ctx->coeff_base_cdf[txs_ctx][plane_type][coeff_ctx], AOMMIN(level, 3), 4);
             }
 
             {
@@ -511,9 +511,9 @@ uint64_t svt_av1_cost_coeffs_txb(struct ModeDecisionContext *ctx, uint8_t allow_
                     assert(coeff_ctx < 4);
 #if CONFIG_ENTROPY_STATS
                     ++td->counts
-                          ->coeff_base_eob_multi[cdf_idx][txsize_ctx][plane_type][coeff_ctx][CLIP3(level, 1, 3) - 1];
+                          ->coeff_base_eob_multi[cdf_idx][txsize_ctx][plane_type][coeff_ctx][AOMMIN(level, 3) - 1];
                 } else {
-                    ++td->counts->coeff_base_multi[cdf_idx][txsize_ctx][plane_type][coeff_ctx][CLIP3(level, 1, 3)];
+                    ++td->counts->coeff_base_multi[cdf_idx][txsize_ctx][plane_type][coeff_ctx][AOMMIN(level, 3)];
 #endif
                 }
             }
