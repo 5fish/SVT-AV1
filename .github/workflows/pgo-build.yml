@@ -23,7 +23,6 @@ jobs:
     runs-on: "ubuntu-latest"
     steps:
     - uses: actions/checkout@v7
-    - run: git tag -f ${{ needs.tag.outputs.tag }} && git push origin ${{ needs.tag.outputs.tag }}
     - run: GH_TOKEN=${{ github.token }} gh release delete ${{ needs.tag.outputs.tag }} --cleanup-tag
       continue-on-error: true
     - uses: softprops/action-gh-release@v3
