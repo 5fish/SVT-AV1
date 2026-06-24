@@ -4,8 +4,8 @@
 # Thanks to studies and contributions from afed, Emre, Ironclad, Itachi Uchiha, Miss Ashenlight, Soda, SwareJonge, Trix, Yiss and other people in the community for discovering the method to build the fastest binary.
 
 name: pgo-build
-# on: workflow_dispatch
-on: push # testing only
+on: workflow_dispatch
+# on: push # testing only
 
 jobs:
   tag:
@@ -226,7 +226,7 @@ jobs:
         files: Bin/Release/Windows_arm64_armv8.7-a+crypto+sm4+sha3+fp16+sve+sve2+oryon-1.tar.xz
 
 
-  # Unfortunately the environment of GitHub Actions is too restrictive to run `perf`, and thus we're not able to optimize using BOLT here.  
+  # Unfortunately the environment of GitHub Actions is too restrictive to run `perf`, and thus we're not able to optimise using BOLT here.  
   # If you're trying to build it yourself, you should incorporate BOLT into your build:
   # 1. Add `-Wl,--emit-relocs,-znow` to `LDFLAGS`.
   # 2. Add these commands after `build.sh` PGO build:
