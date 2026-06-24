@@ -4,8 +4,8 @@
 # Thanks to studies and contributions from afed, Emre, Ironclad, Itachi Uchiha, Miss Ashenlight, Soda, SwareJonge, Trix, Yiss and other people in the community for discovering the method to build the fastest binary.
 
 name: pgo-build
-# on: workflow_dispatch
-on: push # testing only
+on: workflow_dispatch
+# on: push # testing only
 
 jobs:
   tag:
