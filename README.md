@@ -1,6 +1,6 @@
 ## 5fish/SVT-AV1
 
-**5fish/SVT-AV1** is a fork developed for both high efficiency and high fidelity AV1 encoding, and incorporates various tweaks, improvements, and features, alongside a set of easy-to-use parameters tailored specifically for 2D content such as anime and game.  
+**5fish/SVT-AV1** is a fork developed for both high efficiency and high fidelity AV1 encoding, and incorporates various tweaks, improvements, and features, alongside a set of easy-to-use parameters tailored specifically for 2D content such as anime and games.  
 
 This fork includes developments from other SVT-AV1 versions - see [Acknowledgements](#Acknowledgements) for more info.  
 
