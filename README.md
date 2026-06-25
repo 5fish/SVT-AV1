@@ -8,9 +8,12 @@ This fork includes developments from other SVT-AV1 versions - see [Acknowledgeme
 
 ...
 
-### Builds
+### Build
 
-...
+You can download our optimised builds for Windows, Linux, and macOS from [GitHub Releases](../../releases).  
+
+If you want to build it yourself, for the best performance, check [our note](.github/workflows/pgo-build.yml#L1-L4) in the building script.  
+
 
 ### Acknowledgements
 
