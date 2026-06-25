@@ -44,7 +44,7 @@ jobs:
 
           On x86-64 systems, no matter if you're on an Intel or AMD system, you should try these builds in the order of `icelake-server` + `znver5` ⇒ `znver2` ⇒ `x86-64-v3`. Some versions might not be available if the GitHub Actions runners we get this time don't support the respective features.  
 
-          Thanks to studies and contributions from afed, Emre, Ironclad, Itachi Uchiha, Miss Ashenlight, Soda, SwareJonge, Trix, Yiss and other people in the community for discovering the method to build the fastest binary. If you need to build a binary yourself, check [the note](https://github.com/5fish/SVT-AV1/blob/${{ github.sha }}/.github/workflows/pgo-build.yml#L1-L4) in the building script.  
+          Thanks to studies and contributions from afed, Emre, Ironclad, Itachi Uchiha, Miss Ashenlight, Soda, SwareJonge, Trix, Yiss and other people in the community for discovering the method to build the fastest binary. If you need to build a binary yourself, check [the note](../../blob/${{ github.sha }}/.github/workflows/pgo-build.yml#L1-L4) in the building script.  
         prerelease: false
         make_latest: "true"
 
