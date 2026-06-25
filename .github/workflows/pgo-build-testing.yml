@@ -42,7 +42,7 @@ jobs:
           macOS | arm64 | LLVM Project Clang LLD | `armv8.5-a+simd+crypto` + `apple-m3` | LTO PGO  
           macOS | x86-64 | LLVM Project Clang LLD | `skylake` | LTO PGO  
 
-          **This version is currently in testing**, which means although we've seen improvements on the sources we've tested, we're not yet sure that we'll see improvements and not degradations on different kinds of sources. You're recommended to test this out and report the result to us, but we don't recommend using this version for production.  
+          **This version is currently in testing**, which means although we've seen improvements on the sources we've tested, we're not yet sure that we'll see improvements and not degradations on different kinds of sources. You're recommended to test this out and report your results to us, but we don't recommend using this version for production.  
 
           On x86-64 systems, no matter if you're on an Intel or AMD system, you should try these builds in the order of `icelake-server` + `znver5` ⇒ `znver2` ⇒ `x86-64-v3`. Some versions might not be available if the GitHub Actions runners we get this time don't support the respective features.  
 
