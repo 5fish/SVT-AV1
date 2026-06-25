@@ -49,6 +49,13 @@ If you want to try and see how these 4 parameters perform, we highly recommend y
 
 </details>
 
+Using these 4 parameters, using FFmpeg as an example for input, this is what you would do to make a decent mini encode:  
+```sh
+ffmpeg -i SOURCE.mkv -strict -1 -f yuv4mpegpipe -pix_fmt yuv420p10le - | SvtAv1EncApp -b OUTPUT.ivf -i - --preset 2 --crf 26.00 --lineart-psy-bias 3 --texture-psy-bias 3 --color-primaries 1 --transfer-characteristics 1 --matrix-coefficients 1
+```
+
+For advanced users, you can check [Parameters.md](Docs/Parameters.md) for all available parameters and explanations on what they do. Checking Parameters.md is much better than checking `--help` as detailed explanations are only available in Parameters.md.  
+
 ### Build
 
 You can download our optimised builds for Windows, Linux, and macOS from [GitHub Releases](../../releases).  
