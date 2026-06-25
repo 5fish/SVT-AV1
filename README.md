@@ -6,55 +6,55 @@ This fork includes developments from other SVT-AV1 versions - see [Acknowledgeme
 
 ### Usage
 
-Especially for 2D content, we've incoperated all 5fish/SVT-AV1's features into 4 simple parameters below.  
-We recommend you to start from using these 4 parameters.  
+Especially helpful for 2D content, we've incorporated various 5fish/SVT-AV1 features into 4 simple parameters below.  
+We recommend you to start with these 4 parameters.  
 
-If you want to try and see how these 4 parameters perform, we highly recommend you to not take parameters from other variants and instead start fresh. The reason is that many newer features in 5fish/ conflict with older features used in other variants.  
+If you want to try and see how these 4 parameters perform, we highly recommend against taking parameter sets from other variants, and instead, starting fresh. Many newer features in 5fish/SVT-AV1 conflict with older features typically used in other variants.  
 
 <details>
 <summary><b><code>--preset</code> adjusts the speed of the encoder.</b></summary>
 
 ¶ For the best encode quality, we only recommend `--preset 2`.  
-¶ However, if you want the encode to be faster, you can try `--preset 4` and at most `--preset 6`.  
-¶ On the other hand, even if you have time to burn, as of right now, we don't recommend `--preset 0`. `--preset 2` has a smart system to filter candidates, while `--preset 0` tests through all the candidates. This smart filtering system often outperforms doing the full tests, and for this reason `--preset 2` often gives better result than `--preset 0`.  
+¶ However, if you'd like a faster encode, you can try `--preset 4`, or at most, `--preset 6`.  
+¶ On the other hand, even if you have time to burn, as of right now, we don't recommend `--preset 0`. `--preset 2` has a smart system to filter candidates, while `--preset 0` tests through all the candidates. This smart filtering system often outperforms doing the full tests, and for this reason `--preset 2` often gives a better result than `--preset 0`.  
 
 </details>
 <details>
 <summary><b><code>--crf</code> adjusts the quality and thus filesize of the encode.</b></summary>
 
-¶ In general, we call encodes with `--crf [<= 12.00]` high fidelity encodes.  
-¶ We call encodes around `--crf [16.00 ~ 20.00]` higher quality encodes.  
-¶ And we call encodes around `--crf [24.00 ~ 28.00]` bigger mini encodes, and `--crf [32.00 ~ 40.00]` really mini encodes.  
+¶ In general, `--crf [<= 12.00]` is reserved for "high fidelity" encodes.  
+¶ The `--crf [16.00 ~ 20.00]` range covers "high quality" encodes.  
+¶ `--crf [24.00 ~ 28.00]` is suitable for larger "mini" encodes, and `--crf [32.00 ~ 40.00]` for truly "mini" encodes.  
 ¶ You can make a test encode, have a look at the quality and the filesize you get, and decide what `--crf` suits your situation.  
 
 </details>
 <details>
 <summary><b><code>--lineart-psy-bias</code> and <code>--texture-psy-bias</code> tunes detail retention in 5fish/SVT-AV1.</b></summary>
 
-¶ Generally speaking, the higher you set the `-psy-bias`es, the more aggressive the encoder will try to retain information.  
+¶ Generally speaking, the higher you set the `-psy-bias`es, the more aggressively the encoder will try to retain information.  
 ¶ If you see a detail that the encoder fails to retain very well, apart from using better `--crf`, you can try to increase `--lineart-psy-bias` or `--texture-psy-bias` to encourage the encoder to retain it.  
 
-¶ To use the `-psy-bias`es, you're supposed to set both of them together, each to a value fitting to how aggressive you want to retain the respective detail. It's not recommended to omit one of them, or both.  
+¶ To use the `-psy-bias`es, you're supposed to set both of them together, each to a value fitting to how aggressively you want to retain the respective detail. It's not recommended to omit one of them, or both.  
 
-¶ For high quality and high fidelity encode, a good starting point might be `--lineart-psy-bias 5 --texture-psy-bias 4`.  
+¶ For high quality and high fidelity encodes, a good starting point might be `--lineart-psy-bias 5 --texture-psy-bias 4`.  
 ¶ If your source has weak lineart, you might want to use `--lineart-psy-bias [6-7]`.  
 ¶ If your source has heavy texture or heavy noise, you might want to use `--texture-psy-bias [5-7]`.  
-¶ On the other hand, if your source doesn't really have much texture at all, you might want to reduce `--texture-psy-bias` to `3` or lower, saving some filesize while not losing any quality.  
-¶ Similarly, if everything in your source is essentially texture, you might want to reduce `--lineart-psy-bias` to `3`, to allow the encoder to go all in in texture retention.  
+¶ On the other hand, if your source doesn't really have much texture at all, you might want to reduce `--texture-psy-bias` to `3` or lower to save on filesize without sacrificing quality.  
+¶ Similarly, if everything in your source is essentially texture, you might want to reduce `--lineart-psy-bias` to `3` to allow the encoder to go all in on texture retention.  
 
-¶ For mini encode, a good starting point might be `--lineart-psy-bias [2 ~ 3] --texture-psy-bias [2 ~ 3]`.  
-¶ You can set them higher following the same ideas as high quality and high fidelity encode, but pay attention that, in mini encodes, with some noisy sources, setting `--texture-psy-bias` too high might result in blocking, and setting `--lineart-psy-bias` too high might be a little bit wasteful.  
+¶ For mini encodes, a good starting point might be `--lineart-psy-bias [2 ~ 3] --texture-psy-bias [2 ~ 3]`.  
+¶ You can set them higher following the same ideas as high quality and high fidelity encodes, but keep in mind that, in mini encodes, with some noisy sources, setting `--texture-psy-bias` too high could result in blocking, and setting `--lineart-psy-bias` too high may be slightly wasteful for efficiency.  
 
-¶ You should make test encodes, see how each value perform, and then decide on the values you would use for this source.  
+¶ You should make test encodes, see how each value performs, and then decide on the values to use for your source.  
 
 </details>
 
-Using these 4 parameters, using FFmpeg as an example for input, this is what you would do to make a decent mini encode:  
+Here is an example command for a decent mini encode, using these 4 parameters and FFmpeg for input:  
 ```sh
 ffmpeg -i SOURCE.mkv -strict -1 -f yuv4mpegpipe -pix_fmt yuv420p10le - | SvtAv1EncApp -b OUTPUT.ivf -i - --preset 2 --crf 26.00 --lineart-psy-bias 3 --texture-psy-bias 3 --color-primaries 1 --transfer-characteristics 1 --matrix-coefficients 1
 ```
 
-For advanced users, you can check [Parameters.md](Docs/Parameters.md) for all available parameters and explanations on what they do. Checking Parameters.md is much better than checking `--help` as detailed explanations are only available in Parameters.md.  
+For advanced users, you can check [Parameters.md](Docs/Parameters.md) for all available parameters and explanations on what they do. Checking Parameters.md is highly suggested over using `--help`, as detailed explanations are only available in Parameters.md.  
 
 ### Build
 
@@ -76,7 +76,8 @@ This fork and its feature set stands on the work of various entities and individ
 
 A huge thank you goes out to [Akatsumekusa](https://github.com/Akatmks), the main driving force behind new developments and continued maintenance on this fork.
 
-In addition, thank you to the mainline team for their work on [SVT-AV1](https://gitlab.com/AOMediaCodec/SVT-AV1), the psy-ex team for their work on [SVT-AV1-PSY](https://github.com/psy-ex/svt-av1-psy) and its successors [-HDR](https://github.com/juliobbv-p/svt-av1-hdr) and [-PSYEX](https://github.com/BlueSwordM/svt-av1-psyex), and Trix for their work on [-Essential](https://github.com/nekotrix/SVT-AV1-Essential). Some features and improvements incorporated in this fork are pulled or adapted from the aforementioned sources.
+In addition, thank you to the mainline team for their work on [SVT-AV1](https://gitlab.com/AOMediaCodec/SVT-AV1), the psy-ex team for their work on [SVT-AV1-PSY](https://github.com/psy-ex/svt-av1-psy) and its successors [-HDR](https://github.com/juliobbv-p/svt-av1-hdr) and [-PSYEX](https://github.com/BlueSwordM/svt-av1-psyex), and Trix for their work on [-Essential](https://github.com/nekotrix/SVT-AV1-Essential).  
+Some features and improvements incorporated in this fork are pulled or adapted from the aforementioned sources.
 
 Lastly, thank you to the many members within the AV1 encoding communities for contributing in various aspects, whether it be in the form of new & improved code, issue reports, test results, knowledge, or ideas.
 
