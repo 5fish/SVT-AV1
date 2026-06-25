@@ -85,7 +85,7 @@ Lastly, thank you to the many members within the AV1 encoding communities for co
 
 *5fish/SVT-AV1 does not feature license modifications from mainline SVT-AV1.*
 
-Up to v0.8.7, SVT-AV1 is licensed under the BSD-2-clause license and the Alliance for Open Media Patent License 1.0.
-See [LICENSE](LICENSE-BSD2.md) and [PATENTS](PATENTS.md) for details.
-Starting from v0.9, SVT-AV1 is licensed under the BSD-3-clause clear license and the Alliance for Open Media Patent License 1.0.
+Up to v0.8.7, SVT-AV1 is licensed under the BSD-2-clause license and the Alliance for Open Media Patent License 1.0.  
+See [LICENSE](LICENSE-BSD2.md) and [PATENTS](PATENTS.md) for details.  
+Starting from v0.9, SVT-AV1 is licensed under the BSD-3-clause clear license and the Alliance for Open Media Patent License 1.0.  
 See [LICENSE](LICENSE.md) and [PATENTS](PATENTS.md) for details.
