@@ -6,7 +6,7 @@ This fork includes developments from other SVT-AV1 versions - see [Acknowledgeme
 
 ### Usage
 
-Especially helpful for 2D content, we've incorporated various 5fish/SVT-AV1 features into 4 simple parameters below.  
+We've incorporated all 5fish/SVT-AV1 features for 2D content into 4 simple parameters below.  
 We recommend you to start with these 4 parameters.  
 
 If you want to try and see how these 4 parameters perform, we highly recommend against taking parameter sets from other variants, and instead, starting fresh. Many newer features in 5fish/SVT-AV1 conflict with older features typically used in other variants.  
@@ -22,9 +22,9 @@ If you want to try and see how these 4 parameters perform, we highly recommend a
 <details>
 <summary><b><code>--crf</code> adjusts the quality and thus filesize of the encode.</b></summary>
 
-¶ In general, `--crf [<= 12.00]` is reserved for "high fidelity" encodes.  
-¶ The `--crf [16.00 ~ 20.00]` range covers "high quality" encodes.  
-¶ `--crf [24.00 ~ 28.00]` is suitable for larger "mini" encodes, and `--crf [32.00 ~ 40.00]` for truly "mini" encodes.  
+¶ In general, our community calls encodes with `--crf [<= 12.00]` high fidelity encodes.  
+¶ We call encodes around `--crf [16.00 ~ 20.00]` higer quality encodes.  
+¶ We call encodes around `--crf [24.00 ~ 28.00]` larger mini encodes, and encodes with `--crf [32.00 ~ 40.00]` tiny mini encodes.  
 ¶ You can make a test encode, have a look at the quality and the filesize you get, and decide what `--crf` suits your situation.  
 
 </details>
@@ -39,11 +39,11 @@ If you want to try and see how these 4 parameters perform, we highly recommend a
 ¶ For high quality and high fidelity encodes, a good starting point might be `--lineart-psy-bias 5 --texture-psy-bias 4`.  
 ¶ If your source has weak lineart, you might want to use `--lineart-psy-bias [6-7]`.  
 ¶ If your source has heavy texture or heavy noise, you might want to use `--texture-psy-bias [5-7]`.  
-¶ On the other hand, if your source doesn't really have much texture at all, you might want to reduce `--texture-psy-bias` to `3` or lower to save on filesize without sacrificing quality.  
+¶ On the other hand, if your source doesn't really have much texture at all, you might want to reduce `--texture-psy-bias` to `3` or lower to save on filesize without losing any visual quality.  
 ¶ Similarly, if everything in your source is essentially texture, you might want to reduce `--lineart-psy-bias` to `3` to allow the encoder to go all in on texture retention.  
 
 ¶ For mini encodes, a good starting point might be `--lineart-psy-bias [2 ~ 3] --texture-psy-bias [2 ~ 3]`.  
-¶ You can set them higher following the same ideas as high quality and high fidelity encodes, but keep in mind that, in mini encodes, with some noisy sources, setting `--texture-psy-bias` too high could result in blocking, and setting `--lineart-psy-bias` too high may be slightly wasteful for efficiency.  
+¶ You can set them higher following the same ideas as high quality and high fidelity encodes, but pay attention that, in mini encodes, with some noisy sources, setting `--texture-psy-bias` too high could induce blocking.  
 
 ¶ You should make test encodes, see how each value performs, and then decide on the values to use for your source.  
 
