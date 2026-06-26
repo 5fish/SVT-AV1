@@ -4814,6 +4814,14 @@ static void copy_api_from_app(
     // `-psy-bias`
     scs->static_config.lineart_psy_bias = config_struct->lineart_psy_bias;
     scs->static_config.texture_psy_bias = config_struct->texture_psy_bias;
+    if (scs->static_config.lineart_psy_bias == DEFAULT && scs->static_config.texture_psy_bias == DEFAULT) {
+        scs->static_config.lineart_psy_bias = 0.0;
+        scs->static_config.texture_psy_bias = 0.0;
+    }
+    else if (scs->static_config.lineart_psy_bias == DEFAULT)
+        scs->static_config.lineart_psy_bias = AOMMIN(scs->static_config.texture_psy_bias, 2);
+    else if (scs->static_config.texture_psy_bias == DEFAULT)
+        scs->static_config.texture_psy_bias = AOMMIN(scs->static_config.lineart_psy_bias, 2);
     scs->static_config.noise_psy_bias = config_struct->noise_psy_bias;
     scs->static_config.lineart_psy_bias_easter_egg = config_struct->lineart_psy_bias_easter_egg;
     scs->static_config.texture_psy_bias_easter_egg = config_struct->texture_psy_bias_easter_egg;

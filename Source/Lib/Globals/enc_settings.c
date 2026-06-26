@@ -1488,8 +1488,8 @@ EbErrorType svt_av1_set_default_params(EbSvtAv1EncConfiguration *config_ptr) {
     config_ptr->tx_bias                           = 0;
     config_ptr->low_q_taper                       = 0;
     config_ptr->noise_level_thr                   = DEFAULT;
-    config_ptr->lineart_psy_bias                  = 0.0;
-    config_ptr->texture_psy_bias                  = 0.0;
+    config_ptr->lineart_psy_bias                  = DEFAULT;
+    config_ptr->texture_psy_bias                  = DEFAULT;
     config_ptr->noise_psy_bias                    = DEFAULT;
     config_ptr->lineart_psy_bias_easter_egg       = 0;
     config_ptr->texture_psy_bias_easter_egg       = 0;
