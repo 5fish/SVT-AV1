@@ -19,7 +19,7 @@
 /**************************************
  * Defines
  **************************************/
-#define DEFAULT_QP 35
+#define DEFAULT_QP 28
 // Have an unusual magic number to reduce probablity of user using them
 #define DEFAULT_TBR 2000513
 
