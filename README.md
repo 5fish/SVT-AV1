@@ -23,7 +23,7 @@ If you want to try and see how these 4 parameters perform, we highly recommend a
 <summary><b><code>--crf</code> adjusts the quality and thus filesize of the encode.</b></summary>
 
 ¶ In general, our community calls encodes with `--crf [<= 12.00]` high fidelity encodes.  
-¶ We call encodes around `--crf [16.00 ~ 20.00]` higer quality encodes.  
+¶ We call encodes around `--crf [16.00 ~ 20.00]` higher quality encodes.  
 ¶ We call encodes around `--crf [24.00 ~ 28.00]` larger mini encodes, and encodes with `--crf [32.00 ~ 40.00]` tiny mini encodes.  
 ¶ You can make a test encode, have a look at the quality and the filesize you get, and decide what `--crf` suits your situation.  
 
