@@ -453,16 +453,25 @@ SvtAv1EncApp -i in.y4m -b out.ivf --roi-map-file roi_map.txt
 
 | **Configuration file parameter** | **Command line**      | **Range**       | **Default**       | **Description**                                                                                                                                              |
 |----------------------------------|-----------------------|-----------------|-------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **Keyint**                       | --keyint              | [-2-`(2^31)-1`] | -2                | GOP size (frames), use `s` suffix for seconds (SvtAv1EncApp only) [-2: ~10 seconds (up to 305 frames), -1: "infinite" only for CRF, 0: == -1]                |
-| **MinKeyint**                    | --min-keyint          | [-1-`(2^31)-1`] | -1                | Min GOP size (frames) when using `--scd` [-1: auto, 0: no minimum]                                                                                           |
+| **SceneChangeDetection**         | --scd                 | [0-1]           | 1                 | Scene change detection control [`--balancing-q-bias` flavoured scd when `--balancing-q-bias 1` is used] [Please set `--scd 0` if you're using an external scene detection] |
+| **Keyint**                       | --keyint              | [-2-`(2^31)-1`] | -2                | GOP size (frames) [-2: 257 frames, or 321 frames when `--balancing-q-bias 1` is used, -1: "infinite" only for CRF and setting `--scd 0`, 0: "infinite" only for CRF] |
+| **MinKeyint**                    | --min-keyint          | [-1-`(2^31)-1`] | -1                | Min GOP size (frames) [-1: 33 frames, or 129 frames when `--balancing-q-bias 1` is used, 0: = 1]                                                             |
 | **IntraRefreshType**             | --irefresh-type       | [1-2]           | 2                 | Intra refresh type [1: FWD Frame (Open GOP), 2: KEY Frame (Closed GOP)]                                                                                      |
-| **SceneChangeDetection**         | --scd                 | [0-1]           | 0                 | Scene change detection control                                                                                                                               |
 | **Lookahead**                    | --lookahead           | [-1,0-120]      | -1                | Number of frames in the future to look ahead, beyond minigop, temporal filtering, and rate control [-1: auto]                                                |
 | **HierarchicalLevels**           | --hierarchical-levels | [2-5]           | <=M12:5 , else: 4 | Set hierarchical levels beyond the base layer [2: 3 temporal layers, 3: 4 temporal layers, 5: 6 temporal layers]                                             |
 | **PredStructure**                | --pred-struct         | [1-2]           | 2                 | Set prediction structure [1: low delay, 2: random access]                                                                                                    |
 | **ForceKeyFrames**               | --force-key-frames    | any string      | None              | Force key frames at the comma separated specifiers. `#f` for frames, `#.#s` for seconds                                                                      |
 | **EnableDg**                     | --enable-dg           | [0-1]           | 1                 | Enable Dynamic GoP. The algorithm changes the hierarchical structure based on the content                                                                    |
 | **StartupMgSize**                | --startup-mg-size     | [0, 2, 3, 4]    | 0                 | Specify another mini-gop configuration for the first mini-gop after the key-frame [0: OFF, 2: 3 temporal layers, 3: 4 temporal layers, 4: 5 temporal layers] |
+
+#### GOP reference  
+
+Assuming `--lineart-psy-bias` and `--texture-psy-bias` is used:  
+
+* Default: Scene change detection enabled with 321 maximum GOP length and 129 minimum GOP length.  
+* `--keyint 0`: Scene change detection enabled with infinite maximum GOP length and 129 minimum GOP length.  
+* `--scd 0 --keyint 0`: Scene change detection disabled. Using infinite maximum GOP length. Suitable when used with external scene detection.  
+* `--keyint -1`: Scene change detection disabled. Using infinite maximum GOP length. Suitable when used with external scene detection.  
 
 ### AV1 Specific Options
 

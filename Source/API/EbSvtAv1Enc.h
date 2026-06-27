@@ -652,7 +652,7 @@ typedef struct EbSvtAv1EncConfiguration {
 
     /* Flag to enable the scene change detection algorithm.
      *
-     * Default is 0. */
+     * Default is 1. */
     uint32_t scene_change_detection;
 
     /**
@@ -817,12 +817,6 @@ typedef struct EbSvtAv1EncConfiguration {
      *
      */
     Bool force_key_frames;
-
-    /**
-     * @brief Signal to the library to treat intra_period_length as seconds and
-     * multiply by fps_num/fps_den.
-     */
-    Bool multiply_keyint;
 
     // reference scaling parameters
     /**
