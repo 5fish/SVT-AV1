@@ -453,8 +453,8 @@ SvtAv1EncApp -i in.y4m -b out.ivf --roi-map-file roi_map.txt
 
 | **Configuration file parameter** | **Command line**      | **Range**       | **Default**       | **Description**                                                                                                                                              |
 |----------------------------------|-----------------------|-----------------|-------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **SceneChangeDetection**         | --scd                 | [0-1]           | 1                 | Scene change detection control [`--balancing-q-bias` flavoured scd when `--balancing-q-bias 1` is used] [Please set `--scd 0` if you're using an external scene detection] |
-| **Keyint**                       | --keyint              | [-2-`(2^31)-1`] | -2                | GOP size (frames) [-2: 257 frames, or 321 frames when `--balancing-q-bias 1` is used, -1: "infinite" only for CRF and setting `--scd 0`, 0: "infinite" only for CRF] |
+| **SceneChangeDetection**         | --scd                 | [0-1]           | 1                 | Scene change detection control [`--balancing-q-bias` flavoured scd when `--balancing-q-bias 1` is used] [Check GOP parameters reference below]               |
+| **Keyint**                       | --keyint              | [-2-`(2^31)-1`] | -2                | GOP size (frames) [-2: 257 frames, or 321 frames when `--balancing-q-bias 1` is used, -1: "infinite" only for CRF and setting `--scd 0`, 0: "infinite" only for CRF] [Check GOP parameters reference below] |
 | **MinKeyint**                    | --min-keyint          | [-1-`(2^31)-1`] | -1                | Min GOP size (frames) [-1: 33 frames, or 129 frames when `--balancing-q-bias 1` is used, 0: = 1]                                                             |
 | **IntraRefreshType**             | --irefresh-type       | [1-2]           | 2                 | Intra refresh type [1: FWD Frame (Open GOP), 2: KEY Frame (Closed GOP)]                                                                                      |
 | **Lookahead**                    | --lookahead           | [-1,0-120]      | -1                | Number of frames in the future to look ahead, beyond minigop, temporal filtering, and rate control [-1: auto]                                                |
@@ -464,7 +464,7 @@ SvtAv1EncApp -i in.y4m -b out.ivf --roi-map-file roi_map.txt
 | **EnableDg**                     | --enable-dg           | [0-1]           | 1                 | Enable Dynamic GoP. The algorithm changes the hierarchical structure based on the content                                                                    |
 | **StartupMgSize**                | --startup-mg-size     | [0, 2, 3, 4]    | 0                 | Specify another mini-gop configuration for the first mini-gop after the key-frame [0: OFF, 2: 3 temporal layers, 3: 4 temporal layers, 4: 5 temporal layers] |
 
-#### GOP reference  
+#### GOP parameters reference  
 
 Assuming `--lineart-psy-bias` and `--texture-psy-bias` is used:  
 
