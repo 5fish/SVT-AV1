@@ -62,6 +62,8 @@ You can download our optimised builds for Windows, Linux, and macOS from [GitHub
 
 If you want to build it yourself, for the best performance, check [our note](.github/workflows/pgo-build.yml#L1-L4) in the building script.  
 
+In addition to standalone encoder, HandBrake builds with 5fish/SVT-AV1 are available [here](https://github.com/Uranite/HandBrake-5fish-SVT-AV1#handbrake-5fish-svt-av1).  
+
 ### Contributions
 
 You're welcome to report any encoding issues to us. Bugs and crashes aside, if you have a source where you think the encoder is performing poorly, we're happy to have a look at it and see if we can improve the encoding quality in any way.  
