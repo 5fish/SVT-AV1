@@ -9,7 +9,7 @@ This fork includes developments from other SVT-AV1 versions - see [Acknowledgeme
 We've incorporated all 5fish/SVT-AV1 features for 2D content into 4 simple parameters below.  
 We recommend you to start with these 4 parameters.  
 
-If you want to try and see how these 4 parameters perform, we highly recommend against taking parameter sets from other variants, and instead, starting fresh. Many newer features in 5fish/SVT-AV1 conflict with older features typically used in other variants.  
+When you're trying these 4 parameters, we highly recommend you to start with these parameters on their own, and not take any parameters from other SVT-AV1 variants. Many newer features in 5fish/SVT-AV1 conflict with older features typically used in other variants.  
 
 <details>
 <summary><b><code>--preset</code> adjusts the speed of the encoder.</b></summary>
@@ -42,7 +42,7 @@ If you want to try and see how these 4 parameters perform, we highly recommend a
 ¶ On the other hand, if your source doesn't really have much texture at all, you might want to reduce `--texture-psy-bias` to `3` or lower to save on filesize without losing any visual quality.  
 ¶ Similarly, if everything in your source is essentially texture, you might want to reduce `--lineart-psy-bias` to `3` to allow the encoder to go all in on texture retention.  
 
-¶ For mini encodes, a good starting point might be `--lineart-psy-bias [2 ~ 3] --texture-psy-bias [2 ~ 3]`.  
+¶ For mini encodes, a good starting point might be `--lineart-psy-bias 3 --texture-psy-bias 3`.  
 ¶ You can set them higher following the same ideas as high quality and high fidelity encodes, but pay attention that, in mini encodes, with some noisy sources, setting `--texture-psy-bias` too high could induce blocking.  
 
 ¶ You should make test encodes, see how each value performs, and then decide on the values to use for your source.  
