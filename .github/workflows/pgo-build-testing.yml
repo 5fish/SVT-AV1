@@ -258,7 +258,7 @@ jobs:
       continue-on-error: true
     - run: Bin/Release/SvtAv1EncApp -i SolLevante/SolLevante.y4m -b /dev/null --preset 4 --crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5
       if: ${{ steps.build-avx512.outcome != 'failure' }}
-    - run: cd Bin/Release && tar cJf Linux_x86-64_znver2.tar.xz SvtAv1EncApp && cd ../..
+    - run: cd Bin/Release && tar cJf Linux_x86-64_icelake-server+znver5.tar.xz SvtAv1EncApp && cd ../..
       if: ${{ steps.build-avx512.outcome != 'failure' }}
     - uses: softprops/action-gh-release@v3
       with:
