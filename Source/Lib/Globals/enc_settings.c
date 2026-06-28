@@ -3168,7 +3168,6 @@ EB_API EbErrorType svt_av1_enc_parse_parameter(EbSvtAv1EncConfiguration *config_
         {"enable-restoration", &config_struct->enable_restoration_filtering},
         {"enable-mfmv", &config_struct->enable_mfmv},
         {"psy-bias-sharpness-rounding", &config_struct->psy_bias_sharpness_rounding},
-        {"min-keyint", &config_struct->min_intra_period_length},
         {"tile-rows", &config_struct->tile_rows},
         {"tile-columns", &config_struct->tile_columns},
         {"ss", &config_struct->target_socket},
