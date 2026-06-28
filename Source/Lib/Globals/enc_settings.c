@@ -449,6 +449,10 @@ EbErrorType svt_av1_verify_settings(SequenceControlSet *scs) {
         SVT_ERROR("Instance %u: The minimum intra period must be [-1, 2^31-2]  \n", channel_number + 1);
         return_error = EB_ErrorBadParameter;
     }
+    if (config->min_intra_period_length > config->intra_period_length && config->intra_period_length != -1) {
+        SVT_ERROR("Instance %u: The minimum intra period must be lower than the maximum intra period. \n", channel_number + 1);
+        return_error = EB_ErrorBadParameter;
+    }
     if (config->balancing_q_bias) {
         if (config->intra_period_length % (1 << config->hierarchical_levels) != 0 && config->intra_period_length != -1)
             SVT_WARN("Instance %u: The currently set keyint is vulnerable to random bad frames. It is only recommended to use keyint that is (N * 32) + 1 where N is a positive integer.\n", channel_number + 1);
@@ -457,13 +461,6 @@ EbErrorType svt_av1_verify_settings(SequenceControlSet *scs) {
     }
     if (config->min_intra_period_length < (1 << config->hierarchical_levels) && config->min_intra_period_length != 0)
         SVT_WARN("Instance %u: The currently set min-keyint might result in excessive keyframes, which will result in worse efficiency. It is only recommended to use min-keyint that is (N * 32) + 1 where N is a positive integer.\n", channel_number + 1);
-    if (config->scene_change_detection) {
-        if (config->intra_period_length != -1 && config->min_intra_period_length > config->intra_period_length) {
-            SVT_ERROR("Instance %u: The minimum intra period must be lower than "
-                "the maximum intra period. \n", channel_number + 1);
-            return_error = EB_ErrorBadParameter;
-        }
-    }
 
     if (config->intra_refresh_type > 2 || config->intra_refresh_type < 1) {
         SVT_ERROR("Instance %u: Invalid intra Refresh Type [1-2]\n", channel_number + 1);
