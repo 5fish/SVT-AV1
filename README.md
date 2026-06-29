@@ -58,11 +58,10 @@ For advanced users, you can check [Parameters.md](Docs/Parameters.md) for all av
 
 ### Build
 
-You can download our optimised builds for Windows, Linux, and macOS from [GitHub Releases](../../releases).  
-
+For standalone encoder, you can download our optimised builds for Windows, Linux, and macOS from [GitHub Releases](../../releases).  
 If you want to build it yourself, for the best performance, check [our note](.github/workflows/pgo-build.yml#L1-L4) in the building script.  
 
-In addition to standalone encoder, HandBrake builds with 5fish/SVT-AV1 are available [here](https://github.com/Uranite/HandBrake-5fish-SVT-AV1#handbrake-5fish-svt-av1).  
+HandBrake builds are also available [here](https://github.com/Uranite/HandBrake-5fish-SVT-AV1#handbrake-5fish-svt-av1) thanks to Yiss.  
 
 ### Contributions
 
