@@ -99,7 +99,7 @@ jobs:
       with:
         path: hdr10plus_tool
         repository: quietvoid/hdr10plus_tool
-    - run: cd hdr10plus_tool && cargo cinstall -C hdr10plus_tool --release && cd ..
+    - run: cd hdr10plus_tool && cargo cinstall --release && cd ..
     # - run: cmake --fresh -B svt_build -G Ninja -DCMAKE_C_COMPILER="clang" -DCMAKE_CXX_COMPILER="clang++" -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DBUILD_APPS=ON -DTHREADS_PREFER_PTHREAD_FLAG=OFF -DCMAKE_USE_WIN32_THREADS_INIT=ON -DSVT_AV1_LTO=OFF -DENABLE_AVX512=ON -DCMAKE_C_FLAGS_RELEASE="-O3 -flto=full -march=icelake-server -mtune=znver5 -mprefer-vector-width=512 -fno-exceptions -fno-rtti -DNDEBUG -Wno-unused-command-line-argument -Wno-deprecated -fprofile-generate=SolLevante -ftemporal-profile" -DCMAKE_CXX_FLAGS_RELEASE="-O3 -flto=full -march=icelake-server -mtune=znver5 -mprefer-vector-width=512 -fno-exceptions -fno-rtti -DNDEBUG -Wno-unused-command-line-argument -Wno-deprecated -fprofile-generate=SolLevante -ftemporal-profile" -DCMAKE_EXE_LINKER_FLAGS_RELEASE="-fuse-ld=lld -flto=full" && ninja -v -C svt_build
     # - id: profile-avx512
     #   run: Bin/Release/SvtAv1EncApp.exe -i SolLevante/SolLevante.y4m -b /dev/null --preset 2 --crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5
