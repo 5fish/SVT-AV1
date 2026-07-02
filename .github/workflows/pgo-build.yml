@@ -273,35 +273,35 @@ jobs:
   # perf2bolt -p SolLevante/perf.data -o SolLevante/perf.fdata Bin/Release/SvtAv1EncApp
   # llvm-bolt Bin/Release/SvtAv1EncApp -o Bin/Release/SvtAv1EncApp.bolt -data=SolLevante/perf.fdata --relocs --remove-symtab --eliminate-unreachable --hugify --align-blocks --reorder-blocks=ext-tsp --reorder-functions-use-hot-size --use-edge-counts --min-branch-clusters --split-functions --split-strategy=profile2 --split-eh --split-all-cold --frame-opt=all --frame-opt-rm-stores --reg-reassign --use-aggr-reg-reassign --inline-memcpy --inline-ap --shorten-instructions --infer-fall-throughs --infer-stale-profile --equalize-bb-counts --iterative-guess --indirect-call-promotion=all --indirect-call-promotion-use-mispredicts --icp-eliminate-loads --jump-tables=aggressive --simplify-rodata-loads --plt=all --icf=1 --peepholes=all --eliminate-unreachable --elim-link-veneers --group-stubs --fix-block-counts --fix-func-counts --match-profile-with-function-hash --match-with-call-graph --use-compact-aligner --preserve-blocks-alignment --x86-align-branch-boundary-hot-only --x86-strip-redundant-address-size --tail-duplication=cache --simplify-conditional-tail-calls --sctc-mode=heuristic --dyno-stats --icp-mp-threshold=1
   # ```
-  # build-linux-x86-64:
-  #   needs: [tag, release]
-  #   runs-on: "ubuntu-latest"
-  #   steps:
-  #   - uses: ConorMacBride/install-package@v1
-  #     with:
-  #       apt: neofetch
-  #   - run: neofetch
-  #   - uses: actions/checkout@v7
-  #   - uses: actions/checkout@v7
-  #     with:
-  #       path: SolLevante
-  #       ref: sollevante
-  #   - run: xz --decompress SolLevante/SolLevante.y4m.xz
-  #   - uses: ilammy/setup-nasm@v1
-  #   - uses: ZhongRuoyu/setup-llvm@v0
-  #   - uses: dtolnay/rust-toolchain@stable
-  #   - uses: cargo-bins/cargo-binstall@main
-  #   - run: cargo binstall cargo-c
-  #   - uses: actions/checkout@v7
-  #     with:
-  #       path: dovi_tool
-  #       repository: quietvoid/dovi_tool
-  #   - run: cd dovi_tool/dolby_vision && cargo cinstall --verbose --release --prefix ../../rustlibs && cd ../..
-  #   - uses: actions/checkout@v7
-  #     with:
-  #       path: hdr10plus_tool
-  #       repository: quietvoid/hdr10plus_tool
-  #   - run: cd hdr10plus_tool/hdr10plus && cargo cinstall --verbose --release --prefix ../../rustlibs && cd ../..
+  build-linux-x86-64:
+    needs: [tag, release]
+    runs-on: "ubuntu-latest"
+    steps:
+    - uses: ConorMacBride/install-package@v1
+      with:
+        apt: neofetch
+    - run: neofetch
+    - uses: actions/checkout@v7
+    - uses: actions/checkout@v7
+      with:
+        path: SolLevante
+        ref: sollevante
+    - run: xz --decompress SolLevante/SolLevante.y4m.xz
+    - uses: ilammy/setup-nasm@v1
+    - uses: ZhongRuoyu/setup-llvm@v0
+    - uses: dtolnay/rust-toolchain@stable
+    - uses: cargo-bins/cargo-binstall@main
+    - run: cargo binstall cargo-c
+    - uses: actions/checkout@v7
+      with:
+        path: dovi_tool
+        repository: quietvoid/dovi_tool
+    - run: cd dovi_tool/dolby_vision && sudo cargo cinstall --verbose --release && cd ../..
+    - uses: actions/checkout@v7
+      with:
+        path: hdr10plus_tool
+        repository: quietvoid/hdr10plus_tool
+    - run: cd hdr10plus_tool/hdr10plus && sudo cargo cinstall --verbose --release && cd ../..
   #   - id: build-avx512
   #     run: CFLAGS="-flto=full -march=icelake-server -mtune=znver5 -fno-exceptions -fno-rtti -DNDEBUG" CPPFLAGS="-flto=full -march=icelake-server -mtune=znver5 -fno-exceptions -fno-rtti -DNDEBUG" LDFLAGS="-fuse-ld=lld -flto=full" Build/linux/build.sh --verbose --static --release --disable-native --enable-avx512 --disable-lto --enable-pgo --pgo-videos="$(realpath SolLevante)"
   #     continue-on-error: true
@@ -328,13 +328,14 @@ jobs:
   #       files: Bin/Release/Linux_x86-64_znver2.tar.xz
   #     if: ${{ steps.build-znver2.outcome != 'failure' }}
   #   - run: Build/linux/build.sh --clean
-  #   - run: CFLAGS="-flto=full -march=x86-64-v3 -mtune=x86-64 -mno-gather -fno-exceptions -fno-rtti -DNDEBUG" CPPFLAGS="-flto=full -march=x86-64-v3 -mtune=x86-64 -mno-gather -fno-exceptions -fno-rtti -DNDEBUG" LDFLAGS="-fuse-ld=lld -flto=full" Build/linux/build.sh --verbose --static --release --disable-native --enable-avx512 --disable-lto --enable-pgo --pgo-videos="$(realpath SolLevante)"
-  #   - run: Bin/Release/SvtAv1EncApp -i SolLevante/SolLevante.y4m -b test.ivf --preset 4 --crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5
-  #   - run: cd Bin/Release && tar cJf Linux_x86-64_x86-64-v3.tar.xz SvtAv1EncApp && cd ../..
-  #   - uses: softprops/action-gh-release@v3
-  #     with:
-  #       tag_name: ${{ needs.tag.outputs.tag }}
-  #       files: Bin/Release/Linux_x86-64_x86-64-v3.tar.xz
+    - run: CFLAGS="-DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 $(pkg-config --cflags --static dovi) $(pkg-config --cflags --static hdr10plus-rs) -flto=full -march=x86-64-v3 -mtune=x86-64 -mno-gather -fno-exceptions -fno-rtti -DNDEBUG" CPPFLAGS="-DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 $(pkg-config --cflags --static dovi) $(pkg-config --cflags --static hdr10plus-rs) -flto=full -march=x86-64-v3 -mtune=x86-64 -mno-gather -fno-exceptions -fno-rtti -DNDEBUG" LDFLAGS="-fuse-ld=lld $(pkg-config --libs --static dovi) $(pkg-config --libs --static hdr10plus-rs) -flto=full" Build/linux/build.sh --verbose --static --release --disable-native --enable-avx512 --disable-lto --enable-pgo --pgo-videos="$(realpath SolLevante)"
+    - run: ldd Bin/Release/SvtAv1EncApp
+    - run: Bin/Release/SvtAv1EncApp -i SolLevante/SolLevante.y4m -b test.ivf --preset 4 --crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5
+    - run: cd Bin/Release && tar cJf Linux_x86-64_x86-64-v3.tar.xz SvtAv1EncApp && cd ../..
+    - uses: softprops/action-gh-release@v3
+      with:
+        tag_name: ${{ needs.tag.outputs.tag }}
+        files: Bin/Release/Linux_x86-64_x86-64-v3.tar.xz
 
 
   # For some reason `-flto=full` is broken and fails the linking, so using `-DSVT_AV1_LTO=ON` for now.  
@@ -362,15 +363,16 @@ jobs:
       with:
         path: dovi_tool
         repository: quietvoid/dovi_tool
-    - run: cd dovi_tool/dolby_vision && sudo cargo cinstall --verbose --release && cd ../..
+    - run: cd dovi_tool/dolby_vision && cargo cinstall --verbose --release --prefix ../../rustlibs && cd ../..
     - uses: actions/checkout@v7
       with:
         path: hdr10plus_tool
         repository: quietvoid/hdr10plus_tool
-    - run: cd hdr10plus_tool/hdr10plus && sudo cargo cinstall --verbose --release && cd ../..
-    - run: PATH="/opt/homebrew/opt/llvm/bin:$PATH" CMAKE_PREFIX_PATH="/opt/homebrew/opt/llvm" CFLAGS="-I/opt/homebrew/opt/llvm/include -DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 $(pkg-config --cflags --static --dont-define-prefix dovi) $(pkg-config --cflags --static --dont-define-prefix hdr10plus-rs) -march=armv8.5-a+simd+crypto -mtune=apple-m3 -fno-exceptions -fno-rtti -DNDEBUG" CPPFLAGS="-I/opt/homebrew/opt/llvm/include  -DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 $(pkg-config --cflags --static --dont-define-prefix dovi) $(pkg-config --cflags --static --dont-define-prefix hdr10plus-rs) -march=armv8.5-a+simd+crypto -mtune=apple-m3 -fno-exceptions -fno-rtti -DNDEBUG" LDFLAGS="-L/opt/homebrew/opt/llvm/lib -fuse-ld=lld $(pkg-config --libs --static --dont-define-prefix dovi) $(pkg-config --libs --static --dont-define-prefix hdr10plus-rs)" Build/linux/build.sh --verbose --static --release --disable-native --enable-lto --enable-pgo --pgo-videos="$(realpath SolLevante)"
-    - run: Bin/Release/SvtAv1EncApp -i SolLevante/SolLevante.y4m -b /dev/null --preset 4 --crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5
+    - run: cd hdr10plus_tool/hdr10plus && cargo cinstall --verbose --release --prefix ../../rustlibs && cd ../..
+    - run: ls rustlibs/lib
+    - run: PATH="/opt/homebrew/opt/llvm/bin:$PATH" CMAKE_PREFIX_PATH="/opt/homebrew/opt/llvm" CFLAGS="-I/opt/homebrew/opt/llvm/include -DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 -I\"$(realpath rustlibs/include)\" -march=armv8.5-a+simd+crypto -mtune=apple-m3 -fno-exceptions -fno-rtti -DNDEBUG" CPPFLAGS="-I/opt/homebrew/opt/llvm/include -DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 -I\"$(realpath rustlibs/include)\" -march=armv8.5-a+simd+crypto -mtune=apple-m3 -fno-exceptions -fno-rtti -DNDEBUG" LDFLAGS="-fuse-ld=lld -L/opt/homebrew/opt/llvm/lib \"$(realpath rustlibs/lib/libdovi.a)\" \"$(realpath rustlibs/lib/libhdr10plus-rs.a)\"" Build/linux/build.sh --verbose --static --release --disable-native --enable-lto --enable-pgo --pgo-videos="$(realpath SolLevante)"
     - run: otool -L Bin/Release/SvtAv1EncApp
+    - run: Bin/Release/SvtAv1EncApp -i SolLevante/SolLevante.y4m -b /dev/null --preset 4 --crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5
     - run: cd Bin/Release && tar cJf macOS_arm64_armv8.5-a+simd+crypto+apple-m3.tar.xz SvtAv1EncApp && cd ../..
     - uses: softprops/action-gh-release@v3
       with:
@@ -409,10 +411,11 @@ jobs:
   #       path: hdr10plus_tool
   #       repository: quietvoid/hdr10plus_tool
   #   - run: cd hdr10plus_tool/hdr10plus && cargo cinstall --verbose --release --prefix ../../rustlibs && cd ../..
-  #   - run: PATH="/opt/homebrew/opt/llvm/bin:$PATH" CMAKE_PREFIX_PATH="/opt/homebrew/opt/llvm" CFLAGS="-I/opt/homebrew/opt/llvm/include -DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 -I\"$(realpath rustlibs/include)\" -flto=full -march=skylake -mtune=skylake -mno-gather -fno-exceptions -fno-rtti -DNDEBUG" CPPFLAGS="-I/opt/homebrew/opt/llvm/include -DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 -I\"$(realpath rustlibs/include)\" -flto=full -march=skylake -mtune=skylake -mno-gather -fno-exceptions -fno-rtti -DNDEBUG" LDFLAGS="-L/opt/homebrew/opt/llvm/lib \"$(realpath rustlibs/lib/libdovi.a)\" \"$(realpath rustlibs/lib/libhdr10plus-rs.a)\" -fuse-ld=lld -flto=full" Build/linux/build.sh --verbose --static --release --disable-native --enable-avx512 --disable-lto --enable-pgo --pgo-videos="$(realpath SolLevante)"
+  #   - run: ls rustlibs/lib
+  #   - run: PATH="/opt/homebrew/opt/llvm/bin:$PATH" CMAKE_PREFIX_PATH="/opt/homebrew/opt/llvm" CFLAGS="-I/opt/homebrew/opt/llvm/include -DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 -I\"$(realpath rustlibs/include)\" -flto=full -march=skylake -mtune=skylake -mno-gather -fno-exceptions -fno-rtti -DNDEBUG" CPPFLAGS="-I/opt/homebrew/opt/llvm/include -DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 -I\"$(realpath rustlibs/include)\" -flto=full -march=skylake -mtune=skylake -mno-gather -fno-exceptions -fno-rtti -DNDEBUG" LDFLAGS="-fuse-ld=lld -L/opt/homebrew/opt/llvm/lib \"$(realpath rustlibs/lib/libdovi.a)\" \"$(realpath rustlibs/lib/libhdr10plus-rs.a)\" -flto=full" Build/linux/build.sh --verbose --static --release --disable-native --enable-avx512 --disable-lto --enable-pgo --pgo-videos="$(realpath SolLevante)"
+  #   - run: otool -L Bin/Release/SvtAv1EncApp
   #   - run: Bin/Release/SvtAv1EncApp -i SolLevante/SolLevante.y4m -b /dev/null --preset 4 --crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5
   #   - run: cd Bin/Release && tar cJf macOS_x86-64_skylake.tar.xz SvtAv1EncApp && cd ../..
-  #   - run: otool -L Bin/Release/SvtAv1EncApp
   #   - uses: softprops/action-gh-release@v3
   #     with:
   #       tag_name: ${{ needs.tag.outputs.tag }}
