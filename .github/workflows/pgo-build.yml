@@ -296,12 +296,12 @@ jobs:
       with:
         path: dovi_tool
         repository: quietvoid/dovi_tool
-    - run: cd dovi_tool/dolby_vision && sudo PATH=$PATH cargo cinstall --verbose --release && cd ../..
+    - run: cd dovi_tool/dolby_vision && sudo PATH=$PATH sh -c "cargo cinstall --verbose --release" && cd ../..
     - uses: actions/checkout@v7
       with:
         path: hdr10plus_tool
         repository: quietvoid/hdr10plus_tool
-    - run: cd hdr10plus_tool/hdr10plus && sudo PATH=$PATH cargo cinstall --verbose --release && cd ../..
+    - run: cd hdr10plus_tool/hdr10plus && sudo PATH=$PATH sh -c "cargo cinstall --verbose --release" && cd ../..
   #   - id: build-avx512
   #     run: CFLAGS="-flto=full -march=icelake-server -mtune=znver5 -fno-exceptions -fno-rtti -DNDEBUG" CPPFLAGS="-flto=full -march=icelake-server -mtune=znver5 -fno-exceptions -fno-rtti -DNDEBUG" LDFLAGS="-fuse-ld=lld -flto=full" Build/linux/build.sh --verbose --static --release --disable-native --enable-avx512 --disable-lto --enable-pgo --pgo-videos="$(realpath SolLevante)"
   #     continue-on-error: true
