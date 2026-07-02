@@ -302,9 +302,9 @@ jobs:
         path: hdr10plus_tool
         repository: quietvoid/hdr10plus_tool
     - run: cd hdr10plus_tool/hdr10plus && cargo cinstall --verbose --release --library-type staticlib --prefix "$(realpath ../../rustlibs)" && cd ../..
-    - run: ls rustlibs/lib
-    - run: ls rustlibs/lib/pkgconfig
-    - run: cat rustlibs/lib/pkgconfig/dovi.pc
+    - run: ls rustlibs/lib/x86_64-linux-gnu
+    - run: ls rustlibs/lib/x86_64-linux-gnu/pkgconfig
+    - run: cat rustlibs/lib/x86_64-linux-gnu/pkgconfig/dovi.pc
   #   - id: build-avx512
   #     run: CFLAGS="-flto=full -march=icelake-server -mtune=znver5 -fno-exceptions -fno-rtti -DNDEBUG" CPPFLAGS="-flto=full -march=icelake-server -mtune=znver5 -fno-exceptions -fno-rtti -DNDEBUG" LDFLAGS="-fuse-ld=lld -flto=full" Build/linux/build.sh --verbose --static --release --disable-native --enable-avx512 --disable-lto --enable-pgo --pgo-videos="$(realpath SolLevante)"
   #     continue-on-error: true
@@ -331,7 +331,7 @@ jobs:
   #       files: Bin/Release/Linux_x86-64_znver2.tar.xz
   #     if: ${{ steps.build-znver2.outcome != 'failure' }}
   #   - run: Build/linux/build.sh --clean
-    - run: CFLAGS="-DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/pkgconfig/dovi.pc) $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/pkgconfig/hdr10plus-rs.pc) -flto=full -march=x86-64-v3 -mtune=x86-64 -mno-gather -fno-exceptions -fno-rtti -DNDEBUG" CPPFLAGS="-DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/pkgconfig/dovi.pc) $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/pkgconfig/hdr10plus-rs.pc) -flto=full -march=x86-64-v3 -mtune=x86-64 -mno-gather -fno-exceptions -fno-rtti -DNDEBUG" LDFLAGS="-fuse-ld=lld $(pkg-config --libs --static --dont-define-prefix rustlibs/lib/pkgconfig/dovi.pc) $(pkg-config --libs --static --dont-define-prefix rustlibs/lib/pkgconfig/hdr10plus-rs.pc) -flto=full" Build/linux/build.sh --verbose --static --release --disable-native --enable-avx512 --disable-lto --enable-pgo --pgo-videos="$(realpath SolLevante)"
+    - run: CFLAGS="-DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/x86_64-linux-gnu/pkgconfig/dovi.pc) $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/x86_64-linux-gnu/pkgconfig/hdr10plus-rs.pc) -flto=full -march=x86-64-v3 -mtune=x86-64 -mno-gather -fno-exceptions -fno-rtti -DNDEBUG" CPPFLAGS="-DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/x86_64-linux-gnu/pkgconfig/dovi.pc) $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/x86_64-linux-gnu/pkgconfig/hdr10plus-rs.pc) -flto=full -march=x86-64-v3 -mtune=x86-64 -mno-gather -fno-exceptions -fno-rtti -DNDEBUG" LDFLAGS="-fuse-ld=lld $(pkg-config --libs --static --dont-define-prefix rustlibs/lib/x86_64-linux-gnu/pkgconfig/dovi.pc) $(pkg-config --libs --static --dont-define-prefix rustlibs/lib/x86_64-linux-gnu/pkgconfig/hdr10plus-rs.pc) -flto=full" Build/linux/build.sh --verbose --static --release --disable-native --enable-avx512 --disable-lto --enable-pgo --pgo-videos="$(realpath SolLevante)"
     - run: ldd Bin/Release/SvtAv1EncApp
     - run: Bin/Release/SvtAv1EncApp -i SolLevante/SolLevante.y4m -b test.ivf --preset 4 --crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5
     - run: cd Bin/Release && tar cJf Linux_x86-64_x86-64-v3.tar.xz SvtAv1EncApp && cd ../..
