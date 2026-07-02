@@ -360,14 +360,13 @@ jobs:
       with:
         path: dovi_tool
         repository: quietvoid/dovi_tool
-    - run: cd dovi_tool/dolby_vision && cargo cinstall --verbose --release --prefix ../../rustlibs && cd ../..
+    - run: cd dovi_tool/dolby_vision && sudo cargo cinstall --verbose --release && cd ../..
     - uses: actions/checkout@v7
       with:
         path: hdr10plus_tool
         repository: quietvoid/hdr10plus_tool
-    - run: cd hdr10plus_tool/hdr10plus && cargo cinstall --verbose --release --prefix ../../rustlibs && cd ../..
-    - run: ls rustlibs/lib
-    - run: PATH="/opt/homebrew/opt/llvm/bin:$PATH" CMAKE_PREFIX_PATH="/opt/homebrew/opt/llvm" PKG_CONFIG_PATH="$(realpath rustlibs/lib/pkgconfig):$PKG_CONFIG_PATH" CFLAGS="-I/opt/homebrew/opt/llvm/include -I\"$(realpath rustlibs/include)\" -march=armv8.5-a+simd+crypto -mtune=apple-m3 -fno-exceptions -fno-rtti -DNDEBUG" CPPFLAGS="-I/opt/homebrew/opt/llvm/include -I\"$(realpath rustlibs/include)\" -march=armv8.5-a+simd+crypto -mtune=apple-m3 -fno-exceptions -fno-rtti -DNDEBUG" LDFLAGS="-L/opt/homebrew/opt/llvm/lib -L\"$(realpath rustlibs/lib)\" -ldovi -lhdr10plus-rs -fuse-ld=lld" Build/linux/build.sh --verbose --static --release --enable-dovi --enable-hdr10plus --disable-native --enable-lto --enable-pgo --pgo-videos="$(realpath SolLevante)"
+    - run: cd hdr10plus_tool/hdr10plus && sudo cargo cinstall --verbose --release && cd ../..
+    - run: PATH="/opt/homebrew/opt/llvm/bin:$PATH" CMAKE_PREFIX_PATH="/opt/homebrew/opt/llvm" CFLAGS="-I/opt/homebrew/opt/llvm/include -march=armv8.5-a+simd+crypto -mtune=apple-m3 -fno-exceptions -fno-rtti -DNDEBUG" CPPFLAGS="-I/opt/homebrew/opt/llvm/include -march=armv8.5-a+simd+crypto -mtune=apple-m3 -fno-exceptions -fno-rtti -DNDEBUG" LDFLAGS="-L/opt/homebrew/opt/llvm/lib -llibdovi.a -llibhdr10plus-rs.a -fuse-ld=lld" Build/linux/build.sh --verbose --static --release --enable-dovi --enable-hdr10plus --disable-native --enable-lto --enable-pgo --pgo-videos="$(realpath SolLevante)"
     - run: Bin/Release/SvtAv1EncApp -i SolLevante/SolLevante.y4m -b /dev/null --preset 4 --crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5
     - run: cd Bin/Release && tar cJf macOS_arm64_armv8.5-a+simd+crypto+apple-m3.tar.xz SvtAv1EncApp && cd ../..
     - uses: softprops/action-gh-release@v3
