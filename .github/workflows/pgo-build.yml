@@ -379,7 +379,7 @@ jobs:
   #       files: Bin/Release/macOS_arm64_armv8.5-a+simd+crypto+apple-m3.tar.xz
 
 
-  # build-macos-x86-64:
+  build-macos-x86-64:
     needs: [tag, release]
     runs-on: "macos-26-intel"
     steps:
