@@ -55,229 +55,229 @@ jobs:
 
   # `clang-cl` is broken when running in GitHub Actions and either the profiling run fails, or the final binary doesn't work. Using `clang` and `clang++` for now.
   # TODO: Test and migrate to MCF Gthread.
-  build-windows-x86-64:
-    needs: [tag, release]
-    runs-on: "windows-latest"
-    defaults:
-      run:
-        shell: msys2 {0}
-    steps:
-    - uses: msys2/setup-msys2@v2
-      with:
-        msystem: UCRT64
-        path-type: inherit
-        install: >-
-          mingw-w64-ucrt-x86_64-fastfetch
-    - run: fastfetch
-    - uses: actions/checkout@v7
-    - uses: actions/checkout@v7
-      with:
-        path: SolLevante
-        ref: sollevante
-    - run: xz --decompress SolLevante/SolLevante.y4m.xz
-    - uses: ilammy/setup-nasm@v1
-    - uses: ZhongRuoyu/setup-llvm@v0
-    - uses: lukka/get-cmake@latest
-    - run: pacman --noconfirm -S mingw-w64-ucrt-x86_64-pkgconf
-    - uses: dtolnay/rust-toolchain@stable
-      with:
-        targets: x86_64-pc-windows-msvc
-    - uses: cargo-bins/cargo-binstall@main
-    - run: cargo binstall cargo-c
-    - uses: actions/checkout@v7
-      with:
-        path: dovi_tool
-        repository: quietvoid/dovi_tool
-    - run: cd dovi_tool/dolby_vision && RUSTFLAGS="-Ctarget-cpu=x86-64-v3 -Copt-level=3" cargo cinstall --verbose --release --library-type staticlib --prefix "$(cygpath -m -a ../../rustlibs)" && cd ../..
-    - uses: actions/checkout@v7
-      with:
-        path: hdr10plus_tool
-        repository: quietvoid/hdr10plus_tool
-    - run: cd hdr10plus_tool/hdr10plus && RUSTFLAGS="-Ctarget-cpu=x86-64-v3 -Copt-level=3" cargo cinstall --verbose --release --library-type staticlib --prefix "$(cygpath -m -a ../../rustlibs)" && cd ../..
-    # - run: cmake --fresh -B svt_build -G Ninja -DCMAKE_C_COMPILER="clang" -DCMAKE_CXX_COMPILER="clang++" -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DBUILD_APPS=ON -DTHREADS_PREFER_PTHREAD_FLAG=OFF -DCMAKE_USE_WIN32_THREADS_INIT=ON -DSVT_AV1_LTO=OFF -DENABLE_AVX512=ON -DCMAKE_C_FLAGS_RELEASE="-DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/pkgconfig/dovi.pc) $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/pkgconfig/hdr10plus-rs.pc) -DNDEBUG -O3 -flto=full -fwhole-program-vtables -march=icelake-server -mtune=znver5 -mprefer-vector-width=512 -fno-exceptions -fno-rtti -fno-semantic-interposition -fno-stack-protector -fno-stack-clash-protection -fno-sanitize=all -fno-dwarf2-cfi-asm -fprofile-generate=SolLevante -ftemporal-profile" -DCMAKE_CXX_FLAGS_RELEASE="-DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/pkgconfig/dovi.pc) $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/pkgconfig/hdr10plus-rs.pc) -DNDEBUG -O3 -flto=full -fwhole-program-vtables -march=icelake-server -mtune=znver5 -mprefer-vector-width=512 -fno-exceptions -fno-rtti -fno-semantic-interposition -fno-stack-protector -fno-stack-clash-protection -fno-sanitize=all -fno-dwarf2-cfi-asm -fprofile-generate=SolLevante -ftemporal-profile" -DCMAKE_EXE_LINKER_FLAGS_RELEASE="-fuse-ld=lld $(pkg-config --libs --static --dont-define-prefix rustlibs/lib/pkgconfig/dovi.pc) $(pkg-config --libs --static --dont-define-prefix rustlibs/lib/pkgconfig/hdr10plus-rs.pc) -flto=full -fwhole-program-vtables" && ninja -v -C svt_build
-    # - id: profile-avx512
-    #   run: Bin/Release/SvtAv1EncApp.exe -i SolLevante/SolLevante.y4m -b /dev/null --preset 2 --crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5
-    #   continue-on-error: true
-    # - run: llvm-profdata merge -o SolLevante/default.profdata SolLevante/*.profraw
-    #   if: ${{ steps.profile-avx512.outcome != 'failure' }}
-    # - run: ls SolLevante
-    #   if: ${{ steps.profile-avx512.outcome != 'failure' }}
-    # - run: cmake --fresh -B svt_build -G Ninja -DCMAKE_C_COMPILER="clang" -DCMAKE_CXX_COMPILER="clang++" -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DBUILD_APPS=ON -DTHREADS_PREFER_PTHREAD_FLAG=OFF -DCMAKE_USE_WIN32_THREADS_INIT=ON -DSVT_AV1_LTO=OFF -DENABLE_AVX512=ON -DCMAKE_C_FLAGS_RELEASE="-DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/pkgconfig/dovi.pc) $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/pkgconfig/hdr10plus-rs.pc) -DNDEBUG -O3 -flto=full -fwhole-program-vtables -fvisibility=hidden -fvisibility-inlines-hidden -march=icelake-server -mtune=znver5 -mprefer-vector-width=512 -fno-exceptions -fno-rtti -fno-semantic-interposition -fno-stack-protector -fno-stack-clash-protection -fno-sanitize=all -fno-dwarf2-cfi-asm -fprofile-use=\"$(cygpath -m -a SolLevante/default.profdata)\"" -DCMAKE_CXX_FLAGS_RELEASE="-DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/pkgconfig/dovi.pc) $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/pkgconfig/hdr10plus-rs.pc) -DNDEBUG -O3 -flto=full -fwhole-program-vtables -fvisibility=hidden -fvisibility-inlines-hidden -march=icelake-server -mtune=znver5 -mprefer-vector-width=512 -fno-exceptions -fno-rtti -fno-semantic-interposition -fno-stack-protector -fno-stack-clash-protection -fno-sanitize=all -fno-dwarf2-cfi-asm -fprofile-use=\"$(cygpath -m -a SolLevante/default.profdata)\"" -DCMAKE_EXE_LINKER_FLAGS_RELEASE="-fuse-ld=lld $(pkg-config --libs --static --dont-define-prefix rustlibs/lib/pkgconfig/dovi.pc) $(pkg-config --libs --static --dont-define-prefix rustlibs/lib/pkgconfig/hdr10plus-rs.pc) -flto=full -fwhole-program-vtables -fvisibility=hidden -fvisibility-inlines-hidden" && ninja -v -C svt_build
-    #   if: ${{ steps.profile-avx512.outcome != 'failure' }}
-    # - run: ldd Bin/Release/SvtAv1EncApp.exe
-    #   if: ${{ steps.profile-avx512.outcome != 'failure' }}
-    # - run: Bin/Release/SvtAv1EncApp.exe --help | grep dolby
-    #   if: ${{ steps.profile-avx512.outcome != 'failure' }}
-    # - run: Bin/Release/SvtAv1EncApp.exe --help | grep hdr10plus
-    #   if: ${{ steps.profile-avx512.outcome != 'failure' }}
-    # - run: Bin/Release/SvtAv1EncApp.exe -i SolLevante/SolLevante.y4m -b /dev/null --preset 4 --crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5
-    #   if: ${{ steps.profile-avx512.outcome != 'failure' }}
-    # - run: cd Bin/Release && tar cJf Windows_x86-64_icelake-server+znver5.tar.xz SvtAv1EncApp.exe && cd ../..
-    #   if: ${{ steps.profile-avx512.outcome != 'failure' }}
-    # - uses: softprops/action-gh-release@v3
-    #   with:
-    #     tag_name: ${{ needs.tag.outputs.tag }}
-    #     files: Bin/Release/Windows_x86-64_icelake-server+znver5.tar.xz
-    #   if: ${{ steps.profile-avx512.outcome != 'failure' }}
-    # - run: rm -rf svt_build SolLevante/*.profraw SolLevante/*.profdata
-    # - run: ls SolLevante
-    # - run: cmake --fresh -B svt_build -G Ninja -DCMAKE_C_COMPILER="clang" -DCMAKE_CXX_COMPILER="clang++" -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DBUILD_APPS=ON -DTHREADS_PREFER_PTHREAD_FLAG=OFF -DCMAKE_USE_WIN32_THREADS_INIT=ON -DSVT_AV1_LTO=OFF -DENABLE_AVX512=ON -DCMAKE_C_FLAGS_RELEASE="-DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/pkgconfig/dovi.pc) $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/pkgconfig/hdr10plus-rs.pc) -DNDEBUG -O3 -flto=full -fwhole-program-vtables -march=znver2 -mtune=znver2 -fno-exceptions -fno-rtti -fno-semantic-interposition -fno-stack-protector -fno-stack-clash-protection -fno-sanitize=all -fno-dwarf2-cfi-asm -fprofile-generate=SolLevante -ftemporal-profile" -DCMAKE_CXX_FLAGS_RELEASE="-DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/pkgconfig/dovi.pc) $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/pkgconfig/hdr10plus-rs.pc) -DNDEBUG -O3 -flto=full -fwhole-program-vtables -march=znver2 -mtune=znver2 -fno-exceptions -fno-rtti -fno-semantic-interposition -fno-stack-protector -fno-stack-clash-protection -fno-sanitize=all -fno-dwarf2-cfi-asm -fprofile-generate=SolLevante -ftemporal-profile" -DCMAKE_EXE_LINKER_FLAGS_RELEASE="-fuse-ld=lld $(pkg-config --libs --static --dont-define-prefix rustlibs/lib/pkgconfig/dovi.pc) $(pkg-config --libs --static --dont-define-prefix rustlibs/lib/pkgconfig/hdr10plus-rs.pc) -flto=full -fwhole-program-vtables" && ninja -v -C svt_build
-    # - id: profile-znver2
-    #   run: Bin/Release/SvtAv1EncApp.exe -i SolLevante/SolLevante.y4m -b /dev/null --preset 2 --crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5
-    #   continue-on-error: true
-    # - run: llvm-profdata merge -o SolLevante/default.profdata SolLevante/*.profraw
-    #   if: ${{ steps.profile-znver2.outcome != 'failure' }}
-    # - run: ls SolLevante
-    #   if: ${{ steps.profile-znver2.outcome != 'failure' }}
-    # - run: cmake --fresh -B svt_build -G Ninja -DCMAKE_C_COMPILER="clang" -DCMAKE_CXX_COMPILER="clang++" -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DBUILD_APPS=ON -DTHREADS_PREFER_PTHREAD_FLAG=OFF -DCMAKE_USE_WIN32_THREADS_INIT=ON -DSVT_AV1_LTO=OFF -DENABLE_AVX512=ON -DCMAKE_C_FLAGS_RELEASE="-DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/pkgconfig/dovi.pc) $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/pkgconfig/hdr10plus-rs.pc) -DNDEBUG -O3 -flto=full -fwhole-program-vtables -fvisibility=hidden -fvisibility-inlines-hidden -march=znver2 -mtune=znver2 -fno-exceptions -fno-rtti -fno-semantic-interposition -fno-stack-protector -fno-stack-clash-protection -fno-sanitize=all -fno-dwarf2-cfi-asm -fprofile-use=\"$(cygpath -m -a SolLevante/default.profdata)\"" -DCMAKE_CXX_FLAGS_RELEASE="-DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/pkgconfig/dovi.pc) $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/pkgconfig/hdr10plus-rs.pc) -DNDEBUG -O3 -flto=full -fwhole-program-vtables -fvisibility=hidden -fvisibility-inlines-hidden -march=znver2 -mtune=znver2 -fno-exceptions -fno-rtti -fno-semantic-interposition -fno-stack-protector -fno-stack-clash-protection -fno-sanitize=all -fno-dwarf2-cfi-asm -fprofile-use=\"$(cygpath -m -a SolLevante/default.profdata)\"" -DCMAKE_EXE_LINKER_FLAGS_RELEASE="-fuse-ld=lld $(pkg-config --libs --static --dont-define-prefix rustlibs/lib/pkgconfig/dovi.pc) $(pkg-config --libs --static --dont-define-prefix rustlibs/lib/pkgconfig/hdr10plus-rs.pc) -flto=full -fwhole-program-vtables -fvisibility=hidden -fvisibility-inlines-hidden" && ninja -v -C svt_build
-    #   if: ${{ steps.profile-znver2.outcome != 'failure' }}
-    # - run: ldd Bin/Release/SvtAv1EncApp.exe
-    #   if: ${{ steps.profile-znver2.outcome != 'failure' }}
-    # - run: Bin/Release/SvtAv1EncApp.exe --help | grep dolby
-    #   if: ${{ steps.profile-znver2.outcome != 'failure' }}
-    # - run: Bin/Release/SvtAv1EncApp.exe --help | grep hdr10plus
-    #   if: ${{ steps.profile-znver2.outcome != 'failure' }}
-    # - run: Bin/Release/SvtAv1EncApp.exe -i SolLevante/SolLevante.y4m -b /dev/null --preset 4 --crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5
-    #   if: ${{ steps.profile-znver2.outcome != 'failure' }}
-    # - run: cd Bin/Release && tar cJf Windows_x86-64_znver2.tar.xz SvtAv1EncApp.exe && cd ../..
-    #   if: ${{ steps.profile-znver2.outcome != 'failure' }}
-    # - uses: softprops/action-gh-release@v3
-    #   with:
-    #     tag_name: ${{ needs.tag.outputs.tag }}
-    #     files: Bin/Release/Windows_x86-64_znver2.tar.xz
-    #   if: ${{ steps.profile-znver2.outcome != 'failure' }}
-    # - run: rm -rf svt_build SolLevante/*.profraw SolLevante/*.profdata
-    # - run: ls SolLevante
-    - run: cmake --fresh -B svt_build -G Ninja -DCMAKE_C_COMPILER="clang" -DCMAKE_CXX_COMPILER="clang++" -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DBUILD_APPS=ON -DTHREADS_PREFER_PTHREAD_FLAG=OFF -DCMAKE_USE_WIN32_THREADS_INIT=ON -DSVT_AV1_LTO=OFF -DENABLE_AVX512=ON -DCMAKE_C_FLAGS_RELEASE="-DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/pkgconfig/dovi.pc) $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/pkgconfig/hdr10plus-rs.pc) -DNDEBUG -O3 -flto=full -fwhole-program-vtables -march=x86-64-v3 -mtune=znver2 -mno-gather -fno-exceptions -fno-rtti -fno-semantic-interposition -fno-stack-protector -fno-stack-clash-protection -fno-sanitize=all -fno-dwarf2-cfi-asm -fprofile-generate=SolLevante -ftemporal-profile" -DCMAKE_CXX_FLAGS_RELEASE="-DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/pkgconfig/dovi.pc) $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/pkgconfig/hdr10plus-rs.pc) -DNDEBUG -O3 -flto=full -fwhole-program-vtables -march=x86-64-v3 -mtune=znver2 -mno-gather -fno-exceptions -fno-rtti -fno-semantic-interposition -fno-stack-protector -fno-stack-clash-protection -fno-sanitize=all -fno-dwarf2-cfi-asm -fprofile-generate=SolLevante -ftemporal-profile" -DCMAKE_EXE_LINKER_FLAGS_RELEASE="-fuse-ld=lld $(pkg-config --libs --static --dont-define-prefix rustlibs/lib/pkgconfig/dovi.pc) $(pkg-config --libs --static --dont-define-prefix rustlibs/lib/pkgconfig/hdr10plus-rs.pc) -flto=full -fwhole-program-vtables" && ninja -v -C svt_build
-    - run: Bin/Release/SvtAv1EncApp.exe -i SolLevante/SolLevante.y4m -b /dev/null --preset 2 --crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5
-    - run: llvm-profdata merge -o SolLevante/default.profdata SolLevante/*.profraw
-    - run: ls SolLevante
-    - run: cmake --fresh -B svt_build -G Ninja -DCMAKE_C_COMPILER="clang" -DCMAKE_CXX_COMPILER="clang++" -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DBUILD_APPS=ON -DTHREADS_PREFER_PTHREAD_FLAG=OFF -DCMAKE_USE_WIN32_THREADS_INIT=ON -DSVT_AV1_LTO=OFF -DENABLE_AVX512=ON -DCMAKE_C_FLAGS_RELEASE="-DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/pkgconfig/dovi.pc) $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/pkgconfig/hdr10plus-rs.pc) -DNDEBUG -O3 -flto=full -fwhole-program-vtables -fvisibility=hidden -fvisibility-inlines-hidden -march=x86-64-v3 -mtune=znver2 -mno-gather -fno-exceptions -fno-rtti -fno-semantic-interposition -fno-stack-protector -fno-stack-clash-protection -fno-sanitize=all -fno-dwarf2-cfi-asm -fprofile-use=\"$(cygpath -m -a SolLevante/default.profdata)\"" -DCMAKE_CXX_FLAGS_RELEASE="-DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/pkgconfig/dovi.pc) $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/pkgconfig/hdr10plus-rs.pc) -DNDEBUG -O3 -flto=full -fwhole-program-vtables -fvisibility=hidden -fvisibility-inlines-hidden -march=x86-64-v3 -mtune=znver2 -mno-gather -fno-exceptions -fno-rtti -fno-semantic-interposition -fno-stack-protector -fno-stack-clash-protection -fno-sanitize=all -fno-dwarf2-cfi-asm -fprofile-use=\"$(cygpath -m -a SolLevante/default.profdata)\"" -DCMAKE_EXE_LINKER_FLAGS_RELEASE="-fuse-ld=lld $(pkg-config --libs --static --dont-define-prefix rustlibs/lib/pkgconfig/dovi.pc) $(pkg-config --libs --static --dont-define-prefix rustlibs/lib/pkgconfig/hdr10plus-rs.pc) -flto=full -fwhole-program-vtables -fvisibility=hidden -fvisibility-inlines-hidden" && ninja -v -C svt_build
-    - run: ldd Bin/Release/SvtAv1EncApp.exe
-    - run: Bin/Release/SvtAv1EncApp.exe --help | grep dolby
-    - run: Bin/Release/SvtAv1EncApp.exe --help | grep hdr10plus
-    - run: Bin/Release/SvtAv1EncApp.exe -i SolLevante/SolLevante.y4m -b /dev/null --preset 4 --crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5
-    - run: cd Bin/Release && tar cJf Windows_x86-64_x86-64-v3.tar.xz SvtAv1EncApp.exe && cd ../..
-    - uses: softprops/action-gh-release@v3
-      with:
-        tag_name: ${{ needs.tag.outputs.tag }}
-        files: Bin/Release/Windows_x86-64_x86-64-v3.tar.xz
+  # build-windows-x86-64:
+  #   needs: [tag, release]
+  #   runs-on: "windows-latest"
+  #   defaults:
+  #     run:
+  #       shell: msys2 {0}
+  #   steps:
+  #   - uses: msys2/setup-msys2@v2
+  #     with:
+  #       msystem: UCRT64
+  #       path-type: inherit
+  #       install: >-
+  #         mingw-w64-ucrt-x86_64-fastfetch
+  #   - run: fastfetch
+  #   - uses: actions/checkout@v7
+  #   - uses: actions/checkout@v7
+  #     with:
+  #       path: SolLevante
+  #       ref: sollevante
+  #   - run: xz --decompress SolLevante/SolLevante.y4m.xz
+  #   - uses: ilammy/setup-nasm@v1
+  #   - uses: ZhongRuoyu/setup-llvm@v0
+  #   - uses: lukka/get-cmake@latest
+  #   - run: pacman --noconfirm -S mingw-w64-ucrt-x86_64-pkgconf
+  #   - uses: dtolnay/rust-toolchain@stable
+  #     with:
+  #       targets: x86_64-pc-windows-msvc
+  #   - uses: cargo-bins/cargo-binstall@main
+  #   - run: cargo binstall cargo-c
+  #   - uses: actions/checkout@v7
+  #     with:
+  #       path: dovi_tool
+  #       repository: quietvoid/dovi_tool
+  #   - run: cd dovi_tool/dolby_vision && RUSTFLAGS="-Ctarget-cpu=x86-64-v3 -Copt-level=3" cargo cinstall --verbose --release --library-type staticlib --prefix "$(cygpath -m -a ../../rustlibs)" && cd ../..
+  #   - uses: actions/checkout@v7
+  #     with:
+  #       path: hdr10plus_tool
+  #       repository: quietvoid/hdr10plus_tool
+  #   - run: cd hdr10plus_tool/hdr10plus && RUSTFLAGS="-Ctarget-cpu=x86-64-v3 -Copt-level=3" cargo cinstall --verbose --release --library-type staticlib --prefix "$(cygpath -m -a ../../rustlibs)" && cd ../..
+  #   - run: cmake --fresh -B svt_build -G Ninja -DCMAKE_C_COMPILER="clang" -DCMAKE_CXX_COMPILER="clang++" -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DBUILD_APPS=ON -DTHREADS_PREFER_PTHREAD_FLAG=OFF -DCMAKE_USE_WIN32_THREADS_INIT=ON -DSVT_AV1_LTO=OFF -DENABLE_AVX512=ON -DCMAKE_C_FLAGS_RELEASE="-DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/pkgconfig/dovi.pc) $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/pkgconfig/hdr10plus-rs.pc) -DNDEBUG -O3 -flto=full -fwhole-program-vtables -march=icelake-server -mtune=znver5 -mprefer-vector-width=512 -fno-exceptions -fno-rtti -fno-stack-protector -fno-sanitize=all -fno-dwarf2-cfi-asm -Wno-deprecated -fprofile-generate=SolLevante -ftemporal-profile" -DCMAKE_CXX_FLAGS_RELEASE="-DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/pkgconfig/dovi.pc) $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/pkgconfig/hdr10plus-rs.pc) -DNDEBUG -O3 -flto=full -fwhole-program-vtables -march=icelake-server -mtune=znver5 -mprefer-vector-width=512 -fno-exceptions -fno-rtti -fno-stack-protector -fno-sanitize=all -fno-dwarf2-cfi-asm -Wno-deprecated -fprofile-generate=SolLevante -ftemporal-profile" -DCMAKE_EXE_LINKER_FLAGS_RELEASE="-fuse-ld=lld $(pkg-config --libs --static --dont-define-prefix rustlibs/lib/pkgconfig/dovi.pc) $(pkg-config --libs --static --dont-define-prefix rustlibs/lib/pkgconfig/hdr10plus-rs.pc) -flto=full -fwhole-program-vtables" && ninja -v -C svt_build
+  #   - id: profile-avx512
+  #     run: Bin/Release/SvtAv1EncApp.exe -i SolLevante/SolLevante.y4m -b /dev/null --preset 2 --crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5
+  #     continue-on-error: true
+  #   - run: llvm-profdata merge -o SolLevante/default.profdata SolLevante/*.profraw
+  #     if: ${{ steps.profile-avx512.outcome != 'failure' }}
+  #   - run: ls SolLevante
+  #     if: ${{ steps.profile-avx512.outcome != 'failure' }}
+  #   - run: cmake --fresh -B svt_build -G Ninja -DCMAKE_C_COMPILER="clang" -DCMAKE_CXX_COMPILER="clang++" -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DBUILD_APPS=ON -DTHREADS_PREFER_PTHREAD_FLAG=OFF -DCMAKE_USE_WIN32_THREADS_INIT=ON -DSVT_AV1_LTO=OFF -DENABLE_AVX512=ON -DCMAKE_C_FLAGS_RELEASE="-DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/pkgconfig/dovi.pc) $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/pkgconfig/hdr10plus-rs.pc) -DNDEBUG -O3 -flto=full -fwhole-program-vtables -fvisibility=hidden -fvisibility-inlines-hidden -march=icelake-server -mtune=znver5 -mprefer-vector-width=512 -fno-exceptions -fno-rtti -fno-stack-protector -fno-sanitize=all -fno-dwarf2-cfi-asm -Wno-deprecated -fprofile-use=\"$(cygpath -m -a SolLevante/default.profdata)\"" -DCMAKE_CXX_FLAGS_RELEASE="-DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/pkgconfig/dovi.pc) $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/pkgconfig/hdr10plus-rs.pc) -DNDEBUG -O3 -flto=full -fwhole-program-vtables -fvisibility=hidden -fvisibility-inlines-hidden -march=icelake-server -mtune=znver5 -mprefer-vector-width=512 -fno-exceptions -fno-rtti -fno-stack-protector -fno-sanitize=all -fno-dwarf2-cfi-asm -Wno-deprecated -fprofile-use=\"$(cygpath -m -a SolLevante/default.profdata)\"" -DCMAKE_EXE_LINKER_FLAGS_RELEASE="-fuse-ld=lld $(pkg-config --libs --static --dont-define-prefix rustlibs/lib/pkgconfig/dovi.pc) $(pkg-config --libs --static --dont-define-prefix rustlibs/lib/pkgconfig/hdr10plus-rs.pc) -flto=full -fwhole-program-vtables -fvisibility=hidden -fvisibility-inlines-hidden" && ninja -v -C svt_build
+  #     if: ${{ steps.profile-avx512.outcome != 'failure' }}
+  #   - run: ldd Bin/Release/SvtAv1EncApp.exe
+  #     if: ${{ steps.profile-avx512.outcome != 'failure' }}
+  #   - run: Bin/Release/SvtAv1EncApp.exe --help | grep dolby
+  #     if: ${{ steps.profile-avx512.outcome != 'failure' }}
+  #   - run: Bin/Release/SvtAv1EncApp.exe --help | grep hdr10plus
+  #     if: ${{ steps.profile-avx512.outcome != 'failure' }}
+  #   - run: Bin/Release/SvtAv1EncApp.exe -i SolLevante/SolLevante.y4m -b /dev/null --preset 4 --crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5
+  #     if: ${{ steps.profile-avx512.outcome != 'failure' }}
+  #   - run: cd Bin/Release && tar cJf Windows_x86-64_icelake-server+znver5.tar.xz SvtAv1EncApp.exe && cd ../..
+  #     if: ${{ steps.profile-avx512.outcome != 'failure' }}
+  #   - uses: softprops/action-gh-release@v3
+  #     with:
+  #       tag_name: ${{ needs.tag.outputs.tag }}
+  #       files: Bin/Release/Windows_x86-64_icelake-server+znver5.tar.xz
+  #     if: ${{ steps.profile-avx512.outcome != 'failure' }}
+  #   - run: rm -rf svt_build SolLevante/*.profraw SolLevante/*.profdata
+  #   - run: ls SolLevante
+  #   - run: cmake --fresh -B svt_build -G Ninja -DCMAKE_C_COMPILER="clang" -DCMAKE_CXX_COMPILER="clang++" -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DBUILD_APPS=ON -DTHREADS_PREFER_PTHREAD_FLAG=OFF -DCMAKE_USE_WIN32_THREADS_INIT=ON -DSVT_AV1_LTO=OFF -DENABLE_AVX512=ON -DCMAKE_C_FLAGS_RELEASE="-DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/pkgconfig/dovi.pc) $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/pkgconfig/hdr10plus-rs.pc) -DNDEBUG -O3 -flto=full -fwhole-program-vtables -march=znver2 -mtune=znver2 -fno-exceptions -fno-rtti -fno-stack-protector -fno-sanitize=all -fno-dwarf2-cfi-asm -Wno-deprecated -fprofile-generate=SolLevante -ftemporal-profile" -DCMAKE_CXX_FLAGS_RELEASE="-DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/pkgconfig/dovi.pc) $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/pkgconfig/hdr10plus-rs.pc) -DNDEBUG -O3 -flto=full -fwhole-program-vtables -march=znver2 -mtune=znver2 -fno-exceptions -fno-rtti -fno-stack-protector -fno-sanitize=all -fno-dwarf2-cfi-asm -Wno-deprecated -fprofile-generate=SolLevante -ftemporal-profile" -DCMAKE_EXE_LINKER_FLAGS_RELEASE="-fuse-ld=lld $(pkg-config --libs --static --dont-define-prefix rustlibs/lib/pkgconfig/dovi.pc) $(pkg-config --libs --static --dont-define-prefix rustlibs/lib/pkgconfig/hdr10plus-rs.pc) -flto=full -fwhole-program-vtables" && ninja -v -C svt_build
+  #   - id: profile-znver2
+  #     run: Bin/Release/SvtAv1EncApp.exe -i SolLevante/SolLevante.y4m -b /dev/null --preset 2 --crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5
+  #     continue-on-error: true
+  #   - run: llvm-profdata merge -o SolLevante/default.profdata SolLevante/*.profraw
+  #     if: ${{ steps.profile-znver2.outcome != 'failure' }}
+  #   - run: ls SolLevante
+  #     if: ${{ steps.profile-znver2.outcome != 'failure' }}
+  #   - run: cmake --fresh -B svt_build -G Ninja -DCMAKE_C_COMPILER="clang" -DCMAKE_CXX_COMPILER="clang++" -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DBUILD_APPS=ON -DTHREADS_PREFER_PTHREAD_FLAG=OFF -DCMAKE_USE_WIN32_THREADS_INIT=ON -DSVT_AV1_LTO=OFF -DENABLE_AVX512=ON -DCMAKE_C_FLAGS_RELEASE="-DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/pkgconfig/dovi.pc) $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/pkgconfig/hdr10plus-rs.pc) -DNDEBUG -O3 -flto=full -fwhole-program-vtables -fvisibility=hidden -fvisibility-inlines-hidden -march=znver2 -mtune=znver2 -fno-exceptions -fno-rtti -fno-stack-protector -fno-sanitize=all -fno-dwarf2-cfi-asm -Wno-deprecated -fprofile-use=\"$(cygpath -m -a SolLevante/default.profdata)\"" -DCMAKE_CXX_FLAGS_RELEASE="-DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/pkgconfig/dovi.pc) $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/pkgconfig/hdr10plus-rs.pc) -DNDEBUG -O3 -flto=full -fwhole-program-vtables -fvisibility=hidden -fvisibility-inlines-hidden -march=znver2 -mtune=znver2 -fno-exceptions -fno-rtti -fno-stack-protector -fno-sanitize=all -fno-dwarf2-cfi-asm -Wno-deprecated -fprofile-use=\"$(cygpath -m -a SolLevante/default.profdata)\"" -DCMAKE_EXE_LINKER_FLAGS_RELEASE="-fuse-ld=lld $(pkg-config --libs --static --dont-define-prefix rustlibs/lib/pkgconfig/dovi.pc) $(pkg-config --libs --static --dont-define-prefix rustlibs/lib/pkgconfig/hdr10plus-rs.pc) -flto=full -fwhole-program-vtables -fvisibility=hidden -fvisibility-inlines-hidden" && ninja -v -C svt_build
+  #     if: ${{ steps.profile-znver2.outcome != 'failure' }}
+  #   - run: ldd Bin/Release/SvtAv1EncApp.exe
+  #     if: ${{ steps.profile-znver2.outcome != 'failure' }}
+  #   - run: Bin/Release/SvtAv1EncApp.exe --help | grep dolby
+  #     if: ${{ steps.profile-znver2.outcome != 'failure' }}
+  #   - run: Bin/Release/SvtAv1EncApp.exe --help | grep hdr10plus
+  #     if: ${{ steps.profile-znver2.outcome != 'failure' }}
+  #   - run: Bin/Release/SvtAv1EncApp.exe -i SolLevante/SolLevante.y4m -b /dev/null --preset 4 --crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5
+  #     if: ${{ steps.profile-znver2.outcome != 'failure' }}
+  #   - run: cd Bin/Release && tar cJf Windows_x86-64_znver2.tar.xz SvtAv1EncApp.exe && cd ../..
+  #     if: ${{ steps.profile-znver2.outcome != 'failure' }}
+  #   - uses: softprops/action-gh-release@v3
+  #     with:
+  #       tag_name: ${{ needs.tag.outputs.tag }}
+  #       files: Bin/Release/Windows_x86-64_znver2.tar.xz
+  #     if: ${{ steps.profile-znver2.outcome != 'failure' }}
+  #   - run: rm -rf svt_build SolLevante/*.profraw SolLevante/*.profdata
+  #   - run: ls SolLevante
+  #   - run: cmake --fresh -B svt_build -G Ninja -DCMAKE_C_COMPILER="clang" -DCMAKE_CXX_COMPILER="clang++" -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DBUILD_APPS=ON -DTHREADS_PREFER_PTHREAD_FLAG=OFF -DCMAKE_USE_WIN32_THREADS_INIT=ON -DSVT_AV1_LTO=OFF -DENABLE_AVX512=ON -DCMAKE_C_FLAGS_RELEASE="-DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/pkgconfig/dovi.pc) $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/pkgconfig/hdr10plus-rs.pc) -DNDEBUG -O3 -flto=full -fwhole-program-vtables -march=x86-64-v3 -mtune=znver2 -mno-gather -fno-exceptions -fno-rtti -fno-stack-protector -fno-sanitize=all -fno-dwarf2-cfi-asm -Wno-deprecated -fprofile-generate=SolLevante -ftemporal-profile" -DCMAKE_CXX_FLAGS_RELEASE="-DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/pkgconfig/dovi.pc) $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/pkgconfig/hdr10plus-rs.pc) -DNDEBUG -O3 -flto=full -fwhole-program-vtables -march=x86-64-v3 -mtune=znver2 -mno-gather -fno-exceptions -fno-rtti -fno-stack-protector -fno-sanitize=all -fno-dwarf2-cfi-asm -Wno-deprecated -fprofile-generate=SolLevante -ftemporal-profile" -DCMAKE_EXE_LINKER_FLAGS_RELEASE="-fuse-ld=lld $(pkg-config --libs --static --dont-define-prefix rustlibs/lib/pkgconfig/dovi.pc) $(pkg-config --libs --static --dont-define-prefix rustlibs/lib/pkgconfig/hdr10plus-rs.pc) -flto=full -fwhole-program-vtables" && ninja -v -C svt_build
+  #   - run: Bin/Release/SvtAv1EncApp.exe -i SolLevante/SolLevante.y4m -b /dev/null --preset 2 --crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5
+  #   - run: llvm-profdata merge -o SolLevante/default.profdata SolLevante/*.profraw
+  #   - run: ls SolLevante
+  #   - run: cmake --fresh -B svt_build -G Ninja -DCMAKE_C_COMPILER="clang" -DCMAKE_CXX_COMPILER="clang++" -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DBUILD_APPS=ON -DTHREADS_PREFER_PTHREAD_FLAG=OFF -DCMAKE_USE_WIN32_THREADS_INIT=ON -DSVT_AV1_LTO=OFF -DENABLE_AVX512=ON -DCMAKE_C_FLAGS_RELEASE="-DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/pkgconfig/dovi.pc) $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/pkgconfig/hdr10plus-rs.pc) -DNDEBUG -O3 -flto=full -fwhole-program-vtables -fvisibility=hidden -fvisibility-inlines-hidden -march=x86-64-v3 -mtune=znver2 -mno-gather -fno-exceptions -fno-rtti -fno-stack-protector -fno-sanitize=all -fno-dwarf2-cfi-asm -Wno-deprecated -fprofile-use=\"$(cygpath -m -a SolLevante/default.profdata)\"" -DCMAKE_CXX_FLAGS_RELEASE="-DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/pkgconfig/dovi.pc) $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/pkgconfig/hdr10plus-rs.pc) -DNDEBUG -O3 -flto=full -fwhole-program-vtables -fvisibility=hidden -fvisibility-inlines-hidden -march=x86-64-v3 -mtune=znver2 -mno-gather -fno-exceptions -fno-rtti -fno-stack-protector -fno-sanitize=all -fno-dwarf2-cfi-asm -Wno-deprecated -fprofile-use=\"$(cygpath -m -a SolLevante/default.profdata)\"" -DCMAKE_EXE_LINKER_FLAGS_RELEASE="-fuse-ld=lld $(pkg-config --libs --static --dont-define-prefix rustlibs/lib/pkgconfig/dovi.pc) $(pkg-config --libs --static --dont-define-prefix rustlibs/lib/pkgconfig/hdr10plus-rs.pc) -flto=full -fwhole-program-vtables -fvisibility=hidden -fvisibility-inlines-hidden" && ninja -v -C svt_build
+  #   - run: ldd Bin/Release/SvtAv1EncApp.exe
+  #   - run: Bin/Release/SvtAv1EncApp.exe --help | grep dolby
+  #   - run: Bin/Release/SvtAv1EncApp.exe --help | grep hdr10plus
+  #   - run: Bin/Release/SvtAv1EncApp.exe -i SolLevante/SolLevante.y4m -b /dev/null --preset 4 --crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5
+  #   - run: cd Bin/Release && tar cJf Windows_x86-64_x86-64-v3.tar.xz SvtAv1EncApp.exe && cd ../..
+  #   - uses: softprops/action-gh-release@v3
+  #     with:
+  #       tag_name: ${{ needs.tag.outputs.tag }}
+  #       files: Bin/Release/Windows_x86-64_x86-64-v3.tar.xz
 
 
-  build-windows-arm64:
-    needs: [tag, release]
-    runs-on: "windows-11-arm"
-    defaults:
-      run:
-        shell: msys2 {0}
-    steps:
-    - uses: msys2/setup-msys2@v2
-      with:
-        msystem: CLANGARM64
-        path-type: inherit
-        install: >-
-          mingw-w64-clang-aarch64-fastfetch
-    - run: fastfetch
-    - uses: actions/checkout@v7
-    - uses: actions/checkout@v7
-      with:
-        path: SolLevante
-        ref: sollevante
-    - run: xz --decompress SolLevante/SolLevante.y4m.xz
-    - id: install-llvm-30
-      uses: KyleMayes/install-llvm-action@v2
-      with:
-        version: "30"
-      continue-on-error: true
-    - id: install-llvm-29
-      uses: KyleMayes/install-llvm-action@v2
-      if: ${{ steps.install-llvm-30.outcome == 'failure' }}
-      with:
-        version: "29"
-      continue-on-error: true
-    - id: install-llvm-28
-      uses: KyleMayes/install-llvm-action@v2
-      if: ${{ steps.install-llvm-29.outcome == 'failure' }}
-      with:
-        version: "28"
-      continue-on-error: true
-    - id: install-llvm-27
-      uses: KyleMayes/install-llvm-action@v2
-      if: ${{ steps.install-llvm-28.outcome == 'failure' }}
-      with:
-        version: "27"
-      continue-on-error: true
-    - id: install-llvm-26
-      uses: KyleMayes/install-llvm-action@v2
-      if: ${{ steps.install-llvm-27.outcome == 'failure' }}
-      with:
-        version: "26"
-      continue-on-error: true
-    - id: install-llvm-25
-      uses: KyleMayes/install-llvm-action@v2
-      if: ${{ steps.install-llvm-26.outcome == 'failure' }}
-      with:
-        version: "25"
-      continue-on-error: true
-    - id: install-llvm-24
-      uses: KyleMayes/install-llvm-action@v2
-      if: ${{ steps.install-llvm-25.outcome == 'failure' }}
-      with:
-        version: "24"
-      continue-on-error: true
-    - id: install-llvm-23
-      uses: KyleMayes/install-llvm-action@v2
-      if: ${{ steps.install-llvm-24.outcome == 'failure' }}
-      with:
-        version: "23"
-      continue-on-error: true
-    - id: install-llvm-22
-      uses: KyleMayes/install-llvm-action@v2
-      if: ${{ steps.install-llvm-23.outcome == 'failure' }}
-      with:
-        version: "22"
-      continue-on-error: true
-    - id: install-llvm-21
-      uses: KyleMayes/install-llvm-action@v2
-      if: ${{ steps.install-llvm-22.outcome == 'failure' }}
-      with:
-        version: "21"
-      continue-on-error: true
-    - uses: KyleMayes/install-llvm-action@v2
-      if: ${{ steps.install-llvm-21.outcome == 'failure' }}
-      with:
-        version: "20"
-    - uses: lukka/get-cmake@latest
-    - run: pacman --noconfirm -S mingw-w64-clang-aarch64-pkgconf
-    - uses: dtolnay/rust-toolchain@stable
-      with:
-        targets: aarch64-pc-windows-msvc
-    - uses: cargo-bins/cargo-binstall@main
-    - run: cargo binstall cargo-c
-    - uses: actions/checkout@v7
-      with:
-        path: dovi_tool
-        repository: quietvoid/dovi_tool
-    - run: cd dovi_tool/dolby_vision && RUSTFLAGS="-Ctarget-cpu=armv8.7-a+crypto+sm4+sha3+fp16+sve+sve2 -Copt-level=3" cargo cinstall --verbose --release --library-type staticlib --prefix "$(cygpath -m -a ../../rustlibs)" && cd ../..
-    - uses: actions/checkout@v7
-      with:
-        path: hdr10plus_tool
-        repository: quietvoid/hdr10plus_tool
-    - run: cd hdr10plus_tool/hdr10plus && RUSTFLAGS="-Ctarget-cpu=armv8.7-a+crypto+sm4+sha3+fp16+sve+sve2 -Copt-level=3" cargo cinstall --verbose --release --library-type staticlib --prefix "$(cygpath -m -a ../../rustlibs)" && cd ../..
-    - run: cmake --fresh -B svt_build -G Ninja -DCMAKE_C_COMPILER="clang" -DCMAKE_CXX_COMPILER="clang++" -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DBUILD_APPS=ON -DTHREADS_PREFER_PTHREAD_FLAG=OFF -DCMAKE_USE_WIN32_THREADS_INIT=ON -DSVT_AV1_LTO=OFF -DCMAKE_C_FLAGS_RELEASE="-DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/pkgconfig/dovi.pc) $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/pkgconfig/hdr10plus-rs.pc) -DNDEBUG -O3 -flto=full -fwhole-program-vtables -march=armv8.7-a+crypto+sm4+sha3+fp16+sve+sve2 -mtune=oryon-1 -fno-exceptions -fno-rtti -fno-semantic-interposition -fno-stack-protector -fno-stack-clash-protection -fno-sanitize=all -fno-dwarf2-cfi-asm -fprofile-generate=SolLevante -ftemporal-profile" -DCMAKE_CXX_FLAGS_RELEASE="-DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/pkgconfig/dovi.pc) $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/pkgconfig/hdr10plus-rs.pc) -DNDEBUG -O3 -flto=full -fwhole-program-vtables -march=armv8.7-a+crypto+sm4+sha3+fp16+sve+sve2 -mtune=oryon-1 -fno-exceptions -fno-rtti -fno-semantic-interposition -fno-stack-protector -fno-stack-clash-protection -fno-sanitize=all -fno-dwarf2-cfi-asm -fprofile-generate=SolLevante -ftemporal-profile" -DCMAKE_EXE_LINKER_FLAGS_RELEASE="-fuse-ld=lld $(pkg-config --libs --static --dont-define-prefix rustlibs/lib/pkgconfig/dovi.pc) $(pkg-config --libs --static --dont-define-prefix rustlibs/lib/pkgconfig/hdr10plus-rs.pc) -flto=full -fwhole-program-vtables" && ninja -v -C svt_build
-    - run: Bin/Release/SvtAv1EncApp.exe -i SolLevante/SolLevante.y4m -b /dev/null --preset 2 --crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5
-    - run: llvm-profdata merge -o SolLevante/default.profdata SolLevante/*.profraw
-    - run: ls SolLevante
-    - run: cmake --fresh -B svt_build -G Ninja -DCMAKE_C_COMPILER="clang" -DCMAKE_CXX_COMPILER="clang++" -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DBUILD_APPS=ON -DTHREADS_PREFER_PTHREAD_FLAG=OFF -DCMAKE_USE_WIN32_THREADS_INIT=ON -DSVT_AV1_LTO=OFF -DCMAKE_C_FLAGS_RELEASE="-DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/pkgconfig/dovi.pc) $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/pkgconfig/hdr10plus-rs.pc) -DNDEBUG -O3 -flto=full -fwhole-program-vtables -fvisibility=hidden -fvisibility-inlines-hidden -march=armv8.7-a+crypto+sm4+sha3+fp16+sve+sve2 -mtune=oryon-1 -fno-exceptions -fno-rtti -fno-semantic-interposition -fno-stack-protector -fno-stack-clash-protection -fno-sanitize=all -fno-dwarf2-cfi-asm -fprofile-use=\"$(cygpath -m -a SolLevante/default.profdata)\"" -DCMAKE_CXX_FLAGS_RELEASE="-DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/pkgconfig/dovi.pc) $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/pkgconfig/hdr10plus-rs.pc) -DNDEBUG -O3 -flto=full -fwhole-program-vtables -fvisibility=hidden -fvisibility-inlines-hidden -march=armv8.7-a+crypto+sm4+sha3+fp16+sve+sve2 -mtune=oryon-1 -fno-exceptions -fno-rtti -fno-semantic-interposition -fno-stack-protector -fno-stack-clash-protection -fno-sanitize=all -fno-dwarf2-cfi-asm -fprofile-use=\"$(cygpath -m -a SolLevante/default.profdata)\"" -DCMAKE_EXE_LINKER_FLAGS_RELEASE="-fuse-ld=lld $(pkg-config --libs --static --dont-define-prefix rustlibs/lib/pkgconfig/dovi.pc) $(pkg-config --libs --static --dont-define-prefix rustlibs/lib/pkgconfig/hdr10plus-rs.pc) -flto=full -fwhole-program-vtables -fvisibility=hidden -fvisibility-inlines-hidden" && ninja -v -C svt_build
-    - run: ldd Bin/Release/SvtAv1EncApp.exe
-    - run: Bin/Release/SvtAv1EncApp.exe --help | grep dolby
-    - run: Bin/Release/SvtAv1EncApp.exe --help | grep hdr10plus
-    - run: Bin/Release/SvtAv1EncApp.exe -i SolLevante/SolLevante.y4m -b /dev/null --preset 4 --crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5
-    - run: cd Bin/Release && tar cJf Windows_arm64_armv8.7-a+crypto+sm4+sha3+fp16+sve+sve2+oryon-1.tar.xz SvtAv1EncApp.exe && cd ../..
-    - uses: softprops/action-gh-release@v3
-      with:
-        tag_name: ${{ needs.tag.outputs.tag }}
-        files: Bin/Release/Windows_arm64_armv8.7-a+crypto+sm4+sha3+fp16+sve+sve2+oryon-1.tar.xz
+  # build-windows-arm64:
+  #   needs: [tag, release]
+  #   runs-on: "windows-11-arm"
+  #   defaults:
+  #     run:
+  #       shell: msys2 {0}
+  #   steps:
+  #   - uses: msys2/setup-msys2@v2
+  #     with:
+  #       msystem: CLANGARM64
+  #       path-type: inherit
+  #       install: >-
+  #         mingw-w64-clang-aarch64-fastfetch
+  #   - run: fastfetch
+  #   - uses: actions/checkout@v7
+  #   - uses: actions/checkout@v7
+  #     with:
+  #       path: SolLevante
+  #       ref: sollevante
+  #   - run: xz --decompress SolLevante/SolLevante.y4m.xz
+  #   - id: install-llvm-30
+  #     uses: KyleMayes/install-llvm-action@v2
+  #     with:
+  #       version: "30"
+  #     continue-on-error: true
+  #   - id: install-llvm-29
+  #     uses: KyleMayes/install-llvm-action@v2
+  #     if: ${{ steps.install-llvm-30.outcome == 'failure' }}
+  #     with:
+  #       version: "29"
+  #     continue-on-error: true
+  #   - id: install-llvm-28
+  #     uses: KyleMayes/install-llvm-action@v2
+  #     if: ${{ steps.install-llvm-29.outcome == 'failure' }}
+  #     with:
+  #       version: "28"
+  #     continue-on-error: true
+  #   - id: install-llvm-27
+  #     uses: KyleMayes/install-llvm-action@v2
+  #     if: ${{ steps.install-llvm-28.outcome == 'failure' }}
+  #     with:
+  #       version: "27"
+  #     continue-on-error: true
+  #   - id: install-llvm-26
+  #     uses: KyleMayes/install-llvm-action@v2
+  #     if: ${{ steps.install-llvm-27.outcome == 'failure' }}
+  #     with:
+  #       version: "26"
+  #     continue-on-error: true
+  #   - id: install-llvm-25
+  #     uses: KyleMayes/install-llvm-action@v2
+  #     if: ${{ steps.install-llvm-26.outcome == 'failure' }}
+  #     with:
+  #       version: "25"
+  #     continue-on-error: true
+  #   - id: install-llvm-24
+  #     uses: KyleMayes/install-llvm-action@v2
+  #     if: ${{ steps.install-llvm-25.outcome == 'failure' }}
+  #     with:
+  #       version: "24"
+  #     continue-on-error: true
+  #   - id: install-llvm-23
+  #     uses: KyleMayes/install-llvm-action@v2
+  #     if: ${{ steps.install-llvm-24.outcome == 'failure' }}
+  #     with:
+  #       version: "23"
+  #     continue-on-error: true
+  #   - id: install-llvm-22
+  #     uses: KyleMayes/install-llvm-action@v2
+  #     if: ${{ steps.install-llvm-23.outcome == 'failure' }}
+  #     with:
+  #       version: "22"
+  #     continue-on-error: true
+  #   - id: install-llvm-21
+  #     uses: KyleMayes/install-llvm-action@v2
+  #     if: ${{ steps.install-llvm-22.outcome == 'failure' }}
+  #     with:
+  #       version: "21"
+  #     continue-on-error: true
+  #   - uses: KyleMayes/install-llvm-action@v2
+  #     if: ${{ steps.install-llvm-21.outcome == 'failure' }}
+  #     with:
+  #       version: "20"
+  #   - uses: lukka/get-cmake@latest
+  #   - run: pacman --noconfirm -S mingw-w64-clang-aarch64-pkgconf
+  #   - uses: dtolnay/rust-toolchain@stable
+  #     with:
+  #       targets: aarch64-pc-windows-msvc
+  #   - uses: cargo-bins/cargo-binstall@main
+  #   - run: cargo binstall cargo-c
+  #   - uses: actions/checkout@v7
+  #     with:
+  #       path: dovi_tool
+  #       repository: quietvoid/dovi_tool
+  #   - run: cd dovi_tool/dolby_vision && RUSTFLAGS="-Ctarget-cpu=armv8.7-a+crypto+sm4+sha3+fp16+sve+sve2 -Copt-level=3" cargo cinstall --verbose --release --library-type staticlib --prefix "$(cygpath -m -a ../../rustlibs)" && cd ../..
+  #   - uses: actions/checkout@v7
+  #     with:
+  #       path: hdr10plus_tool
+  #       repository: quietvoid/hdr10plus_tool
+  #   - run: cd hdr10plus_tool/hdr10plus && RUSTFLAGS="-Ctarget-cpu=armv8.7-a+crypto+sm4+sha3+fp16+sve+sve2 -Copt-level=3" cargo cinstall --verbose --release --library-type staticlib --prefix "$(cygpath -m -a ../../rustlibs)" && cd ../..
+  #   - run: cmake --fresh -B svt_build -G Ninja -DCMAKE_C_COMPILER="clang" -DCMAKE_CXX_COMPILER="clang++" -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DBUILD_APPS=ON -DTHREADS_PREFER_PTHREAD_FLAG=OFF -DCMAKE_USE_WIN32_THREADS_INIT=ON -DSVT_AV1_LTO=OFF -DCMAKE_C_FLAGS_RELEASE="-DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/pkgconfig/dovi.pc) $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/pkgconfig/hdr10plus-rs.pc) -DNDEBUG -O3 -flto=full -fwhole-program-vtables -march=armv8.7-a+crypto+sm4+sha3+fp16+sve+sve2 -mtune=oryon-1 -fno-exceptions -fno-rtti -fno-stack-protector -fno-sanitize=all -fno-dwarf2-cfi-asm -Wno-deprecated -fprofile-generate=SolLevante -ftemporal-profile" -DCMAKE_CXX_FLAGS_RELEASE="-DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/pkgconfig/dovi.pc) $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/pkgconfig/hdr10plus-rs.pc) -DNDEBUG -O3 -flto=full -fwhole-program-vtables -march=armv8.7-a+crypto+sm4+sha3+fp16+sve+sve2 -mtune=oryon-1 -fno-exceptions -fno-rtti -fno-stack-protector -fno-sanitize=all -fno-dwarf2-cfi-asm -Wno-deprecated -fprofile-generate=SolLevante -ftemporal-profile" -DCMAKE_EXE_LINKER_FLAGS_RELEASE="-fuse-ld=lld $(pkg-config --libs --static --dont-define-prefix rustlibs/lib/pkgconfig/dovi.pc) $(pkg-config --libs --static --dont-define-prefix rustlibs/lib/pkgconfig/hdr10plus-rs.pc) -flto=full -fwhole-program-vtables" && ninja -v -C svt_build
+  #   - run: Bin/Release/SvtAv1EncApp.exe -i SolLevante/SolLevante.y4m -b /dev/null --preset 2 --crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5
+  #   - run: llvm-profdata merge -o SolLevante/default.profdata SolLevante/*.profraw
+  #   - run: ls SolLevante
+  #   - run: cmake --fresh -B svt_build -G Ninja -DCMAKE_C_COMPILER="clang" -DCMAKE_CXX_COMPILER="clang++" -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DBUILD_APPS=ON -DTHREADS_PREFER_PTHREAD_FLAG=OFF -DCMAKE_USE_WIN32_THREADS_INIT=ON -DSVT_AV1_LTO=OFF -DCMAKE_C_FLAGS_RELEASE="-DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/pkgconfig/dovi.pc) $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/pkgconfig/hdr10plus-rs.pc) -DNDEBUG -O3 -flto=full -fwhole-program-vtables -fvisibility=hidden -fvisibility-inlines-hidden -march=armv8.7-a+crypto+sm4+sha3+fp16+sve+sve2 -mtune=oryon-1 -fno-exceptions -fno-rtti -fno-stack-protector -fno-sanitize=all -fno-dwarf2-cfi-asm -Wno-deprecated -fprofile-use=\"$(cygpath -m -a SolLevante/default.profdata)\"" -DCMAKE_CXX_FLAGS_RELEASE="-DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/pkgconfig/dovi.pc) $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/pkgconfig/hdr10plus-rs.pc) -DNDEBUG -O3 -flto=full -fwhole-program-vtables -fvisibility=hidden -fvisibility-inlines-hidden -march=armv8.7-a+crypto+sm4+sha3+fp16+sve+sve2 -mtune=oryon-1 -fno-exceptions -fno-rtti -fno-stack-protector -fno-sanitize=all -fno-dwarf2-cfi-asm -Wno-deprecated -fprofile-use=\"$(cygpath -m -a SolLevante/default.profdata)\"" -DCMAKE_EXE_LINKER_FLAGS_RELEASE="-fuse-ld=lld $(pkg-config --libs --static --dont-define-prefix rustlibs/lib/pkgconfig/dovi.pc) $(pkg-config --libs --static --dont-define-prefix rustlibs/lib/pkgconfig/hdr10plus-rs.pc) -flto=full -fwhole-program-vtables -fvisibility=hidden -fvisibility-inlines-hidden" && ninja -v -C svt_build
+  #   - run: ldd Bin/Release/SvtAv1EncApp.exe
+  #   - run: Bin/Release/SvtAv1EncApp.exe --help | grep dolby
+  #   - run: Bin/Release/SvtAv1EncApp.exe --help | grep hdr10plus
+  #   - run: Bin/Release/SvtAv1EncApp.exe -i SolLevante/SolLevante.y4m -b /dev/null --preset 4 --crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5
+  #   - run: cd Bin/Release && tar cJf Windows_arm64_armv8.7-a+crypto+sm4+sha3+fp16+sve+sve2+oryon-1.tar.xz SvtAv1EncApp.exe && cd ../..
+  #   - uses: softprops/action-gh-release@v3
+  #     with:
+  #       tag_name: ${{ needs.tag.outputs.tag }}
+  #       files: Bin/Release/Windows_arm64_armv8.7-a+crypto+sm4+sha3+fp16+sve+sve2+oryon-1.tar.xz
 
 
   # On Linux, `-flto=thin` should be faster than `-flto=full`.  
@@ -290,86 +290,87 @@ jobs:
   # perf2bolt -p SolLevante/perf.data -o SolLevante/perf.fdata Bin/Release/SvtAv1EncApp
   # llvm-bolt Bin/Release/SvtAv1EncApp -o Bin/Release/SvtAv1EncApp.bolt -data=SolLevante/perf.fdata --relocs --remove-symtab --eliminate-unreachable --hugify --align-blocks --reorder-blocks=ext-tsp --reorder-functions-use-hot-size --use-edge-counts --min-branch-clusters --split-functions --split-strategy=profile2 --split-eh --split-all-cold --frame-opt=all --frame-opt-rm-stores --reg-reassign --use-aggr-reg-reassign --inline-memcpy --inline-ap --shorten-instructions --infer-fall-throughs --infer-stale-profile --equalize-bb-counts --iterative-guess --indirect-call-promotion=all --indirect-call-promotion-use-mispredicts --icp-eliminate-loads --jump-tables=aggressive --simplify-rodata-loads --plt=all --icf=1 --peepholes=all --eliminate-unreachable --elim-link-veneers --group-stubs --fix-block-counts --fix-func-counts --match-profile-with-function-hash --match-with-call-graph --use-compact-aligner --preserve-blocks-alignment --x86-align-branch-boundary-hot-only --x86-strip-redundant-address-size --tail-duplication=cache --simplify-conditional-tail-calls --sctc-mode=heuristic --dyno-stats --icp-mp-threshold=1
   # ```
-  build-linux-x86-64:
-    needs: [tag, release]
-    runs-on: "ubuntu-latest"
-    steps:
-    - uses: ConorMacBride/install-package@v1
-      with:
-        apt: neofetch
-    - run: neofetch
-    - uses: actions/checkout@v7
-    - uses: actions/checkout@v7
-      with:
-        path: SolLevante
-        ref: sollevante
-    - run: xz --decompress SolLevante/SolLevante.y4m.xz
-    - uses: ilammy/setup-nasm@v1
-    - uses: ZhongRuoyu/setup-llvm@v0
-    - uses: dtolnay/rust-toolchain@stable
-    - uses: cargo-bins/cargo-binstall@main
-    - run: cargo binstall cargo-c
-    - uses: actions/checkout@v7
-      with:
-        path: dovi_tool
-        repository: quietvoid/dovi_tool
-    - run: cd dovi_tool/dolby_vision && RUSTFLAGS="-Ctarget-cpu=x86-64-v3 -Copt-level=3" cargo cinstall --verbose --release --library-type staticlib --prefix "$(realpath ../../rustlibs)" && cd ../..
-    - uses: actions/checkout@v7
-      with:
-        path: hdr10plus_tool
-        repository: quietvoid/hdr10plus_tool
-    - run: cd hdr10plus_tool/hdr10plus && RUSTFLAGS="-Ctarget-cpu=x86-64-v3 -Copt-level=3" cargo cinstall --verbose --release --library-type staticlib --prefix "$(realpath ../../rustlibs)" && cd ../..
-    # - id: build-avx512
-    #   run: CFLAGS="-DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/x86_64-linux-gnu/pkgconfig/dovi.pc) $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/x86_64-linux-gnu/pkgconfig/hdr10plus-rs.pc) -DNDEBUG -flto=thin -fwhole-program-vtables -march=icelake-server -mtune=znver5 -mprefer-vector-width=512 -fno-exceptions -fno-rtti -fno-semantic-interposition -fno-stack-protector -fno-stack-clash-protection -fno-sanitize=all -fno-dwarf2-cfi-asm -fno-pic -fno-pie" CPPFLAGS="-DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/x86_64-linux-gnu/pkgconfig/dovi.pc) $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/x86_64-linux-gnu/pkgconfig/hdr10plus-rs.pc) -DNDEBUG -flto=thin -fwhole-program-vtables -march=icelake-server -mtune=znver5 -mprefer-vector-width=512 -fno-exceptions -fno-rtti -fno-semantic-interposition -fno-stack-protector -fno-stack-clash-protection -fno-sanitize=all -fno-dwarf2-cfi-asm -fno-pic -fno-pie" LDFLAGS="-fuse-ld=lld $(pkg-config --libs --static --dont-define-prefix rustlibs/lib/x86_64-linux-gnu/pkgconfig/dovi.pc) $(pkg-config --libs --static --dont-define-prefix rustlibs/lib/x86_64-linux-gnu/pkgconfig/hdr10plus-rs.pc) -flto=thin -fwhole-program-vtables -Wl,-O3 -Wl,--lto-O3 -Wl,--as-needed -Wl,--gc-sections -Wl,--icf=all -Wl,--strip-all -Wl,-z,norelro -Wl,--build-id=none -Wl,--relax -Wl,-z,noseparate-code -Wl,-znow" Build/linux/build.sh --verbose --static --release --disable-native --enable-avx512 --disable-lto --enable-pgo --pgo-videos="$(realpath SolLevante)"
-    #   continue-on-error: true
-    # - run: ldd Bin/Release/SvtAv1EncApp
-    #   if: ${{ steps.build-avx512.outcome != 'failure' }}
-    # - run: Bin/Release/SvtAv1EncApp --help | grep dolby
-    #   if: ${{ steps.build-avx512.outcome != 'failure' }}
-    # - run: Bin/Release/SvtAv1EncApp --help | grep hdr10plus
-    #   if: ${{ steps.build-avx512.outcome != 'failure' }}
-    # - run: Bin/Release/SvtAv1EncApp -i SolLevante/SolLevante.y4m -b /dev/null --preset 4 --crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5
-    #   if: ${{ steps.build-avx512.outcome != 'failure' }}
-    # - run: cd Bin/Release && tar cJf Linux_x86-64_icelake-server+znver5.tar.xz SvtAv1EncApp && cd ../..
-    #   if: ${{ steps.build-avx512.outcome != 'failure' }}
-    # - uses: softprops/action-gh-release@v3
-    #   with:
-    #     tag_name: ${{ needs.tag.outputs.tag }}
-    #     files: Bin/Release/Linux_x86-64_icelake-server+znver5.tar.xz
-    #   if: ${{ steps.build-avx512.outcome != 'failure' }}
-    # - run: Build/linux/build.sh --clean
-    # - id: build-znver2
-    #   run: CFLAGS="-DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/x86_64-linux-gnu/pkgconfig/dovi.pc) $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/x86_64-linux-gnu/pkgconfig/hdr10plus-rs.pc) -DNDEBUG -flto=thin -fwhole-program-vtables -march=znver2 -mtune=znver2 -fno-exceptions -fno-rtti -fno-semantic-interposition -fno-stack-protector -fno-stack-clash-protection -fno-sanitize=all -fno-dwarf2-cfi-asm -fno-pic -fno-pie" CPPFLAGS="-DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/x86_64-linux-gnu/pkgconfig/dovi.pc) $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/x86_64-linux-gnu/pkgconfig/hdr10plus-rs.pc) -DNDEBUG -flto=thin -fwhole-program-vtables -march=znver2 -mtune=znver2 -fno-exceptions -fno-rtti -fno-semantic-interposition -fno-stack-protector -fno-stack-clash-protection -fno-sanitize=all -fno-dwarf2-cfi-asm -fno-pic -fno-pie" LDFLAGS="-fuse-ld=lld $(pkg-config --libs --static --dont-define-prefix rustlibs/lib/x86_64-linux-gnu/pkgconfig/dovi.pc) $(pkg-config --libs --static --dont-define-prefix rustlibs/lib/x86_64-linux-gnu/pkgconfig/hdr10plus-rs.pc) -flto=thin -fwhole-program-vtables -Wl,-O3 -Wl,--lto-O3 -Wl,--as-needed -Wl,--gc-sections -Wl,--icf=all -Wl,--strip-all -Wl,-z,norelro -Wl,--build-id=none -Wl,--relax -Wl,-z,noseparate-code -Wl,-znow" Build/linux/build.sh --verbose --static --release --disable-native --enable-avx512 --disable-lto --enable-pgo --pgo-videos="$(realpath SolLevante)"
-    #   continue-on-error: true
-    # - run: ldd Bin/Release/SvtAv1EncApp
-    #   if: ${{ steps.build-znver2.outcome != 'failure' }}
-    # - run: Bin/Release/SvtAv1EncApp --help | grep dolby
-    #   if: ${{ steps.build-znver2.outcome != 'failure' }}
-    # - run: Bin/Release/SvtAv1EncApp --help | grep hdr10plus
-    #   if: ${{ steps.build-znver2.outcome != 'failure' }}
-    # - run: Bin/Release/SvtAv1EncApp -i SolLevante/SolLevante.y4m -b /dev/null --preset 4 --crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5
-    #   if: ${{ steps.build-znver2.outcome != 'failure' }}
-    # - run: cd Bin/Release && tar cJf Linux_x86-64_znver2.tar.xz SvtAv1EncApp && cd ../..
-    #   if: ${{ steps.build-znver2.outcome != 'failure' }}
-    # - uses: softprops/action-gh-release@v3
-    #   with:
-    #     tag_name: ${{ needs.tag.outputs.tag }}
-    #     files: Bin/Release/Linux_x86-64_znver2.tar.xz
-    #   if: ${{ steps.build-znver2.outcome != 'failure' }}
-    # - run: Build/linux/build.sh --clean
-    - run: CFLAGS="-DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/x86_64-linux-gnu/pkgconfig/dovi.pc) $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/x86_64-linux-gnu/pkgconfig/hdr10plus-rs.pc) -DNDEBUG -flto=thin -fwhole-program-vtables -march=x86-64-v3 -mtune=znver2 -mno-gather -fno-exceptions -fno-rtti -fno-semantic-interposition -fno-stack-protector -fno-stack-clash-protection -fno-sanitize=all -fno-dwarf2-cfi-asm -fno-pic -fno-pie" CPPFLAGS="-DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/x86_64-linux-gnu/pkgconfig/dovi.pc) $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/x86_64-linux-gnu/pkgconfig/hdr10plus-rs.pc) -DNDEBUG -flto=thin -fwhole-program-vtables -march=x86-64-v3 -mtune=znver2 -mno-gather -fno-exceptions -fno-rtti -fno-semantic-interposition -fno-stack-protector -fno-stack-clash-protection -fno-sanitize=all -fno-dwarf2-cfi-asm -fno-pic -fno-pie" LDFLAGS="-fuse-ld=lld $(pkg-config --libs --static --dont-define-prefix rustlibs/lib/x86_64-linux-gnu/pkgconfig/dovi.pc) $(pkg-config --libs --static --dont-define-prefix rustlibs/lib/x86_64-linux-gnu/pkgconfig/hdr10plus-rs.pc) -flto=thin -fwhole-program-vtables -Wl,-O3 -Wl,--lto-O3 -Wl,--as-needed -Wl,--gc-sections -Wl,--icf=all -Wl,--strip-all -Wl,-z,norelro -Wl,--build-id=none -Wl,--relax -Wl,-z,noseparate-code -Wl,-znow" Build/linux/build.sh --verbose --static --release --disable-native --enable-avx512 --disable-lto --enable-pgo --pgo-videos="$(realpath SolLevante)"
-    - run: ldd Bin/Release/SvtAv1EncApp
-    - run: Bin/Release/SvtAv1EncApp --help | grep dolby
-    - run: Bin/Release/SvtAv1EncApp --help | grep hdr10plus
-    - run: Bin/Release/SvtAv1EncApp -i SolLevante/SolLevante.y4m -b test.ivf --preset 4 --crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5
-    - run: cd Bin/Release && tar cJf Linux_x86-64_x86-64-v3.tar.xz SvtAv1EncApp && cd ../..
-    - uses: softprops/action-gh-release@v3
-      with:
-        tag_name: ${{ needs.tag.outputs.tag }}
-        files: Bin/Release/Linux_x86-64_x86-64-v3.tar.xz
+  # build-linux-x86-64:
+  #   needs: [tag, release]
+  #   runs-on: "ubuntu-latest"
+  #   steps:
+  #   - uses: ConorMacBride/install-package@v1
+  #     with:
+  #       apt: neofetch
+  #   - run: neofetch
+  #   - uses: actions/checkout@v7
+  #   - uses: actions/checkout@v7
+  #     with:
+  #       path: SolLevante
+  #       ref: sollevante
+  #   - run: xz --decompress SolLevante/SolLevante.y4m.xz
+  #   - uses: ilammy/setup-nasm@v1
+  #   - uses: ZhongRuoyu/setup-llvm@v0
+  #   - uses: dtolnay/rust-toolchain@stable
+  #   - uses: cargo-bins/cargo-binstall@main
+  #   - run: cargo binstall cargo-c
+  #   - uses: actions/checkout@v7
+  #     with:
+  #       path: dovi_tool
+  #       repository: quietvoid/dovi_tool
+  #   - run: cd dovi_tool/dolby_vision && RUSTFLAGS="-Ctarget-cpu=x86-64-v3 -Copt-level=3" cargo cinstall --verbose --release --library-type staticlib --prefix "$(realpath ../../rustlibs)" && cd ../..
+  #   - uses: actions/checkout@v7
+  #     with:
+  #       path: hdr10plus_tool
+  #       repository: quietvoid/hdr10plus_tool
+  #   - run: cd hdr10plus_tool/hdr10plus && RUSTFLAGS="-Ctarget-cpu=x86-64-v3 -Copt-level=3" cargo cinstall --verbose --release --library-type staticlib --prefix "$(realpath ../../rustlibs)" && cd ../..
+  #   - id: build-avx512
+  #     run: CFLAGS="-DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/x86_64-linux-gnu/pkgconfig/dovi.pc) $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/x86_64-linux-gnu/pkgconfig/hdr10plus-rs.pc) -DNDEBUG -flto=thin -fwhole-program-vtables -march=icelake-server -mtune=znver5 -mprefer-vector-width=512 -fno-exceptions -fno-rtti -fno-semantic-interposition -fno-stack-protector -fno-stack-clash-protection -fno-sanitize=all -fno-dwarf2-cfi-asm -fno-pic -fno-pie -Wno-deprecated" CPPFLAGS="-DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/x86_64-linux-gnu/pkgconfig/dovi.pc) $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/x86_64-linux-gnu/pkgconfig/hdr10plus-rs.pc) -DNDEBUG -flto=thin -fwhole-program-vtables -march=icelake-server -mtune=znver5 -mprefer-vector-width=512 -fno-exceptions -fno-rtti -fno-semantic-interposition -fno-stack-protector -fno-stack-clash-protection -fno-sanitize=all -fno-dwarf2-cfi-asm -fno-pic -fno-pie -Wno-deprecated" LDFLAGS="-fuse-ld=lld $(pkg-config --libs --static --dont-define-prefix rustlibs/lib/x86_64-linux-gnu/pkgconfig/dovi.pc) $(pkg-config --libs --static --dont-define-prefix rustlibs/lib/x86_64-linux-gnu/pkgconfig/hdr10plus-rs.pc) -flto=thin -fwhole-program-vtables -Wl,-O3 -Wl,--lto-O3 -Wl,--as-needed -Wl,--gc-sections -Wl,--icf=all -Wl,--strip-all -Wl,-z,norelro -Wl,--build-id=none -Wl,--relax -Wl,-z,noseparate-code -Wl,-znow" Build/linux/build.sh --verbose --static --release --disable-native --enable-avx512 --disable-lto --enable-pgo --pgo-videos="$(realpath SolLevante)"
+  #     continue-on-error: true
+  #   - run: ldd Bin/Release/SvtAv1EncApp
+  #     if: ${{ steps.build-avx512.outcome != 'failure' }}
+  #   - run: Bin/Release/SvtAv1EncApp --help | grep dolby
+  #     if: ${{ steps.build-avx512.outcome != 'failure' }}
+  #   - run: Bin/Release/SvtAv1EncApp --help | grep hdr10plus
+  #     if: ${{ steps.build-avx512.outcome != 'failure' }}
+  #   - run: Bin/Release/SvtAv1EncApp -i SolLevante/SolLevante.y4m -b /dev/null --preset 4 --crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5
+  #     if: ${{ steps.build-avx512.outcome != 'failure' }}
+  #   - run: cd Bin/Release && tar cJf Linux_x86-64_icelake-server+znver5.tar.xz SvtAv1EncApp && cd ../..
+  #     if: ${{ steps.build-avx512.outcome != 'failure' }}
+  #   - uses: softprops/action-gh-release@v3
+  #     with:
+  #       tag_name: ${{ needs.tag.outputs.tag }}
+  #       files: Bin/Release/Linux_x86-64_icelake-server+znver5.tar.xz
+  #     if: ${{ steps.build-avx512.outcome != 'failure' }}
+  #   - run: Build/linux/build.sh --clean
+  #   - id: build-znver2
+  #     run: CFLAGS="-DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/x86_64-linux-gnu/pkgconfig/dovi.pc) $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/x86_64-linux-gnu/pkgconfig/hdr10plus-rs.pc) -DNDEBUG -flto=thin -fwhole-program-vtables -march=znver2 -mtune=znver2 -fno-exceptions -fno-rtti -fno-semantic-interposition -fno-stack-protector -fno-stack-clash-protection -fno-sanitize=all -fno-dwarf2-cfi-asm -fno-pic -fno-pie -Wno-deprecated" CPPFLAGS="-DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/x86_64-linux-gnu/pkgconfig/dovi.pc) $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/x86_64-linux-gnu/pkgconfig/hdr10plus-rs.pc) -DNDEBUG -flto=thin -fwhole-program-vtables -march=znver2 -mtune=znver2 -fno-exceptions -fno-rtti -fno-semantic-interposition -fno-stack-protector -fno-stack-clash-protection -fno-sanitize=all -fno-dwarf2-cfi-asm -fno-pic -fno-pie -Wno-deprecated" LDFLAGS="-fuse-ld=lld $(pkg-config --libs --static --dont-define-prefix rustlibs/lib/x86_64-linux-gnu/pkgconfig/dovi.pc) $(pkg-config --libs --static --dont-define-prefix rustlibs/lib/x86_64-linux-gnu/pkgconfig/hdr10plus-rs.pc) -flto=thin -fwhole-program-vtables -Wl,-O3 -Wl,--lto-O3 -Wl,--as-needed -Wl,--gc-sections -Wl,--icf=all -Wl,--strip-all -Wl,-z,norelro -Wl,--build-id=none -Wl,--relax -Wl,-z,noseparate-code -Wl,-znow" Build/linux/build.sh --verbose --static --release --disable-native --enable-avx512 --disable-lto --enable-pgo --pgo-videos="$(realpath SolLevante)"
+  #     continue-on-error: true
+  #   - run: ldd Bin/Release/SvtAv1EncApp
+  #     if: ${{ steps.build-znver2.outcome != 'failure' }}
+  #   - run: Bin/Release/SvtAv1EncApp --help | grep dolby
+  #     if: ${{ steps.build-znver2.outcome != 'failure' }}
+  #   - run: Bin/Release/SvtAv1EncApp --help | grep hdr10plus
+  #     if: ${{ steps.build-znver2.outcome != 'failure' }}
+  #   - run: Bin/Release/SvtAv1EncApp -i SolLevante/SolLevante.y4m -b /dev/null --preset 4 --crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5
+  #     if: ${{ steps.build-znver2.outcome != 'failure' }}
+  #   - run: cd Bin/Release && tar cJf Linux_x86-64_znver2.tar.xz SvtAv1EncApp && cd ../..
+  #     if: ${{ steps.build-znver2.outcome != 'failure' }}
+  #   - uses: softprops/action-gh-release@v3
+  #     with:
+  #       tag_name: ${{ needs.tag.outputs.tag }}
+  #       files: Bin/Release/Linux_x86-64_znver2.tar.xz
+  #     if: ${{ steps.build-znver2.outcome != 'failure' }}
+  #   - run: Build/linux/build.sh --clean
+  #   - run: CFLAGS="-DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/x86_64-linux-gnu/pkgconfig/dovi.pc) $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/x86_64-linux-gnu/pkgconfig/hdr10plus-rs.pc) -DNDEBUG -flto=thin -fwhole-program-vtables -march=x86-64-v3 -mtune=znver2 -mno-gather -fno-exceptions -fno-rtti -fno-semantic-interposition -fno-stack-protector -fno-stack-clash-protection -fno-sanitize=all -fno-dwarf2-cfi-asm -fno-pic -fno-pie -Wno-deprecated" CPPFLAGS="-DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/x86_64-linux-gnu/pkgconfig/dovi.pc) $(pkg-config --cflags --static --dont-define-prefix rustlibs/lib/x86_64-linux-gnu/pkgconfig/hdr10plus-rs.pc) -DNDEBUG -flto=thin -fwhole-program-vtables -march=x86-64-v3 -mtune=znver2 -mno-gather -fno-exceptions -fno-rtti -fno-semantic-interposition -fno-stack-protector -fno-stack-clash-protection -fno-sanitize=all -fno-dwarf2-cfi-asm -fno-pic -fno-pie -Wno-deprecated" LDFLAGS="-fuse-ld=lld $(pkg-config --libs --static --dont-define-prefix rustlibs/lib/x86_64-linux-gnu/pkgconfig/dovi.pc) $(pkg-config --libs --static --dont-define-prefix rustlibs/lib/x86_64-linux-gnu/pkgconfig/hdr10plus-rs.pc) -flto=thin -fwhole-program-vtables -Wl,-O3 -Wl,--lto-O3 -Wl,--as-needed -Wl,--gc-sections -Wl,--icf=all -Wl,--strip-all -Wl,-z,norelro -Wl,--build-id=none -Wl,--relax -Wl,-z,noseparate-code -Wl,-znow" Build/linux/build.sh --verbose --static --release --disable-native --enable-avx512 --disable-lto --enable-pgo --pgo-videos="$(realpath SolLevante)"
+  #   - run: ldd Bin/Release/SvtAv1EncApp
+  #   - run: Bin/Release/SvtAv1EncApp --help | grep dolby
+  #   - run: Bin/Release/SvtAv1EncApp --help | grep hdr10plus
+  #   - run: Bin/Release/SvtAv1EncApp -i SolLevante/SolLevante.y4m -b test.ivf --preset 4 --crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5
+  #   - run: cd Bin/Release && tar cJf Linux_x86-64_x86-64-v3.tar.xz SvtAv1EncApp && cd ../..
+  #   - uses: softprops/action-gh-release@v3
+  #     with:
+  #       tag_name: ${{ needs.tag.outputs.tag }}
+  #       files: Bin/Release/Linux_x86-64_x86-64-v3.tar.xz
 
 
   # For some reason `-flto=full` is broken and fails the linking, so using `-flto=thin` for now.  
+  # Also it seems that it's only on macOS where `-fwhole-program-vtables` would trigger an inline error.  
   build-macos-arm64:
     needs: [tag, release]
     runs-on: "macos-latest"
@@ -400,7 +401,7 @@ jobs:
         path: hdr10plus_tool
         repository: quietvoid/hdr10plus_tool
     - run: cd hdr10plus_tool/hdr10plus && sudo RUSTFLAGS="-Ctarget-cpu=armv8.5-a+simd+crypto -Copt-level=3" cargo cinstall --verbose --release --library-type staticlib && cd ../..
-    - run: PATH="/opt/homebrew/opt/llvm/bin:$PATH" CMAKE_PREFIX_PATH="/opt/homebrew/opt/llvm" CFLAGS="-I/opt/homebrew/opt/llvm/include -DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 $(pkg-config --cflags --static dovi) $(pkg-config --cflags --static hdr10plus-rs) -DNDEBUG -flto=thin -fwhole-program-vtables -march=armv8.5-a+simd+crypto -mtune=apple-m3 -fno-exceptions -fno-rtti -fno-semantic-interposition -fno-stack-protector -fno-stack-clash-protection -fno-sanitize=all -fno-dwarf2-cfi-asm" CPPFLAGS="-I/opt/homebrew/opt/llvm/include -DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 $(pkg-config --cflags --static dovi) $(pkg-config --cflags --static hdr10plus-rs) -DNDEBUG -flto=thin -fwhole-program-vtables -march=armv8.5-a+simd+crypto -mtune=apple-m3 -fno-exceptions -fno-rtti -fno-semantic-interposition -fno-stack-protector -fno-stack-clash-protection -fno-sanitize=all -fno-dwarf2-cfi-asm" LDFLAGS="-fuse-ld=lld -L/opt/homebrew/opt/llvm/lib $(pkg-config --libs --static dovi) $(pkg-config --libs --static hdr10plus-rs) -flto=thin -fwhole-program-vtables" Build/linux/build.sh --verbose --static --release --disable-native --disable-lto --enable-pgo --pgo-videos="$(realpath SolLevante)"
+    - run: PATH="/opt/homebrew/opt/llvm/bin:$PATH" CMAKE_PREFIX_PATH="/opt/homebrew/opt/llvm" CFLAGS="-I/opt/homebrew/opt/llvm/include -DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 $(pkg-config --cflags --static dovi) $(pkg-config --cflags --static hdr10plus-rs) -DNDEBUG -flto=thin -march=armv8.5-a+simd+crypto -mtune=apple-m3 -fno-exceptions -fno-rtti -fno-stack-protector -fno-sanitize=all -fno-dwarf2-cfi-asm -Wno-deprecated" CPPFLAGS="-I/opt/homebrew/opt/llvm/include -DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 $(pkg-config --cflags --static dovi) $(pkg-config --cflags --static hdr10plus-rs) -DNDEBUG -flto=thin -march=armv8.5-a+simd+crypto -mtune=apple-m3 -fno-exceptions -fno-rtti -fno-stack-protector -fno-sanitize=all -fno-dwarf2-cfi-asm -Wno-deprecated" LDFLAGS="-fuse-ld=lld -L/opt/homebrew/opt/llvm/lib $(pkg-config --libs --static dovi) $(pkg-config --libs --static hdr10plus-rs) -flto=thin -Wl,-O3 -Wl,--lto-O3 -Wl,--as-needed" Build/linux/build.sh --verbose --static --release --disable-native --disable-lto --enable-pgo --pgo-videos="$(realpath SolLevante)"
     - run: otool -L Bin/Release/SvtAv1EncApp
     - run: Bin/Release/SvtAv1EncApp --help | grep dolby
     - run: Bin/Release/SvtAv1EncApp --help | grep hdr10plus
@@ -412,6 +413,7 @@ jobs:
         files: Bin/Release/macOS_arm64_armv8.5-a+simd+crypto+apple-m3.tar.xz
 
 
+  # Also it seems that it's only on macOS where `-fwhole-program-vtables` would trigger an inline error.  
   build-macos-x86-64:
     needs: [tag, release]
     runs-on: "macos-26-intel"
@@ -443,7 +445,7 @@ jobs:
         path: hdr10plus_tool
         repository: quietvoid/hdr10plus_tool
     - run: cd hdr10plus_tool/hdr10plus && sudo RUSTFLAGS="-Ctarget-cpu=x86-64-v3 -Copt-level=3" cargo cinstall --verbose --release --library-type staticlib && cd ../..
-    - run: PATH="/opt/homebrew/opt/llvm/bin:$PATH" CMAKE_PREFIX_PATH="/opt/homebrew/opt/llvm" CFLAGS="-I/opt/homebrew/opt/llvm/include -DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 $(pkg-config --cflags --static dovi) $(pkg-config --cflags --static hdr10plus-rs) -DNDEBUG -flto=full -fwhole-program-vtables -march=skylake -mtune=skylake -mno-gather -fno-exceptions -fno-rtti -fno-semantic-interposition -fno-stack-protector -fno-stack-clash-protection -fno-sanitize=all -fno-dwarf2-cfi-asm" CPPFLAGS="-I/opt/homebrew/opt/llvm/include -DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 $(pkg-config --cflags --static dovi) $(pkg-config --cflags --static hdr10plus-rs) -DNDEBUG -flto=full -fwhole-program-vtables -march=skylake -mtune=skylake -mno-gather -fno-exceptions -fno-rtti -fno-semantic-interposition -fno-stack-protector -fno-stack-clash-protection -fno-sanitize=all -fno-dwarf2-cfi-asm" LDFLAGS="-fuse-ld=lld -L/opt/homebrew/opt/llvm/lib $(pkg-config --libs --static dovi) $(pkg-config --libs --static hdr10plus-rs) -flto=full -fwhole-program-vtables" Build/linux/build.sh --verbose --static --release --disable-native --enable-avx512 --disable-lto --enable-pgo --pgo-videos="$(realpath SolLevante)"
+    - run: PATH="/opt/homebrew/opt/llvm/bin:$PATH" CMAKE_PREFIX_PATH="/opt/homebrew/opt/llvm" CFLAGS="-I/opt/homebrew/opt/llvm/include -DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 $(pkg-config --cflags --static dovi) $(pkg-config --cflags --static hdr10plus-rs) -DNDEBUG -flto=full -march=skylake -mtune=skylake -mno-gather -fno-exceptions -fno-rtti -fno-stack-protector -fno-sanitize=all -fno-dwarf2-cfi-asm -Wno-deprecated" CPPFLAGS="-I/opt/homebrew/opt/llvm/include -DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 $(pkg-config --cflags --static dovi) $(pkg-config --cflags --static hdr10plus-rs) -DNDEBUG -flto=full -march=skylake -mtune=skylake -mno-gather -fno-exceptions -fno-rtti -fno-stack-protector -fno-sanitize=all -fno-dwarf2-cfi-asm -Wno-deprecated" LDFLAGS="-fuse-ld=lld -L/opt/homebrew/opt/llvm/lib $(pkg-config --libs --static dovi) $(pkg-config --libs --static hdr10plus-rs) -flto=full -Wl,-O3 -Wl,--lto-O3 -Wl,--as-needed" Build/linux/build.sh --verbose --static --release --disable-native --enable-avx512 --disable-lto --enable-pgo --pgo-videos="$(realpath SolLevante)"
     - run: otool -L Bin/Release/SvtAv1EncApp
     - run: Bin/Release/SvtAv1EncApp --help | grep dolby
     - run: Bin/Release/SvtAv1EncApp --help | grep hdr10plus
