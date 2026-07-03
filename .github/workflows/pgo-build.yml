@@ -392,7 +392,7 @@ jobs:
     - run: xz --decompress SolLevante/SolLevante.y4m.xz
     - uses: ConorMacBride/install-package@v1
       with:
-        brew: llvm lld
+        brew: llvm@22.1.7 lld@22.1.7
     - uses: dtolnay/rust-toolchain@stable
     - uses: cargo-bins/cargo-binstall@main
     - run: cargo binstall cargo-c
