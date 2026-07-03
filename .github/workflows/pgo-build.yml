@@ -406,7 +406,7 @@ jobs:
         path: hdr10plus_tool
         repository: quietvoid/hdr10plus_tool
     - run: cd hdr10plus_tool/hdr10plus && sudo RUSTFLAGS="-Ctarget-cpu=apple-m1 -Copt-level=3" cargo cinstall --verbose --release --library-type staticlib && cd ../..
-    - run: PATH="/opt/homebrew/opt/llvm/bin:$PATH" CMAKE_PREFIX_PATH="/opt/homebrew/opt/llvm" CFLAGS="-I/opt/homebrew/opt/llvm/include -DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 $(pkg-config --cflags --static dovi) $(pkg-config --cflags --static hdr10plus-rs) -DNDEBUG -flto=thin -march=armv8.5-a+simd+crypto -mtune=apple-m3 -fno-exceptions -fno-rtti -fno-stack-protector -fno-sanitize=all -fno-dwarf2-cfi-asm -Wno-deprecated" CPPFLAGS="-I/opt/homebrew/opt/llvm/include -DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 $(pkg-config --cflags --static dovi) $(pkg-config --cflags --static hdr10plus-rs) -DNDEBUG -flto=thin -march=armv8.5-a+simd+crypto -mtune=apple-m3 -fno-exceptions -fno-rtti -fno-stack-protector -fno-sanitize=all -fno-dwarf2-cfi-asm -Wno-deprecated" LDFLAGS="-fuse-ld=lld -L/opt/homebrew/opt/llvm/lib $(pkg-config --libs --static dovi) $(pkg-config --libs --static hdr10plus-rs) -flto=thin" Build/linux/build.sh --verbose --static --release --disable-native --disable-lto --enable-pgo --pgo-videos="$(realpath SolLevante)"
+    - run: PATH="/opt/homebrew/opt/llvm/bin:$PATH" CMAKE_PREFIX_PATH="/opt/homebrew/opt/llvm" CFLAGS="-I/opt/homebrew/opt/llvm/include -DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 $(pkg-config --cflags --static dovi) $(pkg-config --cflags --static hdr10plus-rs) -DNDEBUG -flto=thin -march=armv8.5-a+simd+crypto -mtune=apple-m3 -fno-exceptions -fno-rtti -Wno-deprecated" CPPFLAGS="-I/opt/homebrew/opt/llvm/include -DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 $(pkg-config --cflags --static dovi) $(pkg-config --cflags --static hdr10plus-rs) -DNDEBUG -flto=thin -march=armv8.5-a+simd+crypto -mtune=apple-m3 -fno-exceptions -fno-rtti -Wno-deprecated" LDFLAGS="-fuse-ld=lld -L/opt/homebrew/opt/llvm/lib $(pkg-config --libs --static dovi) $(pkg-config --libs --static hdr10plus-rs) -flto=thin" Build/linux/build.sh --verbose --static --release --disable-native --disable-lto --enable-pgo --pgo-videos="$(realpath SolLevante)"
     - run: otool -L Bin/Release/SvtAv1EncApp
     - run: Bin/Release/SvtAv1EncApp --help | grep dolby
     - run: Bin/Release/SvtAv1EncApp --help | grep hdr10plus
@@ -418,44 +418,44 @@ jobs:
         files: Bin/Release/macOS_arm64_armv8.5-a+simd+crypto+apple-m3.tar.xz
 
 
-  build-macos-x86-64:
-    needs: [tag, release]
-    runs-on: "macos-26-intel"
-    steps:
-    - uses: ConorMacBride/install-package@v1
-      with:
-        brew: fastfetch
-    - run: fastfetch
-    - uses: actions/checkout@v7
-    - uses: actions/checkout@v7
-      with:
-        path: SolLevante
-        ref: sollevante
-    - run: xz --decompress SolLevante/SolLevante.y4m.xz
-    - uses: ilammy/setup-nasm@v1
-    - uses: ConorMacBride/install-package@v1
-      with:
-        brew: llvm lld
-    - uses: dtolnay/rust-toolchain@stable
-    - uses: cargo-bins/cargo-binstall@main
-    - run: cargo binstall cargo-c
-    - uses: actions/checkout@v7
-      with:
-        path: dovi_tool
-        repository: quietvoid/dovi_tool
-    - run: cd dovi_tool/dolby_vision && sudo RUSTFLAGS="-Ctarget-cpu=x86-64-v3 -Copt-level=3" cargo cinstall --verbose --release --library-type staticlib && cd ../..
-    - uses: actions/checkout@v7
-      with:
-        path: hdr10plus_tool
-        repository: quietvoid/hdr10plus_tool
-    - run: cd hdr10plus_tool/hdr10plus && sudo RUSTFLAGS="-Ctarget-cpu=x86-64-v3 -Copt-level=3" cargo cinstall --verbose --release --library-type staticlib && cd ../..
-    - run: PATH="/opt/homebrew/opt/llvm/bin:$PATH" CMAKE_PREFIX_PATH="/opt/homebrew/opt/llvm" CFLAGS="-I/opt/homebrew/opt/llvm/include -DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 $(pkg-config --cflags --static dovi) $(pkg-config --cflags --static hdr10plus-rs) -DNDEBUG -flto=full -fwhole-program-vtables -march=skylake -mtune=skylake -mno-gather -fno-exceptions -fno-rtti -fno-stack-protector -fno-sanitize=all -fno-dwarf2-cfi-asm -Wno-deprecated" CPPFLAGS="-I/opt/homebrew/opt/llvm/include -DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 $(pkg-config --cflags --static dovi) $(pkg-config --cflags --static hdr10plus-rs) -DNDEBUG -flto=full -fwhole-program-vtables -march=skylake -mtune=skylake -mno-gather -fno-exceptions -fno-rtti -fno-stack-protector -fno-sanitize=all -fno-dwarf2-cfi-asm -Wno-deprecated" LDFLAGS="-fuse-ld=lld -L/opt/homebrew/opt/llvm/lib $(pkg-config --libs --static dovi) $(pkg-config --libs --static hdr10plus-rs) -flto=full -fwhole-program-vtables -Wl,-O3 -Wl,--lto-O3" Build/linux/build.sh --verbose --static --release --disable-native --enable-avx512 --disable-lto --enable-pgo --pgo-videos="$(realpath SolLevante)"
-    - run: otool -L Bin/Release/SvtAv1EncApp
-    - run: Bin/Release/SvtAv1EncApp --help | grep dolby
-    - run: Bin/Release/SvtAv1EncApp --help | grep hdr10plus
-    - run: Bin/Release/SvtAv1EncApp -i SolLevante/SolLevante.y4m -b /dev/null --preset 4 --crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5
-    - run: cd Bin/Release && tar cJf macOS_x86-64_skylake.tar.xz SvtAv1EncApp && cd ../..
-    - uses: softprops/action-gh-release@v3
-      with:
-        tag_name: ${{ needs.tag.outputs.tag }}
-        files: Bin/Release/macOS_x86-64_skylake.tar.xz
+  # build-macos-x86-64:
+  #   needs: [tag, release]
+  #   runs-on: "macos-26-intel"
+  #   steps:
+  #   - uses: ConorMacBride/install-package@v1
+  #     with:
+  #       brew: fastfetch
+  #   - run: fastfetch
+  #   - uses: actions/checkout@v7
+  #   - uses: actions/checkout@v7
+  #     with:
+  #       path: SolLevante
+  #       ref: sollevante
+  #   - run: xz --decompress SolLevante/SolLevante.y4m.xz
+  #   - uses: ilammy/setup-nasm@v1
+  #   - uses: ConorMacBride/install-package@v1
+  #     with:
+  #       brew: llvm lld
+  #   - uses: dtolnay/rust-toolchain@stable
+  #   - uses: cargo-bins/cargo-binstall@main
+  #   - run: cargo binstall cargo-c
+  #   - uses: actions/checkout@v7
+  #     with:
+  #       path: dovi_tool
+  #       repository: quietvoid/dovi_tool
+  #   - run: cd dovi_tool/dolby_vision && sudo RUSTFLAGS="-Ctarget-cpu=x86-64-v3 -Copt-level=3" cargo cinstall --verbose --release --library-type staticlib && cd ../..
+  #   - uses: actions/checkout@v7
+  #     with:
+  #       path: hdr10plus_tool
+  #       repository: quietvoid/hdr10plus_tool
+  #   - run: cd hdr10plus_tool/hdr10plus && sudo RUSTFLAGS="-Ctarget-cpu=x86-64-v3 -Copt-level=3" cargo cinstall --verbose --release --library-type staticlib && cd ../..
+  #   - run: PATH="/opt/homebrew/opt/llvm/bin:$PATH" CMAKE_PREFIX_PATH="/opt/homebrew/opt/llvm" CFLAGS="-I/opt/homebrew/opt/llvm/include -DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 $(pkg-config --cflags --static dovi) $(pkg-config --cflags --static hdr10plus-rs) -DNDEBUG -flto=full -fwhole-program-vtables -march=skylake -mtune=skylake -mno-gather -fno-exceptions -fno-rtti -fno-stack-protector -fno-sanitize=all -fno-dwarf2-cfi-asm -Wno-deprecated" CPPFLAGS="-I/opt/homebrew/opt/llvm/include -DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 $(pkg-config --cflags --static dovi) $(pkg-config --cflags --static hdr10plus-rs) -DNDEBUG -flto=full -fwhole-program-vtables -march=skylake -mtune=skylake -mno-gather -fno-exceptions -fno-rtti -fno-stack-protector -fno-sanitize=all -fno-dwarf2-cfi-asm -Wno-deprecated" LDFLAGS="-fuse-ld=lld -L/opt/homebrew/opt/llvm/lib $(pkg-config --libs --static dovi) $(pkg-config --libs --static hdr10plus-rs) -flto=full -fwhole-program-vtables -Wl,-O3 -Wl,--lto-O3" Build/linux/build.sh --verbose --static --release --disable-native --enable-avx512 --disable-lto --enable-pgo --pgo-videos="$(realpath SolLevante)"
+  #   - run: otool -L Bin/Release/SvtAv1EncApp
+  #   - run: Bin/Release/SvtAv1EncApp --help | grep dolby
+  #   - run: Bin/Release/SvtAv1EncApp --help | grep hdr10plus
+  #   - run: Bin/Release/SvtAv1EncApp -i SolLevante/SolLevante.y4m -b /dev/null --preset 4 --crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5
+  #   - run: cd Bin/Release && tar cJf macOS_x86-64_skylake.tar.xz SvtAv1EncApp && cd ../..
+  #   - uses: softprops/action-gh-release@v3
+  #     with:
+  #       tag_name: ${{ needs.tag.outputs.tag }}
+  #       files: Bin/Release/macOS_x86-64_skylake.tar.xz
