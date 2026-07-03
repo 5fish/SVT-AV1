@@ -375,8 +375,7 @@ jobs:
   #       files: Bin/Release/Linux_x86-64_x86-64-v3.tar.xz
 
 
-  # For some reason `-flto=full` is broken and fails the linking, so using `-flto=thin` for now.  
-  # Also setting `-flto=thin` in `LDFLAGS` also breaks.  
+  # For some reason manually specifying `-flto` is broken and doesn't link, so using `-DSVT_AV1_LTO=ON` for now
   build-macos-arm64:
     needs: [tag, release]
     runs-on: "macos-latest"
@@ -407,7 +406,7 @@ jobs:
         path: hdr10plus_tool
         repository: quietvoid/hdr10plus_tool
     - run: cd hdr10plus_tool/hdr10plus && sudo RUSTFLAGS="-Ctarget-cpu=apple-m1 -Copt-level=3" cargo cinstall --verbose --release --library-type staticlib && cd ../..
-    - run: PATH="/opt/homebrew/opt/llvm/bin:$PATH" CMAKE_PREFIX_PATH="/opt/homebrew/opt/llvm" CFLAGS="-I/opt/homebrew/opt/llvm/include -DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 $(pkg-config --cflags --static dovi) $(pkg-config --cflags --static hdr10plus-rs) -DNDEBUG -march=armv8.5-a+simd+crypto -mtune=apple-m3 -fno-exceptions -fno-rtti -Wno-deprecated" CPPFLAGS="-I/opt/homebrew/opt/llvm/include -DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 $(pkg-config --cflags --static dovi) $(pkg-config --cflags --static hdr10plus-rs) -DNDEBUG -march=armv8.5-a+simd+crypto -mtune=apple-m3 -fno-exceptions -fno-rtti -Wno-deprecated" LDFLAGS="-fuse-ld=lld -L/opt/homebrew/opt/llvm/lib $(pkg-config --libs --static dovi) $(pkg-config --libs --static hdr10plus-rs)" Build/linux/build.sh --verbose --static --release --disable-native --enable-lto --enable-pgo --pgo-videos="$(realpath SolLevante)"
+    - run: PATH="/opt/homebrew/opt/llvm/bin:$PATH" CMAKE_PREFIX_PATH="/opt/homebrew/opt/llvm" CFLAGS="-I/opt/homebrew/opt/llvm/include -DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 $(pkg-config --cflags --static dovi) $(pkg-config --cflags --static hdr10plus-rs) -DNDEBUG -march=armv8.5-a+simd+crypto -mtune=apple-m3 -fno-exceptions -fno-rtti -fno-stack-protector -fno-sanitize=all -fno-dwarf2-cfi-asm -Wno-deprecated" CPPFLAGS="-I/opt/homebrew/opt/llvm/include -DLIBDOVI_FOUND=1 -DLIBHDR10PLUS_RS_FOUND=1 $(pkg-config --cflags --static dovi) $(pkg-config --cflags --static hdr10plus-rs) -DNDEBUG -march=armv8.5-a+simd+crypto -mtune=apple-m3 -fno-exceptions -fno-rtti -fno-stack-protector -fno-sanitize=all -fno-dwarf2-cfi-asm -Wno-deprecated" LDFLAGS="-fuse-ld=lld -L/opt/homebrew/opt/llvm/lib $(pkg-config --libs --static dovi) $(pkg-config --libs --static hdr10plus-rs) -Wl,-O3 -Wl,--lto-O3" Build/linux/build.sh --verbose --static --release --disable-native --enable-lto --enable-pgo --pgo-videos="$(realpath SolLevante)"
     - run: otool -L Bin/Release/SvtAv1EncApp
     - run: Bin/Release/SvtAv1EncApp --help | grep dolby
     - run: Bin/Release/SvtAv1EncApp --help | grep hdr10plus
