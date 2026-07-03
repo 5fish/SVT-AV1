@@ -254,12 +254,6 @@ jobs:
         targets: aarch64-pc-windows-msvc
     - uses: cargo-bins/cargo-binstall@main
     - run: cargo binstall cargo-c
-    - run: rustc --print=target-list
-    - run: rustc --print=target-cpus
-    - run: rustc --print=target-features
-    - run: rustc --target=aarch64-pc-windows-msvc --print=target-list
-    - run: rustc --target=aarch64-pc-windows-msvc --print=target-cpus
-    - run: rustc --target=aarch64-pc-windows-msvc --print=target-features
     - uses: actions/checkout@v7
       with:
         path: dovi_tool
