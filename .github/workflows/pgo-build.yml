@@ -184,6 +184,9 @@ jobs:
         path: SolLevante
         ref: sollevante
     - run: xz --decompress SolLevante/SolLevante.y4m.xz
+    # ZhongRuoyu/setup-llvm doesn't support Windows arm64 yet, and will try to download Windows x86-64 instead.
+    # This KyleMayes/install-llvm-action requires inputting a version, so we have to do this to get the latest version.
+    # This needs to be updated when we're approaching LLVM version 30.
     - id: install-llvm-30
       uses: KyleMayes/install-llvm-action@v2
       with:
