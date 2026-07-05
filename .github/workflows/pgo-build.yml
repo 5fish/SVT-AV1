@@ -5,8 +5,8 @@
 
 name: pgo-build
 on:
-  workflow_dispatch
-  push # testing only
+  workflow_dispatch:
+  push: # testing only
 
 jobs:
   tag:
