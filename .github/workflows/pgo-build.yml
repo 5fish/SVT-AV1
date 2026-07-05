@@ -65,6 +65,9 @@ jobs:
     steps:
     - uses: actions/checkout@v7
     - uses: Akatmks/build-svt-av1@master
+      with:
+        pgo-video: "SolLevante"
+        pgo-parameters: "--crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5"
   #   - uses: msys2/setup-msys2@v2
   #     with:
   #       msystem: UCRT64
@@ -176,6 +179,9 @@ jobs:
     steps:
     - uses: actions/checkout@v7
     - uses: Akatmks/build-svt-av1@master
+      with:
+        pgo-video: "SolLevante"
+        pgo-parameters: "--crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5"
   #   - uses: msys2/setup-msys2@v2
   #     with:
   #       msystem: CLANGARM64
@@ -304,6 +310,9 @@ jobs:
     steps:
     - uses: actions/checkout@v7
     - uses: Akatmks/build-svt-av1@master
+      with:
+        pgo-video: "SolLevante"
+        pgo-parameters: "--crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5"
   #   - uses: ConorMacBride/install-package@v1
   #     with:
   #       apt: neofetch
@@ -386,6 +395,9 @@ jobs:
     steps:
     - uses: actions/checkout@v7
     - uses: Akatmks/build-svt-av1@master
+      with:
+        pgo-video: "SolLevante"
+        pgo-parameters: "--crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5"
     # - uses: ConorMacBride/install-package@v1
     #   with:
     #     brew: fastfetch
@@ -430,6 +442,9 @@ jobs:
     steps:
     - uses: actions/checkout@v7
     - uses: Akatmks/build-svt-av1@master
+      with:
+        pgo-video: "SolLevante"
+        pgo-parameters: "--crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5"
   #   - uses: ConorMacBride/install-package@v1
   #     with:
   #       brew: fastfetch
