@@ -66,6 +66,7 @@ jobs:
     - uses: actions/checkout@v7
     - uses: Akatmks/build-svt-av1@master
       with:
+        shared: "true"
         pgo-video: "SolLevante"
         pgo-parameters: "--crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5"
   #   - uses: msys2/setup-msys2@v2
@@ -180,6 +181,7 @@ jobs:
     - uses: actions/checkout@v7
     - uses: Akatmks/build-svt-av1@master
       with:
+        shared: "true"
         pgo-video: "SolLevante"
         pgo-parameters: "--crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5"
   #   - uses: msys2/setup-msys2@v2
@@ -311,6 +313,7 @@ jobs:
     - uses: actions/checkout@v7
     - uses: Akatmks/build-svt-av1@master
       with:
+        shared: "true"
         pgo-video: "SolLevante"
         pgo-parameters: "--crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5"
   #   - uses: ConorMacBride/install-package@v1
@@ -396,6 +399,7 @@ jobs:
     - uses: actions/checkout@v7
     - uses: Akatmks/build-svt-av1@master
       with:
+        shared: "true"
         pgo-video: "SolLevante"
         pgo-parameters: "--crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5"
     # - uses: ConorMacBride/install-package@v1
@@ -443,6 +447,7 @@ jobs:
     - uses: actions/checkout@v7
     - uses: Akatmks/build-svt-av1@master
       with:
+        shared: "true"
         pgo-video: "SolLevante"
         pgo-parameters: "--crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5"
   #   - uses: ConorMacBride/install-package@v1
