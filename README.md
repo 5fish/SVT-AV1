@@ -59,7 +59,7 @@ For advanced users, you can check [Parameters.md](Docs/Parameters.md) for all av
 ### Build
 
 For standalone encoder, you can download our optimised builds for Windows, Linux, and macOS from [GitHub Releases](../../releases).  
-If you want to build it yourself, for the best performance, check [our note](.github/workflows/pgo-build.yml#L1-L4) in the building script.  
+To build it yourself, for performance, always use clang over gcc or msvc, and then run `Build/linux/build.sh --native --static --release --enable-lto --enable-pgo` to build a decent binary. For the best performance, check how we do it in the [GitHub Action](https://github.com/Akatmks/build-svt-av1).  
 
 HandBrake builds are also available [here](https://github.com/Uranite/HandBrake-5fish-SVT-AV1#handbrake-5fish-svt-av1) thanks to Yiss.  
 
