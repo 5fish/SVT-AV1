@@ -141,7 +141,7 @@ Try not to deviate too much from the default threshold, which is `16000` as of e
 | `--lineart-psy-bias` level | `1` | `2` | `3` | `4` | `5` | `6` | `7` | Note |
 | :-- | :--: | :--: | :--: | :--: | :--: | :--: | :--: | :-- |
 | [global] `--scm 0` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overridden |
-| [global] `--noise-level-thr` default to `20000` | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Applied when `--crf [> 30.00]`; Can be overridden |
+| [global] `--noise-level-thr` default to `22600` | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Applied when `--crf [> 30.00]`; Can be overridden |
 | [pd] `--startup-mg-size` adjustment | ✕ | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | Can be overridden |
 | [me] `--psy-bias-disable-warped-motion 1` | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overridden |
 | [me] `--psy-bias-disable-me-8x8 1` | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overridden |

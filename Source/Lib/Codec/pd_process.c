@@ -2807,7 +2807,7 @@ static int32_t get_noise_level_thr(PictureParentControlSet *pcs, PictureDecision
     int32_t default_noise_level_thr;
     if ((pcs->scs->static_config.qp << 2) + pcs->scs->static_config.extended_crf_qindex_offset > 120 && // --crf 30.00
         pcs->scs->static_config.lineart_psy_bias >= 2.0)
-        default_noise_level_thr = 20000;
+        default_noise_level_thr = 22600;
     else
         default_noise_level_thr = VQ_NOISE_LVL_TH;
 
