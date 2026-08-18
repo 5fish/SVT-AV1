@@ -214,8 +214,9 @@ You should use `--lineart-variance-thr` to adjust the threshold above which a de
 | [md] `GLOBALMV` bias | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | |
 | [md] `--psy-bias-inter-mode-bias 1` | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | (◯) | Can be overridden |
 | [dlf] `--dlf-bias 1` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | |
-| [dlf] `--dlf-bias-max-dlf` | `8,2` | `8,2` | `8,2` | `6,2` | `6,2` | `6,2` | `6,2` | Applied when `--crf [<= 30.00]`; Can be overridden |
-| [dlf] `--dlf-bias-max-dlf` | `8,2` | `8,2` | `10,2` | `10,2` | `10,2` | `10,2` | `10,2` | Applied when `--crf [> 30.00]`; Can be overridden |
+| [dlf] `--dlf-bias-max-dlf` | `8,2` | `8,2` | `8,2` | `6,2` | `6,2` | `6,2` | `6,2` | Applied when `--crf [<= 28.00]`; Can be overridden |
+| [dlf] `--dlf-bias-max-dlf` | `8,2` | `8,2` | `8,2` | `24,4` | `24,4` | `24,4` | `24,4` | Applied when `--crf [> 28.00]`; Sometimes called the high DLF strategy; Can be overridden |
+| [dlf] `--dlf-bias-min-dlf` | `2,0` | `2,0` | `2,0` | `16,2` | `16,2` | `16,2` | `16,2` | Applied when `--crf [> 28.00]`; Sometimes called the high DLF strategy; Can be overridden |
 | [cdef] `--cdef-bias 1` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | |
 | [cdef] bias towards disabling CDEF | ✕ | ✕ | ✕ | ✕ | ✕ | ◯ | ◯ | |
 | [cdef] `--cdef-bias-max-cdef -,0,-,0` | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | Can be overridden |
