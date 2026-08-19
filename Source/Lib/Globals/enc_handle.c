@@ -4049,8 +4049,12 @@ static void set_param_based_on_input(SequenceControlSet *scs)
         scs->static_config.sharpness = 2;
     if (scs->static_config.psy_bias_sharpness_rounding == DEFAULT)
         scs->static_config.psy_bias_sharpness_rounding = -2;
-    if (scs->static_config.psy_bias_mds0_sad == UINT8_DEFAULT)
-        scs->static_config.psy_bias_mds0_sad = 0;
+    if (scs->static_config.psy_bias_mds0_sad == UINT8_DEFAULT) {
+        if (scs->static_config.lineart_psy_bias >= 2.0 || scs->static_config.texture_psy_bias >= 3.0)
+            scs->static_config.psy_bias_mds0_sad = 1;
+        else
+            scs->static_config.psy_bias_mds0_sad = 0;
+    }
     if (scs->static_config.psy_bias_disable_warped_motion == UINT8_DEFAULT) {
         if (scs->static_config.lineart_psy_bias >= 3.0)
             scs->static_config.psy_bias_disable_warped_motion = 1;
