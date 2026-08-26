@@ -157,6 +157,7 @@ Try not to deviate too much from the default threshold, which is `16000` as of e
 | [md] `--psy-bias-optimize-b 1` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Applied when `--preset [<= 4]`; Can be overridden |
 | [md] `--texture-psy-bias-optimize-b 2` | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | Applied when `--preset [<= 4]`; `--lineart-psy-bias [>= 4.0]` overrides the setting of `--texture-psy-bias [>= 3.0]`; Can be overridden |
 | [md] `--noise-norm-strength 0` | ✕ | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | Only applied when `--texture-psy-bias [<= 3.0]`; Can be overridden |
+| [md] `--psy-bias-mds0-sad 1` | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | |
 | [md] use better `pic_obmc_level` | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | |
 | [md] variance skip taper | ✕ | ✕ | ✕ | ✕ | ✕ | ◯ | ◯ | |
 | [md] alternative tx search grouping | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | |
@@ -200,11 +201,12 @@ You should use `--lineart-variance-thr` to adjust the threshold above which a de
 | [md] `--psy-bias-qm-bias 1` | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overridden |
 | [md] `--psy-bias-optimize-b 1` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Applied when `--preset [<= 4]`; Can be overridden |
 | [md] `--texture-psy-bias-optimize-b 4` | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | Applied when `--preset [<= 4]`; Can be overridden |
+| [md] `--noise-norm-strength 4` | ✕ | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | Can be overridden |
 | [md] `--psy-bias-coeff-lvl-offset 2` | ✕ | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | Can be overridden |
+| [md] `--psy-bias-mds0-sad 1` | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | |
 | [md] variance cand elimination | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | Using `--lineart-variance-thr` |
 | [md] no nic post mds1/2 `CAND_CLASS_1` class pruning | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | |
 | [md] disable mds0 unipred bias | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | |
-| [md] `--noise-norm-strength 4` | ✕ | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | Can be overridden |
 | [md] `--ac-bias` | `1.0` | `1.0` | `1.0` | `1.0` | `2.5` | `2.5` | `2.5` | Can be overridden |
 | [md] `--texture-ac-bias` | － | － | － | `2.5` | `6.0` | `6.0` | `6.0` | Can be overridden |
 | [md] `--texture-energy-bias` | `1.00` | `1.00` | `1.02` | `1.02` | `1.10` | `1.10` | `1.10` | Can be overridden |
