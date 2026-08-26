@@ -105,6 +105,8 @@ jobs:
       with:
         pgo-video: "SolLevante"
         pgo-parameters: "--crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5"
+        cflags-profiling: "-fgnuc-version=4.2.1"
+        cflags-final: "-fgnuc-version=4.2.1"
 
     - run: ls BuildAction/armv8.7-a+crypto+sm4+sha3+fp16+sve+sve2+oryon-1/static/SvtAv1EncApp.exe
     - run: cd BuildAction/armv8.7-a+crypto+sm4+sha3+fp16+sve+sve2+oryon-1/static && tar cJf Windows_arm64_armv8.7-a+crypto+sm4+sha3+fp16+sve+sve2+oryon-1.tar.xz SvtAv1EncApp.exe
