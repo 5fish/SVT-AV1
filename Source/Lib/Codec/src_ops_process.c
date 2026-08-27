@@ -952,8 +952,8 @@ static void tpl_mc_flow_dispenser_sb_generic(EncodeContext *enc_ctx, SequenceCon
                 get_quantize_error(&mb_plane, best_coeff, qcoeff, dqcoeff, tx_size, &eob, &recon_error, &sse);
 
                 int rate_cost        = pcs->tpl_ctrls.compute_rate ? rate_estimator(qcoeff, eob, tx_size) : 0;
-                tpl_stats.srcrf_rate = (rate_cost << (pcs->scs->static_config.tune == 3 ? 1 : TPL_DEP_COST_SCALE_LOG2)) << tpl_ctrls->subsample_tx; // Experimental tune 3 change, likely to be modified in the future.
-                tpl_stats.srcrf_dist = (recon_error << (pcs->scs->static_config.tune == 3 ? 1 : TPL_DEP_COST_SCALE_LOG2)) << tpl_ctrls->subsample_tx;
+                tpl_stats.srcrf_rate = (rate_cost << (pcs->scs->static_config.tune == 3 || pcs->scs->static_config.balancing_q_bias ? 1 : TPL_DEP_COST_SCALE_LOG2)) << tpl_ctrls->subsample_tx; // Experimental tune 3 change, likely to be modified in the future.
+                tpl_stats.srcrf_dist = (recon_error << (pcs->scs->static_config.tune == 3 || pcs->scs->static_config.balancing_q_bias ? 1 : TPL_DEP_COST_SCALE_LOG2)) << tpl_ctrls->subsample_tx;
             }
             if (scs->tpl_lad_mg > 0) {
                 //store src based stats
@@ -1180,11 +1180,11 @@ static void tpl_mc_flow_dispenser_sb_generic(EncodeContext *enc_ctx, SequenceCon
             }
         }
 
-        tpl_stats.recrf_dist = (recon_error << (pcs->scs->static_config.tune == 3 ? 1 : TPL_DEP_COST_SCALE_LOG2)) << tpl_ctrls->subsample_tx;
-        tpl_stats.recrf_rate = (rate_cost << (pcs->scs->static_config.tune == 3 ? 1 : TPL_DEP_COST_SCALE_LOG2)) << tpl_ctrls->subsample_tx;
+        tpl_stats.recrf_dist = (recon_error << (pcs->scs->static_config.tune == 3 || pcs->scs->static_config.balancing_q_bias ? 1 : TPL_DEP_COST_SCALE_LOG2)) << tpl_ctrls->subsample_tx;
+        tpl_stats.recrf_rate = (rate_cost << (pcs->scs->static_config.tune == 3 || pcs->scs->static_config.balancing_q_bias ? 1 : TPL_DEP_COST_SCALE_LOG2)) << tpl_ctrls->subsample_tx;
         if (best_mode != NEWMV) {
-            tpl_stats.srcrf_dist = (recon_error << (pcs->scs->static_config.tune == 3 ? 1 : TPL_DEP_COST_SCALE_LOG2)) << tpl_ctrls->subsample_tx;
-            tpl_stats.srcrf_rate = (rate_cost << (pcs->scs->static_config.tune == 3 ? 1 : TPL_DEP_COST_SCALE_LOG2)) << tpl_ctrls->subsample_tx;
+            tpl_stats.srcrf_dist = (recon_error << (pcs->scs->static_config.tune == 3 || pcs->scs->static_config.balancing_q_bias ? 1 : TPL_DEP_COST_SCALE_LOG2)) << tpl_ctrls->subsample_tx;
+            tpl_stats.srcrf_rate = (rate_cost << (pcs->scs->static_config.tune == 3 || pcs->scs->static_config.balancing_q_bias ? 1 : TPL_DEP_COST_SCALE_LOG2)) << tpl_ctrls->subsample_tx;
         }
 
         tpl_stats.recrf_dist = AOMMAX(tpl_stats.srcrf_dist, tpl_stats.recrf_dist);
@@ -2353,40 +2353,17 @@ static void aom_av1_set_mb_ssim_rdmult_scaling(PictureParentControlSet *pcs) {
                 }
             }
         }
-    } else { // Do superblock-based adjustment if we're on Tune 3 or using alternative SSIM tuning
-        const int sb_size = pcs->scs->seq_header.sb_size;
-        const int num_mi_w_sb = mi_size_wide[sb_size];
-        const int num_mi_h_sb = mi_size_high[sb_size];
-        const int num_cols_sb =
-            (cm->mi_cols + num_mi_w_sb - 1) / num_mi_w_sb;
-        const int num_rows_sb =
-            (cm->mi_rows + num_mi_h_sb - 1) / num_mi_h_sb;
-        const int num_blk_w = num_mi_w_sb / num_mi_w;
-        const int num_blk_h = num_mi_h_sb / num_mi_h;
-        for (int row = 0; row < num_rows_sb; ++row) {
-            for (int col = 0; col < num_cols_sb; ++col) {
-                double log_sum_sb = 0.0;
-                double blk_count = 0.0;
-                for (int blk_row = row * num_blk_h;
-                    blk_row < (row + 1) * num_blk_h && blk_row < num_rows; ++blk_row) {
-                    for (int blk_col = col * num_blk_w;
-                        blk_col < (col + 1) * num_blk_w && blk_col < num_cols;
-                        ++blk_col) {
-                        const int index = blk_row * num_cols + blk_col;
-                        log_sum_sb += log(pcs->pa_me_data->ssim_rdmult_scaling_factors[index]);
-                        blk_count += 1.0;
-                    }
-                }
-                log_sum_sb = exp(log_sum_sb / blk_count);
-                for (int blk_row = row * num_blk_h;
-                    blk_row < (row + 1) * num_blk_h && blk_row < num_rows; ++blk_row) {
-                    for (int blk_col = col * num_blk_w;
-                        blk_col < (col + 1) * num_blk_w && blk_col < num_cols;
-                        ++blk_col) {
-                        const int index = blk_row * num_cols + blk_col;
-                        pcs->pa_me_data->ssim_rdmult_scaling_factors[index] /= log_sum_sb;
-                    }
-                }
+    } else { // Unbounded alternative SSIM tuning: fixed-reference, log-domain scaling
+        const double gain     = 2.0; // log2 octaves across the full activity range
+        const double min_log2 = -2.0;
+        const double max_log2 = 0.5;
+        for (int row = 0; row < num_rows; ++row) {
+            for (int col = 0; col < num_cols; ++col) {
+                const int    index  = row * num_cols + col;
+                const double factor = pcs->pa_me_data->ssim_rdmult_scaling_factors[index];
+                const double f_norm      = CLIP3(0.0, 1.0, (factor - 17.492222) / 67.035434);
+                const double log2_factor = CLIP3(min_log2, max_log2, gain * (f_norm - 0.5));
+                pcs->pa_me_data->ssim_rdmult_scaling_factors[index] = exp2(log2_factor);
             }
         }
     }

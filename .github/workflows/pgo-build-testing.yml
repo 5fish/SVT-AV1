@@ -20,7 +20,7 @@ jobs:
     - uses: actions/checkout@v7
     - run: GH_TOKEN=${{ github.token }} gh release delete ${{ needs.tag.outputs.tag }} --cleanup-tag
       continue-on-error: true
-    - uses: softprops/action-gh-release@v3
+    - uses: softprops/action-gh-release@v3.0.1
       with:
         tag_name: ${{ needs.tag.outputs.tag }}
         target_commitish: ${{ github.sha }}
@@ -69,7 +69,7 @@ jobs:
       continue-on-error: true
     - run: cd BuildAction/icelake-server+znver5/static && tar cJf Windows_x86-64_icelake-server+znver5.tar.xz SvtAv1EncApp.exe
       if: ${{ steps.detect-icelake-server-znver5.outcome != 'failure' }}
-    - uses: softprops/action-gh-release@v3
+    - uses: softprops/action-gh-release@v3.0.1
       with:
         tag_name: ${{ needs.tag.outputs.tag }}
         files: BuildAction/icelake-server+znver5/static/Windows_x86-64_icelake-server+znver5.tar.xz
@@ -80,7 +80,7 @@ jobs:
       continue-on-error: true
     - run: cd BuildAction/znver2/static && tar cJf Windows_x86-64_znver2.tar.xz SvtAv1EncApp.exe
       if: ${{ steps.detect-znver2.outcome != 'failure' }}
-    - uses: softprops/action-gh-release@v3
+    - uses: softprops/action-gh-release@v3.0.1
       with:
         tag_name: ${{ needs.tag.outputs.tag }}
         files: BuildAction/znver2/static/Windows_x86-64_znver2.tar.xz
@@ -88,7 +88,7 @@ jobs:
 
     - run: ls BuildAction/x86-64-v3+znver2/static/SvtAv1EncApp.exe
     - run: cd BuildAction/x86-64-v3+znver2/static && tar cJf Windows_x86-64_x86-64-v3+znver2.tar.xz SvtAv1EncApp.exe
-    - uses: softprops/action-gh-release@v3
+    - uses: softprops/action-gh-release@v3.0.1
       with:
         tag_name: ${{ needs.tag.outputs.tag }}
         files: BuildAction/x86-64-v3+znver2/static/Windows_x86-64_x86-64-v3+znver2.tar.xz
@@ -107,10 +107,12 @@ jobs:
       with:
         pgo-video: "SolLevante"
         pgo-parameters: "--crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5"
+        cflags-profiling: "-fgnuc-version=4.2.1"
+        cflags-final: "-fgnuc-version=4.2.1"
 
     - run: ls BuildAction/armv8.7-a+crypto+sm4+sha3+fp16+sve+sve2+oryon-1/static/SvtAv1EncApp.exe
     - run: cd BuildAction/armv8.7-a+crypto+sm4+sha3+fp16+sve+sve2+oryon-1/static && tar cJf Windows_arm64_armv8.7-a+crypto+sm4+sha3+fp16+sve+sve2+oryon-1.tar.xz SvtAv1EncApp.exe
-    - uses: softprops/action-gh-release@v3
+    - uses: softprops/action-gh-release@v3.0.1
       with:
         tag_name: ${{ needs.tag.outputs.tag }}
         files: BuildAction/armv8.7-a+crypto+sm4+sha3+fp16+sve+sve2+oryon-1/static/Windows_arm64_armv8.7-a+crypto+sm4+sha3+fp16+sve+sve2+oryon-1.tar.xz
@@ -132,7 +134,7 @@ jobs:
       continue-on-error: true
     - run: cd BuildAction/icelake-server+znver5/static && tar cJf Linux_x86-64_icelake-server+znver5.tar.xz SvtAv1EncApp
       if: ${{ steps.detect-icelake-server-znver5.outcome != 'failure' }}
-    - uses: softprops/action-gh-release@v3
+    - uses: softprops/action-gh-release@v3.0.1
       with:
         tag_name: ${{ needs.tag.outputs.tag }}
         files: BuildAction/icelake-server+znver5/static/Linux_x86-64_icelake-server+znver5.tar.xz
@@ -143,7 +145,7 @@ jobs:
       continue-on-error: true
     - run: cd BuildAction/znver2/static && tar cJf Linux_x86-64_znver2.tar.xz SvtAv1EncApp
       if: ${{ steps.detect-znver2.outcome != 'failure' }}
-    - uses: softprops/action-gh-release@v3
+    - uses: softprops/action-gh-release@v3.0.1
       with:
         tag_name: ${{ needs.tag.outputs.tag }}
         files: BuildAction/znver2/static/Linux_x86-64_znver2.tar.xz
@@ -151,7 +153,7 @@ jobs:
 
     - run: ls BuildAction/x86-64-v3+znver2/static/SvtAv1EncApp
     - run: cd BuildAction/x86-64-v3+znver2/static && tar cJf Linux_x86-64_x86-64-v3+znver2.tar.xz SvtAv1EncApp
-    - uses: softprops/action-gh-release@v3
+    - uses: softprops/action-gh-release@v3.0.1
       with:
         tag_name: ${{ needs.tag.outputs.tag }}
         files: BuildAction/x86-64-v3+znver2/static/Linux_x86-64_x86-64-v3+znver2.tar.xz
@@ -170,7 +172,7 @@ jobs:
 
     - run: ls BuildAction/armv8.5-a+simd+crypto+apple-m3/static/SvtAv1EncApp
     - run: cd BuildAction/armv8.5-a+simd+crypto+apple-m3/static && tar cJf macOS_arm64_armv8.5-a+simd+crypto+apple-m3.tar.xz SvtAv1EncApp
-    - uses: softprops/action-gh-release@v3
+    - uses: softprops/action-gh-release@v3.0.1
       with:
         tag_name: ${{ needs.tag.outputs.tag }}
         files: BuildAction/armv8.5-a+simd+crypto+apple-m3/static/macOS_arm64_armv8.5-a+simd+crypto+apple-m3.tar.xz
@@ -189,7 +191,7 @@ jobs:
 
     - run: ls BuildAction/skylake/static/SvtAv1EncApp
     - run: cd BuildAction/skylake/static && tar cJf macOS_x86-64_skylake.tar.xz SvtAv1EncApp
-    - uses: softprops/action-gh-release@v3
+    - uses: softprops/action-gh-release@v3.0.1
       with:
         tag_name: ${{ needs.tag.outputs.tag }}
         files: BuildAction/skylake/static/macOS_x86-64_skylake.tar.xz

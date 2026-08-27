@@ -1308,8 +1308,8 @@ static void obmc_trans_face_off(ModeDecisionCandidateBuffer *cand_bf, PictureCon
         }
     }
 }
-void fast_loop_core(ModeDecisionCandidateBuffer *cand_bf, PictureControlSet *pcs, ModeDecisionContext *ctx,
-                    EbPictureBufferDesc *input_pic, BlockLocation *loc) {
+void NOINLINE fast_loop_core(ModeDecisionCandidateBuffer *cand_bf, PictureControlSet *pcs, ModeDecisionContext *ctx,
+                             EbPictureBufferDesc *input_pic, BlockLocation *loc) {
     const uint32_t input_origin_index       = loc->input_origin_index;
     const uint32_t input_cb_origin_in_index = loc->input_cb_origin_in_index;
     const uint32_t input_cr_origin_in_index = loc->input_cb_origin_in_index;
