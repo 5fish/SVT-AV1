@@ -265,6 +265,7 @@
 #define BALANCING_Q_BIAS_TOKEN "--balancing-q-bias"
 #define BALANCING_LUMINANCE_Q_BIAS_TOKEN "--balancing-luminance-q-bias"
 #define BALANCING_NOISE_LEVEL_Q_BIAS_TOKEN "--balancing-noise-level-q-bias"
+#define BALANCING_MG_DIST_Q_BIAS_TOKEN "--balancing-mg-dist-q-bias"
 #define BALANCING_LUMINANCE_LAMBDA_BIAS_TOKEN "--balancing-luminance-lambda-bias"
 #define BALANCING_TEXTURE_LAMBDA_BIAS_TOKEN "--balancing-texture-lambda-bias"
 #define BALANCING_R0_DAMPENING_LAYER_TOKEN "--balancing-r0-dampening-layer"
@@ -1570,6 +1571,10 @@ ConfigEntry config_entry_psy[] = {
      "[PSY] Balancing noise level Q bias, default is 1.0 [0.5-2.0]",
      set_cfg_generic_token},
     {SINGLE_INPUT,
+     BALANCING_MG_DIST_Q_BIAS_TOKEN,
+     "[PSY] Balancing mg dist Q bias, default is 0.0 [0.0-0.999]",
+     set_cfg_generic_token},
+    {SINGLE_INPUT,
      BALANCING_LUMINANCE_LAMBDA_BIAS_TOKEN,
      "[PSY] Balancing luminance lambda bias [0.0-0.999]",
      set_cfg_generic_token},
@@ -1882,6 +1887,7 @@ ConfigEntry config_entry[] = {
     {SINGLE_INPUT, BALANCING_Q_BIAS_TOKEN, "BalancingQBias", set_cfg_generic_token},
     {SINGLE_INPUT, BALANCING_LUMINANCE_Q_BIAS_TOKEN, "BalancingLuminanceQBias", set_cfg_generic_token},
     {SINGLE_INPUT, BALANCING_NOISE_LEVEL_Q_BIAS_TOKEN, "BalancingNoiseLevelQBias", set_cfg_generic_token},
+    {SINGLE_INPUT, BALANCING_MG_DIST_Q_BIAS_TOKEN, "BalancingMGDistQBias", set_cfg_generic_token},
     {SINGLE_INPUT, BALANCING_LUMINANCE_LAMBDA_BIAS_TOKEN, "BalancingLuminanceLambdaBias", set_cfg_generic_token},
     {SINGLE_INPUT, BALANCING_TEXTURE_LAMBDA_BIAS_TOKEN, "BalancingTextureLambdaBias", set_cfg_generic_token},
     {SINGLE_INPUT, BALANCING_R0_DAMPENING_LAYER_TOKEN, "BalancingR0DampeningLayer", set_cfg_generic_token},

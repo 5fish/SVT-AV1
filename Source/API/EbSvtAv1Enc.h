@@ -1253,6 +1253,12 @@ typedef struct EbSvtAv1EncConfiguration {
      */
     double balancing_noise_level_q_bias;
     /**
+     * @brief balancing mg dist Q bias
+     * Max value: 0.999
+     * Min value: 0.0
+     */
+    double balancing_mg_dist_q_bias;
+    /**
      * @brief Enable balancing luminance lambda bias
      * Min value is 0.0
      * Max value is 1 (Exclusive)

@@ -4031,6 +4031,12 @@ static void set_param_based_on_input(SequenceControlSet *scs)
         else
             scs->static_config.balancing_luminance_q_bias     = 0;
     }
+    if (scs->static_config.balancing_mg_dist_q_bias == DEFAULT) {
+        if (scs->static_config.balancing_q_bias && scs->static_config.psy_bias_dg)
+            scs->static_config.balancing_mg_dist_q_bias = 0.0;
+        else
+            scs->static_config.balancing_mg_dist_q_bias = 0.0;
+    }
     if (scs->static_config.balancing_luminance_lambda_bias == DEFAULT)
         scs->static_config.balancing_luminance_lambda_bias = 0.0;
     if (scs->static_config.balancing_texture_lambda_bias == DEFAULT)
@@ -4545,6 +4551,10 @@ static void set_param_based_on_input(SequenceControlSet *scs)
         scs->enable_dg = 0;
     else
         scs->enable_dg = scs->static_config.enable_dg;
+    if (scs->static_config.balancing_mg_dist_q_bias && (!scs->static_config.psy_bias_dg || !scs->enable_dg)) {
+        SVT_WARN("enable-dg and psy-bias-dg is required by balancing-mg-dist-q-bias and thus enabled\n");
+        scs->enable_dg = scs->static_config.enable_dg = scs->static_config.psy_bias_dg = 1;
+    }
     // Set hbd_md OFF for high encode modes or bitdepth < 10
     if (scs->static_config.encoder_bit_depth < 10)
         scs->enable_hbd_mode_decision = 0;
@@ -4814,6 +4824,7 @@ static void copy_api_from_app(
     scs->static_config.balancing_q_bias = config_struct->balancing_q_bias;
     scs->static_config.balancing_luminance_q_bias = config_struct->balancing_luminance_q_bias;
     scs->static_config.balancing_noise_level_q_bias = config_struct->balancing_noise_level_q_bias;
+    scs->static_config.balancing_mg_dist_q_bias = config_struct->balancing_mg_dist_q_bias;
     scs->static_config.balancing_luminance_lambda_bias = config_struct->balancing_luminance_lambda_bias;
     scs->static_config.balancing_texture_lambda_bias = config_struct->balancing_texture_lambda_bias;
     scs->static_config.balancing_r0_dampening_layer = config_struct->balancing_r0_dampening_layer;

@@ -1325,12 +1325,17 @@ EbErrorType svt_av1_verify_settings(SequenceControlSet *scs) {
         SVT_ERROR("Instance %u: balancing-q-bias must be between 0 and 1\n", channel_number + 1);
         return_error = EB_ErrorBadParameter;
     }
-    if (config->balancing_noise_level_q_bias < 0.5 || config->balancing_noise_level_q_bias > 2.0) {
+    if (!(config->balancing_noise_level_q_bias >= 0.5 && config->balancing_noise_level_q_bias <= 2.0)) {
         SVT_ERROR("Instance %u: balancing-noise-level-q-bias must be between 0.50 and 2.00\n", channel_number + 1);
         return_error = EB_ErrorBadParameter;
     }
+    if (!(config->balancing_mg_dist_q_bias >= 0.0 && config->balancing_mg_dist_q_bias < 1.0) && 
+        config->balancing_mg_dist_q_bias != DEFAULT) {
+        SVT_ERROR("Instance %u: balancing-mg-dist-q-bias must be between 0.0 and 0.999\n", channel_number + 1);
+        return_error = EB_ErrorBadParameter;
+    }
 
-    if (!(config->balancing_luminance_lambda_bias >= 0.0 && config->balancing_luminance_lambda_bias < 1) &&
+    if (!(config->balancing_luminance_lambda_bias >= 0.0 && config->balancing_luminance_lambda_bias < 1.0) &&
         config->balancing_luminance_lambda_bias != DEFAULT) {
         SVT_ERROR("Instance %u: balancing-luminance-lambda-bias must be between 0.0 and 0.999\n", channel_number + 1);
         return_error = EB_ErrorBadParameter;
@@ -1588,6 +1593,7 @@ EbErrorType svt_av1_set_default_params(EbSvtAv1EncConfiguration *config_ptr) {
     config_ptr->balancing_q_bias                  = UINT8_DEFAULT;
     config_ptr->balancing_luminance_q_bias        = UINT8_DEFAULT;
     config_ptr->balancing_noise_level_q_bias      = 1.0;
+    config_ptr->balancing_mg_dist_q_bias          = DEFAULT;
     config_ptr->balancing_luminance_lambda_bias   = DEFAULT;
     config_ptr->balancing_texture_lambda_bias     = DEFAULT;
     config_ptr->balancing_r0_dampening_layer      = INT8_DEFAULT;
@@ -3158,6 +3164,7 @@ EB_API EbErrorType svt_av1_enc_parse_parameter(EbSvtAv1EncConfiguration *config_
     } double_opts[] = {
         {"qp-scale-compress-strength", &config_struct->qp_scale_compress_strength},
         {"balancing-noise-level-q-bias", &config_struct->balancing_noise_level_q_bias},
+        {"balancing-mg-dist-q-bias", &config_struct->balancing_mg_dist_q_bias},
         {"balancing-luminance-lambda-bias", &config_struct->balancing_luminance_lambda_bias},
         {"balancing-texture-lambda-bias", &config_struct->balancing_texture_lambda_bias},
         {"ac-bias", &config_struct->ac_bias},

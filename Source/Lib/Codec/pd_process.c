@@ -777,7 +777,7 @@ static bool psy_bias_dg_l6_l5(EncodeContext *enc_ctx, PictureDecisionContext *ct
         early_hme(ctx, (PictureParentControlSet *)enc_ctx->pre_assignment_buffer[svt_aom_get_mini_gop_stats(psy_bias_dg_index_array[top_index])->end_index - 1]->object_ptr,
                        (PictureParentControlSet *)enc_ctx->pre_assignment_buffer[svt_aom_get_mini_gop_stats(psy_bias_dg_index_array[top_index])->start_index]->object_ptr);
         if (ctx->norm_dist > thr) {
-            fprintf(stderr, "%llu ", ctx->norm_dist);
+            // fprintf(stderr, "%llu ", ctx->norm_dist);
             ctx->mini_gop_activity_array[psy_bias_dg_index_array[top_index]] = TRUE;
             ctx->mini_gop_activity_array[psy_bias_dg_index_array[sub_index]] = FALSE;
             ctx->mini_gop_activity_array[psy_bias_dg_index_array[sub_index + 1]] = FALSE;
@@ -810,7 +810,7 @@ static bool psy_bias_dg_l4(EncodeContext *enc_ctx, PictureDecisionContext *ctx, 
     }
 }
 static void psy_bias_dg(EncodeContext *enc_ctx, PictureDecisionContext *ctx) {
-    fprintf(stderr, "\n%03u / C / ", enc_ctx->intra_period_position);
+    // fprintf(stderr, "\n%03u / C / ", enc_ctx->intra_period_position);
     if (!psy_bias_dg_l6_l5(enc_ctx, ctx, PSY_BIAS_DG_L6_INDEX, PSY_BIAS_DG_L5_0_INDEX, PSY_BIAS_L6_TH)) {
         if (!psy_bias_dg_l6_l5(enc_ctx, ctx, PSY_BIAS_DG_L5_0_INDEX, PSY_BIAS_DG_L4_0_INDEX, PSY_BIAS_L5_TH)) {
             psy_bias_dg_l4(enc_ctx, ctx, PSY_BIAS_DG_L4_0_INDEX, PSY_BIAS_DG_L3_0_INDEX);
@@ -914,9 +914,9 @@ static void initialize_mini_gop_activity_array(SequenceControlSet* scs, PictureP
 
     if (scs->enable_dg && scs->static_config.psy_bias_dg) {
         psy_bias_dg(enc_ctx, ctx);
-        fprintf(stderr, "\n%03u / E / ", enc_ctx->intra_period_position);
-        for (uint8_t i = 0; i <= enc_ctx->pre_assignment_buffer_count - 1; i++)
-            fprintf(stderr, "%4llu ", ((PictureParentControlSet *)enc_ctx->pre_assignment_buffer[i]->object_ptr)->balancing_mg_dist);
+        // fprintf(stderr, "\n%03u / E / ", enc_ctx->intra_period_position);
+        // for (uint8_t i = 0; i <= enc_ctx->pre_assignment_buffer_count - 1; i++)
+        //     fprintf(stderr, "%4llu ", ((PictureParentControlSet *)enc_ctx->pre_assignment_buffer[i]->object_ptr)->balancing_mg_dist);
     }
     // 6L vs. 5L
     else if (scs->enable_dg && ctx->mini_gop_activity_array[L6_INDEX] == FALSE)
