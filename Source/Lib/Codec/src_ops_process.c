@@ -1620,9 +1620,21 @@ void svt_aom_generate_r0beta(PictureParentControlSet *pcs) {
                 mc_dep_delta_base_sum,
                 (double)mc_dep_delta_base_sum / recrf_dist_base_sum);
 #endif
+        int64_t balancing_q_bias_base;
+        if (scs->static_config.balancing_mg_dist_q_bias || scs->static_config.balancing_noise_level_q_bias)
+            balancing_q_bias_base = (double)(recrf_dist_base_sum << 8) *
+                                    AOMMAX(scs->static_config.balancing_mg_dist_q_bias *
+                                           ((double)pcs->balancing_mg_dist * pcs->balancing_mg_dist) /
+                                           ((double)pcs->balancing_mg_dist * pcs->balancing_mg_dist + (double)16 * 16 * 8 * 16 * 16 * 8),
+                                           scs->static_config.balancing_noise_level_q_bias *
+                                           ((double)pcs->noise_level * pcs->noise_level) /
+                                           ((double)pcs->noise_level * pcs->noise_level + (double)16000 * 16000));
+        else
+            balancing_q_bias_base = recrf_dist_base_sum << 9;
         mean_mc_dep_delta_base_sum = 
-            mc_dep_delta_base_sum  = AOMMAX(mc_dep_delta_base_sum, recrf_dist_base_sum << 9);
-        mc_dep_delta_base_sum      = ((mc_dep_delta_base_sum - (recrf_dist_base_sum << 9)) >> 1) +
+        mc_dep_delta_base_sum      = AOMMAX(mc_dep_delta_base_sum, balancing_q_bias_base);
+        if (mc_dep_delta_base_sum > recrf_dist_base_sum << 9)
+            mc_dep_delta_base_sum  = ((mc_dep_delta_base_sum - (recrf_dist_base_sum << 9)) >> 1) +
                                      ((mc_dep_delta_base_sum - (recrf_dist_base_sum << 9)) >> 2) +
                                      (recrf_dist_base_sum << 9);
     }
@@ -1694,8 +1706,8 @@ void svt_aom_generate_r0beta(PictureParentControlSet *pcs) {
             }
 
             if (scs->static_config.balancing_q_bias) {
-                mc_dep_delta_sum = AOMMAX(AOMMIN(mean_mc_dep_delta_base_sum, recrf_dist_sum << 15),
-                                          mc_dep_delta_sum);
+                mc_dep_delta_sum = AOMMAX(mc_dep_delta_sum,
+                                          AOMMIN(mean_mc_dep_delta_base_sum, recrf_dist_sum << 15));
                 if (mc_dep_delta_sum > recrf_dist_sum << 9)
                     mc_dep_delta_sum = ((mc_dep_delta_sum - (recrf_dist_sum << 9)) >> 1) +
                                        ((mc_dep_delta_sum - (recrf_dist_sum << 9)) >> 2) +
