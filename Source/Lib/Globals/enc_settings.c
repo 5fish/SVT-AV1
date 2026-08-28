@@ -1275,6 +1275,10 @@ EbErrorType svt_av1_verify_settings(SequenceControlSet *scs) {
         SVT_ERROR("Instance %u: texture-psy-bias-optimize-b must be -2, between 0 and 2, or 4\n", channel_number + 1);
         return_error = EB_ErrorBadParameter;
     }
+    if (config->psy_bias_dg > 1 && config->psy_bias_dg != UINT8_DEFAULT) {
+        SVT_ERROR("Instance %u: psy-bias-dg must be between 0 and 1\n", channel_number + 1);
+        return_error = EB_ErrorBadParameter;
+    }
 
     if (!(config->high_quality_encode_psy_bias >= 0.0 && config->high_quality_encode_psy_bias <= 1.0) &&
         config->high_quality_encode_psy_bias != DEFAULT) {
@@ -1552,6 +1556,7 @@ EbErrorType svt_av1_set_default_params(EbSvtAv1EncConfiguration *config_ptr) {
     config_ptr->psy_bias_sharpness_rounding       = DEFAULT;
     config_ptr->psy_bias_optimize_b               = INT8_DEFAULT;
     config_ptr->texture_psy_bias_optimize_b       = INT8_DEFAULT;
+    config_ptr->psy_bias_dg                       = UINT8_DEFAULT;
     config_ptr->high_quality_encode_psy_bias      = DEFAULT;
     config_ptr->high_fidelity_encode_psy_bias     = DEFAULT;
     config_ptr->dlf_bias                          = 0;
@@ -3104,6 +3109,7 @@ EB_API EbErrorType svt_av1_enc_parse_parameter(EbSvtAv1EncConfiguration *config_
         {"psy-bias-mds0-intra-inter-mode-bias", &config_struct->psy_bias_mds0_intra_inter_mode_bias},
         {"psy-bias-inter-mode-bias", &config_struct->psy_bias_inter_mode_bias},
         {"psy-bias-qm-bias", &config_struct->psy_bias_qm_bias},
+        {"psy-bias-dg", &config_struct->psy_bias_dg},
         {"dlf-bias", &config_struct->dlf_bias},
         {"dlf-sharpness", &config_struct->dlf_sharpness},
         {"cdef-bias", &config_struct->cdef_bias},

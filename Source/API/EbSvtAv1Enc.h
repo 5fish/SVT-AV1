@@ -1161,6 +1161,7 @@ typedef struct EbSvtAv1EncConfiguration {
     int32_t psy_bias_sharpness_rounding;
     int8_t psy_bias_optimize_b;
     int8_t texture_psy_bias_optimize_b;
+    uint8_t psy_bias_dg;
 
     /**
      * @brief Bias various features for high quality encoding.

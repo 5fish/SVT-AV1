@@ -247,6 +247,7 @@
 #define PSY_BIAS_SHARPNESS_ROUNDIND_TOKEN "--psy-bias-sharpness-rounding"
 #define PSY_BIAS_OPTIMIZE_B_TOKEN "--psy-bias-optimize-b"
 #define TEXTURE_PSY_BIAS_OPTIMIZE_B_TOKEN "--texture-psy-bias-optimize-b"
+#define PSY_BIAS_DG_TOKEN "--psy-bias-dg"
 #define HIGH_QUALITY_ENCODE_PSY_BIAS "--high-quality-encode-psy-bias"
 #define HIGH_FIDELITY_ENCODE_PSY_BIAS "--high-fidelity-encode-psy-bias"
 #define DLF_BIAS_TOKEN "--dlf-bias"
@@ -1493,6 +1494,10 @@ ConfigEntry config_entry_psy[] = {
      "[PSY] Optimize quantization using full distortion calculation in low variance region. Slow. [-2,0-2,4]",
      set_cfg_generic_token},
     {SINGLE_INPUT,
+     PSY_BIAS_DG_TOKEN,
+     "[PSY] Psy Bias Dynamic GoP. [0-1]",
+     set_cfg_generic_token},
+    {SINGLE_INPUT,
      HIGH_QUALITY_ENCODE_PSY_BIAS,
      "[PSY] Bias various features for high quality encoding. [0-1]",
      set_cfg_generic_token},
@@ -1852,6 +1857,7 @@ ConfigEntry config_entry[] = {
     {SINGLE_INPUT, PSY_BIAS_SHARPNESS_ROUNDIND_TOKEN, "PsyBiasSharpnessRounding", set_cfg_generic_token},
     {SINGLE_INPUT, PSY_BIAS_OPTIMIZE_B_TOKEN, "PsyBiasOptimizeB", set_cfg_generic_token},
     {SINGLE_INPUT, TEXTURE_PSY_BIAS_OPTIMIZE_B_TOKEN, "TexturePsyBiasOptimizeB", set_cfg_generic_token},
+    {SINGLE_INPUT, PSY_BIAS_DG_TOKEN, "PsyBiasDG", set_cfg_generic_token},
 
     {SINGLE_INPUT, HIGH_QUALITY_ENCODE_PSY_BIAS, "HighQualityEncodePsyBias", set_cfg_generic_token},
     {SINGLE_INPUT, HIGH_FIDELITY_ENCODE_PSY_BIAS, "HighFidelityEncodePsyBias", set_cfg_generic_token},

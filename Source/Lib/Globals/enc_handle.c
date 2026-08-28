@@ -3986,6 +3986,12 @@ static void set_param_based_on_input(SequenceControlSet *scs)
     //     if (scs->static_config.lineart_psy_bias >= 5.0)
     //         scs->static_config.startup_mg_size = CLIP3(2, 4, scs->static_config.hierarchical_levels - 1);
     // }
+    if (scs->static_config.psy_bias_dg == UINT8_DEFAULT) {
+        if (scs->static_config.lineart_psy_bias >= 3.0 || scs->static_config.texture_psy_bias >= 3.0)
+            scs->static_config.psy_bias_dg = 1;
+        else
+            scs->static_config.psy_bias_dg = 0;
+    }
 
     // `-psy-bias`s RC
     svt_av1_verify_balancing_q_bias(&scs->static_config, &scs->static_config);
@@ -4842,6 +4848,7 @@ static void copy_api_from_app(
     scs->static_config.psy_bias_sharpness_rounding = config_struct->psy_bias_sharpness_rounding;
     scs->static_config.psy_bias_optimize_b = config_struct->psy_bias_optimize_b;
     scs->static_config.texture_psy_bias_optimize_b = config_struct->texture_psy_bias_optimize_b;
+    scs->static_config.psy_bias_dg = config_struct->psy_bias_dg;
 
     scs->static_config.high_quality_encode_psy_bias = config_struct->high_quality_encode_psy_bias;
     scs->static_config.high_fidelity_encode_psy_bias = config_struct->high_fidelity_encode_psy_bias;
