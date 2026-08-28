@@ -653,7 +653,6 @@ static void early_hme(
 
 #define HIGH_DIST_TH 16 * 16 * 18
 #define LOW_DIST_TH  16 * 16 *  2
-#define PSY_BIAS_LOW_DIST_TH 16 * 16 * 4
 
 static void calc_mini_gop_activity(
     PictureDecisionContext* ctx,
@@ -661,55 +660,41 @@ static void calc_mini_gop_activity(
     uint64_t top_layer_idx, uint64_t top_layer_dist, uint8_t top_layer_perc_active, uint8_t top_layer_perc_cplx,
     uint64_t sub_layer_idx0, uint64_t sub_layer_dist0, uint8_t sub_layer0_perc_active, uint8_t sub_layer0_perc_cplx,
     uint64_t sub_layer_idx1, uint64_t sub_layer_dist1, uint8_t sub_layer1_perc_active, uint8_t sub_layer1_perc_cplx,
-    int16_t top_layer_mv_in_out_count, int16_t sub_layer_mv_in_out_count1, int16_t sub_layer_mv_in_out_count2,
-    uint8_t psy_bias_dg) {
+    int16_t top_layer_mv_in_out_count, int16_t sub_layer_mv_in_out_count1, int16_t sub_layer_mv_in_out_count2) {
     (void)top_layer_mv_in_out_count;
+    // The bias is function of the previous mini-gop structure towards less switch(es) within the same gop
+    // 6L will be maintained unless the presence of a significant change compared to the previous mini-gop
+    // To do: make the bias function of the preset; higher is the preset, higher is the bias towards less 6L
+    int bias = (enc_ctx->mini_gop_cnt_per_gop > 1 && enc_ctx->previous_mini_gop_hierarchical_levels == 5) ? 25 : 75;
+    const bool cond1 = top_layer_perc_active >= 95 &&
+        !(sub_layer0_perc_active >= 95 && sub_layer1_perc_active < 75) &&
+        !(sub_layer0_perc_active < 75 && sub_layer1_perc_active >= 95);
+    const bool cond2 = top_layer_dist > LOW_DIST_TH &&
+        sub_layer_dist0 < HIGH_DIST_TH &&
+        sub_layer_dist1 < HIGH_DIST_TH &&
+        top_layer_perc_cplx >   0 &&
+        sub_layer0_perc_cplx < 25 &&
+        sub_layer1_perc_cplx < 25 &&
+        (((sub_layer_dist0 + sub_layer_dist1) / 2) < ((bias * top_layer_dist) / 100));
 
-    if (!psy_bias_dg) {
-        // The bias is function of the previous mini-gop structure towards less switch(es) within the same gop
-        // 6L will be maintained unless the presence of a significant change compared to the previous mini-gop
-        // To do: make the bias function of the preset; higher is the preset, higher is the bias towards less 6L
-        int bias = (enc_ctx->mini_gop_cnt_per_gop > 1 && enc_ctx->previous_mini_gop_hierarchical_levels == 5) ? 25 : 75;
-        const bool cond1 = top_layer_perc_active >= 95 &&
-            !(sub_layer0_perc_active >= 95 && sub_layer1_perc_active < 75) &&
-            !(sub_layer0_perc_active < 75 && sub_layer1_perc_active >= 95);
-        const bool cond2 = top_layer_dist > LOW_DIST_TH &&
-            sub_layer_dist0 < HIGH_DIST_TH &&
-            sub_layer_dist1 < HIGH_DIST_TH &&
-            top_layer_perc_cplx >   0 &&
-            sub_layer0_perc_cplx < 25 &&
-            sub_layer1_perc_cplx < 25 &&
-            (((sub_layer_dist0 + sub_layer_dist1) / 2) < ((bias * top_layer_dist) / 100));
+    const bool cond3 = MIN(sub_layer_mv_in_out_count1, sub_layer_mv_in_out_count2) > 40 && MAX(sub_layer_mv_in_out_count1, sub_layer_mv_in_out_count2) > 55;
 
-        const bool cond3 = MIN(sub_layer_mv_in_out_count1, sub_layer_mv_in_out_count2) > 40 && MAX(sub_layer_mv_in_out_count1, sub_layer_mv_in_out_count2) > 55;
+    // aka: Apparently cplx is incremented when SAD is higher than given threshold
+    // aka: in_out_count is whether the vectors point towards the centre and NOT whether vectors point outside the screen
+    // aka:              it technically can detect zoom, but in the case of anime, it's very unreliable due to the random lineart vectors.
+    // aka: TO BE IMPLEMENTED
+    // aka: Break 32 into 2 16 when top_layer_dist, sub_layer_dist0, and sub_layer_dist1 all bigger than LOW_DIST_TH
+    // aka:                    OR either sub_layer_dist0 or sub_layer_dist1 bigger than HIGH_DIST_TH
+    // aka: CONSIDER further breaking 16 into 2 8 if certain TH is reached
+    // fprintf(stderr, "\n%u / perc_active %u %u %u / cond1 %u\n", enc_ctx->intra_period_position, top_layer_perc_active, sub_layer0_perc_active, sub_layer1_perc_active, cond1);
+    // fprintf(stderr, "%u / dist %llu %llu %llu / perc_cplx %u %u %u / cond2 %u\n", enc_ctx->intra_period_position, top_layer_dist, sub_layer_dist0, sub_layer_dist1,
+    //                                                                                                               top_layer_perc_cplx, sub_layer0_perc_cplx, sub_layer1_perc_cplx, cond2);
+    // fprintf(stderr, "%u / mv_in_out_count %d %d %d / cond3 %u\n", enc_ctx->intra_period_position, top_layer_mv_in_out_count, sub_layer_mv_in_out_count1, sub_layer_mv_in_out_count2, cond3);
 
-        if (cond1 && (cond2 || cond3)) {
-            ctx->mini_gop_activity_array[top_layer_idx] = TRUE;
-            ctx->mini_gop_activity_array[sub_layer_idx0] = FALSE;
-            ctx->mini_gop_activity_array[sub_layer_idx1] = FALSE;
-        }
-
-        // aka: Apparently cplx is incremented when SAD is higher than given threshold
-        // aka: in_out_count is whether the vectors point towards the centre and NOT whether vectors point outside the screen
-        // aka:              it technically can detect zoom, but in the case of anime, it's very unreliable due to the random lineart vectors.
-        // aka: TO BE IMPLEMENTED
-        // aka: Break 32 into 2 16 when top_layer_dist, sub_layer_dist0, and sub_layer_dist1 all bigger than LOW_DIST_TH
-        // aka:                    OR either sub_layer_dist0 or sub_layer_dist1 bigger than HIGH_DIST_TH
-        // aka: CONSIDER further breaking 16 into 2 8 if certain TH is reached
-        // fprintf(stderr, "\n%u / perc_active %u %u %u / cond1 %u\n", enc_ctx->intra_period_position, top_layer_perc_active, sub_layer0_perc_active, sub_layer1_perc_active, cond1);
-        // fprintf(stderr, "%u / dist %llu %llu %llu / perc_cplx %u %u %u / cond2 %u\n", enc_ctx->intra_period_position, top_layer_dist, sub_layer_dist0, sub_layer_dist1,
-        //                                                                                                               top_layer_perc_cplx, sub_layer0_perc_cplx, sub_layer1_perc_cplx, cond2);
-        // fprintf(stderr, "%u / mv_in_out_count %d %d %d / cond3 %u\n", enc_ctx->intra_period_position, top_layer_mv_in_out_count, sub_layer_mv_in_out_count1, sub_layer_mv_in_out_count2, cond3);
-    }
-    else {
-        // fprintf(stderr, "%u / dist %llu %llu %llu / thr %u %u\n", enc_ctx->intra_period_position, top_layer_dist, sub_layer_dist0, sub_layer_dist1,
-        //                                                                                           PSY_BIAS_LOW_DIST_TH, HIGH_DIST_TH);
-        if ((top_layer_dist > PSY_BIAS_LOW_DIST_TH && sub_layer_dist0 > PSY_BIAS_LOW_DIST_TH && sub_layer_dist1 > PSY_BIAS_LOW_DIST_TH) ||
-            (sub_layer_dist0 > HIGH_DIST_TH || sub_layer_dist1 > HIGH_DIST_TH)) {
-            ctx->mini_gop_activity_array[top_layer_idx] = TRUE;
-            ctx->mini_gop_activity_array[sub_layer_idx0] = FALSE;
-            ctx->mini_gop_activity_array[sub_layer_idx1] = FALSE;
-        }
+    if (cond1 && (cond2 || cond3)) {
+        ctx->mini_gop_activity_array[top_layer_idx] = TRUE;
+        ctx->mini_gop_activity_array[sub_layer_idx0] = FALSE;
+        ctx->mini_gop_activity_array[sub_layer_idx1] = FALSE;
     }
 }
 
@@ -721,8 +706,7 @@ static void eval_sub_mini_gop(
     uint64_t sub_layer_idx1,
     PictureParentControlSet *start_pcs,
     PictureParentControlSet *mid_pcs,
-    PictureParentControlSet *end_pcs,
-    uint8_t psy_bias_dg) {
+    PictureParentControlSet *end_pcs) {
 
     early_hme(
         ctx,
@@ -759,8 +743,84 @@ static void eval_sub_mini_gop(
         top_layer_idx, dist_end_start, perc_active_end_start, perc_cplx_end_start,
         sub_layer_idx0, dist_mid_start, perc_active_mid_start, perc_cplx_mid_start,
         sub_layer_idx1, dist_end_mid, perc_active_end_mid, perc_cplx_end_mid,
-        mv_in_out_count_end_start, mv_in_out_count_end_mid, mv_in_out_count_mid_start,
-        psy_bias_dg);
+        mv_in_out_count_end_start, mv_in_out_count_end_mid, mv_in_out_count_mid_start);
+}
+
+#define PSY_BIAS_L6_TH 16 * 16 * 6
+#define PSY_BIAS_L5_TH 16 * 16 * 10
+
+static const uint8_t psy_bias_dg_index_array[] = {
+    L6_INDEX,
+    L5_0_INDEX, L5_1_INDEX,
+    L4_0_INDEX, L4_1_INDEX, L4_2_INDEX, L4_3_INDEX,
+    L3_0_INDEX, L3_1_INDEX, L3_2_INDEX, L3_3_INDEX, L3_4_INDEX, L3_5_INDEX, L3_6_INDEX, L3_7_INDEX,
+};
+#define PSY_BIAS_DG_L6_INDEX 0
+#define PSY_BIAS_DG_L5_0_INDEX 1
+#define PSY_BIAS_DG_L5_1_INDEX 2
+#define PSY_BIAS_DG_L4_0_INDEX 3
+#define PSY_BIAS_DG_L4_1_INDEX 4
+#define PSY_BIAS_DG_L4_2_INDEX 5
+#define PSY_BIAS_DG_L4_3_INDEX 6
+#define PSY_BIAS_DG_L3_0_INDEX 7
+#define PSY_BIAS_DG_L3_1_INDEX 8
+#define PSY_BIAS_DG_L3_2_INDEX 9
+#define PSY_BIAS_DG_L3_3_INDEX 10
+#define PSY_BIAS_DG_L3_4_INDEX 11
+#define PSY_BIAS_DG_L3_5_INDEX 12
+#define PSY_BIAS_DG_L3_6_INDEX 13
+#define PSY_BIAS_DG_L3_7_INDEX 14
+
+// Return TRUE if all done
+static bool psy_bias_dg_l6_l5(EncodeContext *enc_ctx, PictureDecisionContext *ctx, uint8_t top_index, uint8_t sub_index, uint64_t thr) {
+    if (ctx->mini_gop_activity_array[psy_bias_dg_index_array[top_index]] == FALSE) {
+        early_hme(ctx, (PictureParentControlSet *)enc_ctx->pre_assignment_buffer[svt_aom_get_mini_gop_stats(psy_bias_dg_index_array[top_index])->end_index - 1]->object_ptr,
+                       (PictureParentControlSet *)enc_ctx->pre_assignment_buffer[svt_aom_get_mini_gop_stats(psy_bias_dg_index_array[top_index])->start_index]->object_ptr);
+        if (ctx->norm_dist > thr) {
+            fprintf(stderr, "%llu ", ctx->norm_dist);
+            ctx->mini_gop_activity_array[psy_bias_dg_index_array[top_index]] = TRUE;
+            ctx->mini_gop_activity_array[psy_bias_dg_index_array[sub_index]] = FALSE;
+            ctx->mini_gop_activity_array[psy_bias_dg_index_array[sub_index + 1]] = FALSE;
+        }
+        else {
+            for (uint8_t i = svt_aom_get_mini_gop_stats(psy_bias_dg_index_array[top_index])->start_index; i <= svt_aom_get_mini_gop_stats(psy_bias_dg_index_array[top_index])->end_index; i++)
+                ((PictureParentControlSet *)enc_ctx->pre_assignment_buffer[i]->object_ptr)->balancing_mg_dist = ctx->norm_dist;
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+static bool psy_bias_dg_l4(EncodeContext *enc_ctx, PictureDecisionContext *ctx, uint8_t top_index, uint8_t sub_index) {
+    if (ctx->mini_gop_activity_array[psy_bias_dg_index_array[top_index]] == FALSE) {
+        early_hme(ctx, (PictureParentControlSet *)enc_ctx->pre_assignment_buffer[svt_aom_get_mini_gop_stats(psy_bias_dg_index_array[top_index])->end_index - 1]->object_ptr,
+                       (PictureParentControlSet *)enc_ctx->pre_assignment_buffer[svt_aom_get_mini_gop_stats(psy_bias_dg_index_array[top_index])->start_index]->object_ptr);
+        for (uint8_t i = svt_aom_get_mini_gop_stats(psy_bias_dg_index_array[top_index])->start_index; i <= svt_aom_get_mini_gop_stats(psy_bias_dg_index_array[top_index])->end_index; i++)
+            ((PictureParentControlSet *)enc_ctx->pre_assignment_buffer[i]->object_ptr)->balancing_mg_dist = ctx->norm_dist;
+        return TRUE;
+    }
+    else {
+        if (ctx->mini_gop_activity_array[psy_bias_dg_index_array[sub_index]] == FALSE)
+            early_hme(ctx, (PictureParentControlSet *)enc_ctx->pre_assignment_buffer[enc_ctx->pre_assignment_buffer_count - 1]->object_ptr,
+                           (PictureParentControlSet *)enc_ctx->pre_assignment_buffer[svt_aom_get_mini_gop_stats(psy_bias_dg_index_array[top_index])->start_index]->object_ptr);
+        else
+            ctx->norm_dist = 0;
+        for (uint8_t i = svt_aom_get_mini_gop_stats(psy_bias_dg_index_array[top_index])->start_index; i <= enc_ctx->pre_assignment_buffer_count - 1; i++)
+            ((PictureParentControlSet *)enc_ctx->pre_assignment_buffer[i]->object_ptr)->balancing_mg_dist = ctx->norm_dist;
+        return TRUE;
+    }
+}
+static void psy_bias_dg(EncodeContext *enc_ctx, PictureDecisionContext *ctx) {
+    fprintf(stderr, "\n%03u / C / ", enc_ctx->intra_period_position);
+    if (!psy_bias_dg_l6_l5(enc_ctx, ctx, PSY_BIAS_DG_L6_INDEX, PSY_BIAS_DG_L5_0_INDEX, PSY_BIAS_L6_TH)) {
+        if (!psy_bias_dg_l6_l5(enc_ctx, ctx, PSY_BIAS_DG_L5_0_INDEX, PSY_BIAS_DG_L4_0_INDEX, PSY_BIAS_L5_TH)) {
+            psy_bias_dg_l4(enc_ctx, ctx, PSY_BIAS_DG_L4_0_INDEX, PSY_BIAS_DG_L3_0_INDEX);
+            psy_bias_dg_l4(enc_ctx, ctx, PSY_BIAS_DG_L4_1_INDEX, PSY_BIAS_DG_L3_2_INDEX);
+        }
+        if (!psy_bias_dg_l6_l5(enc_ctx, ctx, PSY_BIAS_DG_L5_1_INDEX, PSY_BIAS_DG_L4_2_INDEX, PSY_BIAS_L5_TH)) {
+            psy_bias_dg_l4(enc_ctx, ctx, PSY_BIAS_DG_L4_2_INDEX, PSY_BIAS_DG_L3_4_INDEX);
+            psy_bias_dg_l4(enc_ctx, ctx, PSY_BIAS_DG_L4_3_INDEX, PSY_BIAS_DG_L3_6_INDEX);
+        }
+    }
 }
 
 /***************************************************************************************************
@@ -852,8 +912,14 @@ static void initialize_mini_gop_activity_array(SequenceControlSet* scs, PictureP
         ctx->mini_gop_activity_array[L2_0_INDEX] = FALSE;
     }
 
+    if (scs->enable_dg && scs->static_config.psy_bias_dg) {
+        psy_bias_dg(enc_ctx, ctx);
+        fprintf(stderr, "\n%03u / E / ", enc_ctx->intra_period_position);
+        for (uint8_t i = 0; i <= enc_ctx->pre_assignment_buffer_count - 1; i++)
+            fprintf(stderr, "%4llu ", ((PictureParentControlSet *)enc_ctx->pre_assignment_buffer[i]->object_ptr)->balancing_mg_dist);
+    }
     // 6L vs. 5L
-    if (scs->enable_dg && ctx->mini_gop_activity_array[L6_INDEX] == FALSE)
+    else if (scs->enable_dg && ctx->mini_gop_activity_array[L6_INDEX] == FALSE)
     {
         PictureParentControlSet* start_pcs = (PictureParentControlSet*)enc_ctx->pre_assignment_buffer[0]->object_ptr;
         PictureParentControlSet* mid_pcs = (PictureParentControlSet*)enc_ctx->pre_assignment_buffer[((1 << scs->static_config.hierarchical_levels) >> 1) - 1]->object_ptr;
@@ -866,8 +932,7 @@ static void initialize_mini_gop_activity_array(SequenceControlSet* scs, PictureP
             L5_1_INDEX,
             start_pcs,
             mid_pcs,
-            end_pcs,
-            scs->static_config.psy_bias_dg);
+            end_pcs);
     }
     ctx->list0_only = 0;
     if (scs->list0_only_base_ctrls.enabled) {

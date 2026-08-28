@@ -1316,6 +1316,7 @@ static EbErrorType picture_parent_control_set_ctor(PictureParentControlSet *obje
         EB_MALLOC_2D(object_ptr->variance, object_ptr->b64_total_count, block_count);
         EB_MALLOC_ARRAY(object_ptr->balancing_luminance, object_ptr->b64_total_count);
     }
+    object_ptr->balancing_mg_dist = 0;
     if (init_data_ptr->calc_hist) {
         EB_ALLOC_PTR_ARRAY(object_ptr->picture_histogram, MAX_NUMBER_OF_REGIONS_IN_WIDTH);
 
