@@ -28,7 +28,7 @@ jobs:
         body: |
           ### Testing
 
-          **This version is currently in testing**, which means although we've seen improvements on the sources we've tested, we're not yet sure that we'll see improvements and not degradations on different kinds of sources. You're recommended to test this out and report your results to us, but we don't recommend using this version for production.  
+          **This version is currently in testing**, which means although we've seen improvements on the sources we've tested, we're not yet sure that we'll see improvements and not degradations on different kinds of sources. Use with caution.  
 
           ### Build Information
 

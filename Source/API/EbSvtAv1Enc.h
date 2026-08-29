@@ -1161,7 +1161,7 @@ typedef struct EbSvtAv1EncConfiguration {
     int32_t psy_bias_sharpness_rounding;
     int8_t psy_bias_optimize_b;
     int8_t texture_psy_bias_optimize_b;
-    uint8_t psy_bias_dg;
+    int8_t psy_bias_dg;
 
     /**
      * @brief Bias various features for high quality encoding.
@@ -1238,26 +1238,23 @@ typedef struct EbSvtAv1EncConfiguration {
      */
     uint8_t balancing_q_bias;
     /**
+     * @brief balancing mg dist Q bias
+     * 0: disabled
+     * Calculated from `--baluancing-mg-dist-q-bias` commandline parameter via `pow(2, "balancing-mg-dist-q-bias")`
+     */
+    double balancing_mg_dist_q_bias;
+    /**
+     * @brief balancing noise level Q bias
+     * 0: disabled
+     * Calculated from `--baluancing-noise-level-q-bias` commandline parameter via `pow(2, "balancing-noise-level-q-bias")`
+     */
+    double balancing_noise_level_q_bias;
+    /**
      * @brief Enable balancing luminance Q bias
      * 0: disabled
      * Calculated from `--balancing-luminance-q-bias` commandline parameter via `"balancing-luminance-q-bias" * 10`.
      */
     uint8_t balancing_luminance_q_bias;
-    /**
-     * @brief balancing noise level Q bias
-     * Max value: 2.0
-     * Min value: 0.5
-     * >1: boost frames with low noise
-     * <1: dampen frames with low noise
-     * Default is 1.0
-     */
-    double balancing_noise_level_q_bias;
-    /**
-     * @brief balancing mg dist Q bias
-     * Max value: 0.999
-     * Min value: 0.0
-     */
-    double balancing_mg_dist_q_bias;
     /**
      * @brief Enable balancing luminance lambda bias
      * Min value is 0.0

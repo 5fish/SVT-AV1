@@ -1275,8 +1275,8 @@ EbErrorType svt_av1_verify_settings(SequenceControlSet *scs) {
         SVT_ERROR("Instance %u: texture-psy-bias-optimize-b must be -2, between 0 and 2, or 4\n", channel_number + 1);
         return_error = EB_ErrorBadParameter;
     }
-    if (config->psy_bias_dg > 1 && config->psy_bias_dg != UINT8_DEFAULT) {
-        SVT_ERROR("Instance %u: psy-bias-dg must be between 0 and 1\n", channel_number + 1);
+    if (config->psy_bias_dg != 1 && config->psy_bias_dg != 0 && config->psy_bias_dg != -2 && config->psy_bias_dg != INT8_DEFAULT) {
+        SVT_ERROR("Instance %u: psy-bias-dg must be -2, 0 or 1\n", channel_number + 1);
         return_error = EB_ErrorBadParameter;
     }
 
@@ -1325,13 +1325,12 @@ EbErrorType svt_av1_verify_settings(SequenceControlSet *scs) {
         SVT_ERROR("Instance %u: balancing-q-bias must be between 0 and 1\n", channel_number + 1);
         return_error = EB_ErrorBadParameter;
     }
-    if (!(config->balancing_noise_level_q_bias >= 0.5 && config->balancing_noise_level_q_bias <= 2.0)) {
-        SVT_ERROR("Instance %u: balancing-noise-level-q-bias must be between 0.50 and 2.00\n", channel_number + 1);
+    if (!(config->balancing_mg_dist_q_bias >= 0.0)) {
+        SVT_ERROR("Instance %u: balancing-mg-dist-q-bias must be between 0.0 and 8.0 or -2\n", channel_number + 1);
         return_error = EB_ErrorBadParameter;
     }
-    if (!(config->balancing_mg_dist_q_bias >= 0.0 && config->balancing_mg_dist_q_bias < 1.0) && 
-        config->balancing_mg_dist_q_bias != DEFAULT) {
-        SVT_ERROR("Instance %u: balancing-mg-dist-q-bias must be between 0.0 and 0.999\n", channel_number + 1);
+    if (!(config->balancing_noise_level_q_bias >= 0.0)) {
+        SVT_ERROR("Instance %u: balancing-noise-level-q-bias must be between 0.0 and 8.0 or -2\n", channel_number + 1);
         return_error = EB_ErrorBadParameter;
     }
 
@@ -1561,7 +1560,7 @@ EbErrorType svt_av1_set_default_params(EbSvtAv1EncConfiguration *config_ptr) {
     config_ptr->psy_bias_sharpness_rounding       = DEFAULT;
     config_ptr->psy_bias_optimize_b               = INT8_DEFAULT;
     config_ptr->texture_psy_bias_optimize_b       = INT8_DEFAULT;
-    config_ptr->psy_bias_dg                       = UINT8_DEFAULT;
+    config_ptr->psy_bias_dg                       = INT8_DEFAULT;
     config_ptr->high_quality_encode_psy_bias      = DEFAULT;
     config_ptr->high_fidelity_encode_psy_bias     = DEFAULT;
     config_ptr->dlf_bias                          = 0;
@@ -1591,9 +1590,9 @@ EbErrorType svt_av1_set_default_params(EbSvtAv1EncConfiguration *config_ptr) {
     config_ptr->texture_cdef_bias_max_sec_cdef_rel = 0;
     config_ptr->cdef_bias_damping_offset          = 0;
     config_ptr->balancing_q_bias                  = UINT8_DEFAULT;
+    config_ptr->balancing_mg_dist_q_bias          = 0.0;
+    config_ptr->balancing_noise_level_q_bias      = 0.0;
     config_ptr->balancing_luminance_q_bias        = UINT8_DEFAULT;
-    config_ptr->balancing_noise_level_q_bias      = 1.0;
-    config_ptr->balancing_mg_dist_q_bias          = DEFAULT;
     config_ptr->balancing_luminance_lambda_bias   = DEFAULT;
     config_ptr->balancing_texture_lambda_bias     = DEFAULT;
     config_ptr->balancing_r0_dampening_layer      = INT8_DEFAULT;
@@ -1662,23 +1661,6 @@ void svt_av1_print_lib_params(SequenceControlSet *scs) {
                 : config->encoder_color_format == EB_YUV444 ? "YUV444"
                                                             : "unknown color format");
 
-        SVT_INFO("SVT [config]: preset / tune / mini-GOP size / pred struct \t\t\t: %d / %s%s / %d / %s\n",
-                 config->enc_mode,
-                 config->tune == 0       ? "VQ"
-                     : config->tune == 1 ? "PSNR"
-                         : config->tune == 2 ? "SSIM"
-                             : config->tune == 3 ? "subjective SSIM"
-                                             : "still picture",
-                (config->tune == 2 || config->tune == 3 || config->tune == 4) && config->alt_ssim_tuning ? " (alt)" : "",
-                 1 << config->hierarchical_levels,
-                 config->pred_structure == 1       ? "low delay"
-                     : config->pred_structure == 2 ? "random access"
-                                                   : "unknown");
-        if (config->auto_tiling > 0 || config->tile_columns > 0 || config->tile_rows > 0)
-            SVT_INFO("SVT [config]: auto tiling / columns / rows \t\t\t\t\t: %d / %d / %d\n",
-                     config->auto_tiling,
-                     config->tile_columns,
-                     config->tile_rows);
         if (config->scene_change_detection) {
             if (config->intra_period_length != -1)
                 SVT_INFO("SVT [config]: scene change detection / max / min GOP size / refresh type \t: on / %d / %d / %s\n",
@@ -1707,6 +1689,34 @@ void svt_av1_print_lib_params(SequenceControlSet *scs) {
                             : config->intra_refresh_type == SVT_AV1_KF_REFRESH ? "closed GOP"
                                                                                : "unknown");
         }
+        if (config->psy_bias_dg)
+            SVT_INFO("SVT [config]: preset / tune / PSY bias dynamic mini-GOP / max mini-GOP size \t: %d / %s%s / enabled / %d\n",
+                     config->enc_mode,
+                     config->tune == 0       ? "VQ"
+                         : config->tune == 1 ? "PSNR"
+                             : config->tune == 2 ? "SSIM"
+                                 : config->tune == 3 ? "subjective SSIM"
+                                                 : "still picture",
+                    (config->tune == 2 || config->tune == 3 || config->tune == 4) && config->alt_ssim_tuning ? " (alt)" : "",
+                     1 << config->hierarchical_levels);
+        else
+            SVT_INFO("SVT [config]: preset / tune / mini-GOP size / pred struct \t\t\t: %d / %s%s / %d / %s\n",
+                     config->enc_mode,
+                     config->tune == 0       ? "VQ"
+                         : config->tune == 1 ? "PSNR"
+                             : config->tune == 2 ? "SSIM"
+                                 : config->tune == 3 ? "subjective SSIM"
+                                                 : "still picture",
+                    (config->tune == 2 || config->tune == 3 || config->tune == 4) && config->alt_ssim_tuning ? " (alt)" : "",
+                     1 << config->hierarchical_levels,
+                     config->pred_structure == 1       ? "low delay"
+                         : config->pred_structure == 2 ? "random access"
+                                                       : "unknown");
+        if (config->auto_tiling > 0 || config->tile_columns > 0 || config->tile_rows > 0)
+            SVT_INFO("SVT [config]: auto tiling / columns / rows \t\t\t\t\t: %d / %d / %d\n",
+                     config->auto_tiling,
+                     config->tile_columns,
+                     config->tile_rows);
 
         // Rate control
         switch (config->rate_control_mode) {
@@ -1771,13 +1781,11 @@ void svt_av1_print_lib_params(SequenceControlSet *scs) {
                          config->frame_luma_bias >= config->luminance_qp_bias ? config->frame_luma_bias : config->luminance_qp_bias);
         }
         else { // config->balancing_q_bias
-            if (config->balancing_noise_level_q_bias == 1.0)
-                SVT_INFO("SVT [config]: balancing - Q bias / luminance Q bias \t\t\t\t: based / %d\n",
-                         config->balancing_luminance_q_bias);
-            else
-                SVT_INFO("SVT [config]: balancing - Q bias / luminance Q bias / noise level Q bias \t: based / %d / %.2f\n",
-                         config->balancing_luminance_q_bias,
-                         config->balancing_noise_level_q_bias);
+            SVT_INFO("SVT [config]: balancing - mini-GOP dist r0 bias / noise level r0 bias \t: %.0f / %.0f\n",
+                     config->balancing_mg_dist_q_bias,
+                     config->balancing_noise_level_q_bias);
+            SVT_INFO("SVT [config]: balancing - luminance beta bias \t\t\t\t: %u\n",
+                     config->balancing_luminance_q_bias);
 
             if (config->balancing_r0_dampening_layer == 1)
                 SVT_INFO("SVT [config]: balancing - r0-based decision \t\t\t\t\t: full\n");
@@ -1870,24 +1878,24 @@ void svt_av1_print_lib_params(SequenceControlSet *scs) {
         }
 
         // Motion Estimation
-        if (config->enable_tf) {
-            if (config->enable_tf == 2) {
-                if (config->alt_tf_decay && !(config->tune == 0 || config->tune == 3))
-                    SVT_INFO("SVT [config]: temporal filtering - strength / alt decay \t\t\t: auto / enabled\n");
-                else
-                    SVT_INFO("SVT [config]: temporal filtering strength \t\t\t\t\t: auto\n");
-            }
-            else { // (config->enable_tf == 1)
-                if (config->alt_tf_decay && !(config->tune == 0 || config->tune == 3))
-                    SVT_INFO("SVT [config]: TF - keyframe / non-keyframe strength / alt decay \t\t: %d / %d / enabled\n",
-                             config->kf_tf_strength,
-                             config->tf_strength);
-                else
-                    SVT_INFO("SVT [config]: temporal filtering - keyframe / non-keyframe strength \t\t: %d / %d\n",
-                             config->kf_tf_strength,
-                             config->tf_strength);
-            }
-        }
+        // if (config->enable_tf) {
+        //     if (config->enable_tf == 2) {
+        //         if (config->alt_tf_decay && !(config->tune == 0 || config->tune == 3))
+        //             SVT_INFO("SVT [config]: temporal filtering - strength / alt decay \t\t\t: auto / enabled\n");
+        //         else
+        //             SVT_INFO("SVT [config]: temporal filtering strength \t\t\t\t\t: auto\n");
+        //     }
+        //     else { // (config->enable_tf == 1)
+        //         if (config->alt_tf_decay && !(config->tune == 0 || config->tune == 3))
+        //             SVT_INFO("SVT [config]: TF - keyframe / non-keyframe strength / alt decay \t\t: %d / %d / enabled\n",
+        //                      config->kf_tf_strength,
+        //                      config->tf_strength);
+        //         else
+        //             SVT_INFO("SVT [config]: temporal filtering - keyframe / non-keyframe strength \t\t: %d / %d\n",
+        //                      config->kf_tf_strength,
+        //                      config->tf_strength);
+        //     }
+        // }
 
         // Mode Decision
         if (config->enable_qm) {
@@ -2891,6 +2899,25 @@ static EbErrorType str_to_balancing_luminance_q_bias(const char *nptr, EbSvtAv1E
     return EB_ErrorNone;
 }
 
+static EbErrorType str_to_balancing_mg_dist_noise_level_q_bias(const char *nptr, double *target) {
+    double      balancing_bias;
+    EbErrorType return_error;
+
+    return_error = str_to_double(nptr, &balancing_bias, NULL);
+
+    if (return_error == EB_ErrorBadParameter)
+        return return_error;
+    if (!(balancing_bias >= 0) && balancing_bias != -2)
+        return EB_ErrorBadParameter;
+
+    if (balancing_bias == -2)
+        *target = 0;
+    else
+        *target = pow(2, balancing_bias);
+
+    return EB_ErrorNone;
+}
+
 #define COLOR_OPT(par, opt)                                          \
     do {                                                             \
         if (!strcmp(name, par)) {                                    \
@@ -3027,6 +3054,11 @@ EB_API EbErrorType svt_av1_enc_parse_parameter(EbSvtAv1EncConfiguration *config_
     if (!strcmp(name, "balancing-luminance-q-bias"))
         return str_to_balancing_luminance_q_bias(value, config_struct);
 
+    if (!strcmp(name, "balancing-mg-dist-q-bias"))
+        return str_to_balancing_mg_dist_noise_level_q_bias(value, &config_struct->balancing_mg_dist_q_bias);
+    if (!strcmp(name, "balancing-noise-level-q-bias"))
+        return str_to_balancing_mg_dist_noise_level_q_bias(value, &config_struct->balancing_noise_level_q_bias);
+
     // uint32_t fields
     const struct {
         const char *name;
@@ -3115,7 +3147,6 @@ EB_API EbErrorType svt_av1_enc_parse_parameter(EbSvtAv1EncConfiguration *config_
         {"psy-bias-mds0-intra-inter-mode-bias", &config_struct->psy_bias_mds0_intra_inter_mode_bias},
         {"psy-bias-inter-mode-bias", &config_struct->psy_bias_inter_mode_bias},
         {"psy-bias-qm-bias", &config_struct->psy_bias_qm_bias},
-        {"psy-bias-dg", &config_struct->psy_bias_dg},
         {"dlf-bias", &config_struct->dlf_bias},
         {"dlf-sharpness", &config_struct->dlf_sharpness},
         {"cdef-bias", &config_struct->cdef_bias},
@@ -3163,8 +3194,6 @@ EB_API EbErrorType svt_av1_enc_parse_parameter(EbSvtAv1EncConfiguration *config_
         double     *out;
     } double_opts[] = {
         {"qp-scale-compress-strength", &config_struct->qp_scale_compress_strength},
-        {"balancing-noise-level-q-bias", &config_struct->balancing_noise_level_q_bias},
-        {"balancing-mg-dist-q-bias", &config_struct->balancing_mg_dist_q_bias},
         {"balancing-luminance-lambda-bias", &config_struct->balancing_luminance_lambda_bias},
         {"balancing-texture-lambda-bias", &config_struct->balancing_texture_lambda_bias},
         {"ac-bias", &config_struct->ac_bias},
@@ -3225,6 +3254,7 @@ EB_API EbErrorType svt_av1_enc_parse_parameter(EbSvtAv1EncConfiguration *config_
     } int8_opts[] = {
         {"preset", &config_struct->enc_mode},
         {"sharpness", &config_struct->sharpness},
+        {"psy-bias-dg", &config_struct->psy_bias_dg},
         {"balancing-r0-dampening-layer", &config_struct->balancing_r0_dampening_layer},
         {"psy-bias-coeff-lvl-offset", &config_struct->psy_bias_coeff_lvl_offset},
         {"psy-bias-optimize-b", &config_struct->psy_bias_optimize_b},

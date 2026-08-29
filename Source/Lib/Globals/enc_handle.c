@@ -3986,8 +3986,9 @@ static void set_param_based_on_input(SequenceControlSet *scs)
     //     if (scs->static_config.lineart_psy_bias >= 5.0)
     //         scs->static_config.startup_mg_size = CLIP3(2, 4, scs->static_config.hierarchical_levels - 1);
     // }
-    if (scs->static_config.psy_bias_dg == UINT8_DEFAULT) {
-        if (scs->static_config.lineart_psy_bias >= 3.0 || scs->static_config.texture_psy_bias >= 3.0)
+    // `--balancing-mg-dist-q-bias` will switch it on later
+    if (scs->static_config.psy_bias_dg == INT8_DEFAULT) {
+        if (scs->static_config.lineart_psy_bias >= 2.0 || scs->static_config.texture_psy_bias >= 2.0)
             scs->static_config.psy_bias_dg = 1;
         else
             scs->static_config.psy_bias_dg = 0;
@@ -4030,12 +4031,6 @@ static void set_param_based_on_input(SequenceControlSet *scs)
         }
         else
             scs->static_config.balancing_luminance_q_bias     = 0;
-    }
-    if (scs->static_config.balancing_mg_dist_q_bias == DEFAULT) {
-        if (scs->static_config.balancing_q_bias && scs->static_config.psy_bias_dg)
-            scs->static_config.balancing_mg_dist_q_bias = 0.0;
-        else
-            scs->static_config.balancing_mg_dist_q_bias = 0.0;
     }
     if (scs->static_config.balancing_luminance_lambda_bias == DEFAULT)
         scs->static_config.balancing_luminance_lambda_bias = 0.0;
@@ -4551,9 +4546,10 @@ static void set_param_based_on_input(SequenceControlSet *scs)
         scs->enable_dg = 0;
     else
         scs->enable_dg = scs->static_config.enable_dg;
-    if (scs->static_config.balancing_mg_dist_q_bias && (!scs->static_config.psy_bias_dg || !scs->enable_dg)) {
-        SVT_WARN("enable-dg and psy-bias-dg is required by balancing-mg-dist-q-bias and thus enabled\n");
-        scs->enable_dg = scs->static_config.enable_dg = scs->static_config.psy_bias_dg = 1;
+    if (scs->static_config.balancing_mg_dist_q_bias) {
+        if (scs->static_config.psy_bias_dg != -2)
+            scs->static_config.psy_bias_dg = 1;
+        scs->static_config.enable_dg = 1;
     }
     // Set hbd_md OFF for high encode modes or bitdepth < 10
     if (scs->static_config.encoder_bit_depth < 10)

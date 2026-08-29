@@ -87,9 +87,9 @@ Do note however, that there is no error checking for duplicate keys and only for
 | **FilteringNoiseDetection**      | --filtering-noise-detection | [0-4]                          | 0           | Controls noise detection which disables CDEF/restoration when noise level is high enough, enabled by default on tunes 0 and 3 [0: default tune behavior, 1: on, 2: off, 3: on (CDEF only), 4: on (restoration only)] |
 | **NoiseLevelThr**                | --noise-level-thr           | [-2-`(2^31)-1`]                | -1          | Change encoder noise level threshold. Further explanations can be found below. [-1: default encoder behaviour, -2: print the noise level for each frame, >0: set the noise level threshold] |
 | **BalancingQBias**               | --balancing-q-bias          | [0-1]                          | 0           | Enable balancing Q bias. Balancing Q bias biases the TPL system on both per frame and per Super Block level for better detail retention. |
+| **BalancingMGDistQBias**         | --balancing-mg-dist-level-q-bias | [-2,0.0-8.0]              | -2          | Boost balancing Q bias with MG dist. Enables `--psy-bias-dg` and `--enable-dg`. Use `--psy-bias-dg -2` to print out MG dist for reference. Setting both `--balancing-mg-dist-q-bias -2` and `--balancing-noise-level-q-bias -2` reverts to previous `--balancing-q-bias` behaviour |
+| **BalancingNoiseLevelQBias**     | --balancing-noise-level-q-bias | [-2,0.0-8.0]                | -2          | Boost balancing Q bias with noise level. Use `--noise-level-thr -2` to print out noise level for reference. The threshold of `--noise-level-thr` doesn't affect this parameter. Setting both `--balancing-mg-dist-q-bias -2` and `--balancing-noise-level-q-bias -2` reverts to previous `--balancing-q-bias` behaviour |
 | **BalancingLuminanceQBias**      | --balancing-luminance-q-bias | [0.0-25.0]                    | 0.0         | Enable balancing luminance Q bias. Boost Super Block with low luminance via beta. Recommended to be used with `--balancing-q-bias` but can be used without. [0: disabled, 4.0: default with `--balancing-q-bias 1`] |
-| **BalancingNoiseLevelQBias**     | --balancing-noise-level-q-bias | [0.5-2.0]                   | 1.0         | Boost a frame's base qindex when noise level is below the threshold. Can be used without `--balancing-q-bias`. [1.0: disabled, >1: boost frames with low noise, <1: dampen frames with low noise, 0.91-1.10: recommended range] |
-| **BalancingMGDistQBias**         | --balancing-mg-dist-level-q-bias | [0.0-0.999]               | 1.0         | Boost a frame's base qindex when dist within a mini GoP is high. Requires `--psy-bias-dg` and `--enable-dg`. Can be used without `--balancing-q-bias`. [0.0: disabled] |
 | **BalancingLuminanceLambdaBias** | --balancing-luminance-lambda-bias | [0.0-0.999]              | 0.0         | Enable balancing luminance lambda bias. Bias lambda in mode decision in super block with low luminance. [0: default encoder behaviour] |
 | **BalancingTextureLambdaBias**   | --balancing-texture-lambda-bias | [0.0-0.999]                | 0.0         | Enable balancing texture lambda bias. Bias lambda in low variance regions. [0: default encoder behaviour]     |
 | **BalancingR0DampeningLayer**    | --balancing-r0-dampening-layer | [-5-1]                      | 1           | Dampen r0-based boosting in frames with temporal layer higher than or equal to hierarchical levels + `--balancing-r0-dampening-layer`. This affects a wide range of features and can be used without `--balancing-q-bias`. [1: disabled, -2: default with `--balancing-q-bias 1`] |
@@ -124,7 +124,7 @@ Do note however, that there is no error checking for duplicate keys and only for
 | **PsyBiasQMBias**                | --psy-bias-qm-bias          | [0-1]                          | 0           | Increase QM level in frames of higher temporal layer                                                          |
 | **PsyBiasSharpnessRounding**     | --psy-bias-sharpness-rounding | [1-256]                      | -2          | Quantization rounding [-2: `64` in every `--tune` but `--tune 3`, which is `48`]                              |
 | **PsyBiasOptimizeB**             | --psy-bias-optimize-b       | [-2,0-2,4]                     | 0           | Optimize quantization using full distortion calculation. Slow. [0: Disabled, 1: Use slow method to optimize eob, and then proceed with normal optimization, 4: Disable normal optimization, and only use slow method to optimize eob, 2: Disable normal optimization, and use slow method to optimize eob and adjust coefficients, -2: Disable normal optimization] |
-| **PsyBiasDG**                    | --psy-bias-dg               | [0-1]                          | 0           | Psy Bias Dynamic GoP.                                                                                         |
+| **PsyBiasDG**                    | --psy-bias-dg               | [-2,0-1]                       | 0           | Psy Bias Dynamic GoP. [-2: print out mini-GOP dist for split decision and for `--balancing-mg-dist-q-bias`]   |
 | **TexturePsyBiasOptimizeB**      | --texture-psy-bias-optimize-b | [-2,0-2,4]                   | inherits `--psy-bias-optimize-b` | Optimize quantization using full distortion calculation in low variance region. Using `--texture-variance-thr` |
 | **HighQualityEncodePsyBias**     | --high-quality-encode-psy-bias | [0-1]                       | 0           | Bias various features for high quality encoding. Check below for more description. [Default to `1` when `--crf [<= 24.00]`, and either `--lineart-psy-bias` or `--texture-psy-bias` are set; Default to `0` otherwise] |
 | **HighFidelityEncodePsyBias**    | --high-fidelity-encode-psy-bias | [0-1]                      | 0           | Bias various features for high fidelity encoding. Check below for more description. [Default to `1` when `--crf [<= 16.00]`, and either `--lineart-psy-bias` or `--texture-psy-bias` are set; Default to `0` otherwise] |
@@ -144,7 +144,7 @@ Try not to deviate too much from the default threshold, which is `16000` as of e
 | :-- | :--: | :--: | :--: | :--: | :--: | :--: | :--: | :-- |
 | [global] `--scm 0` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overridden |
 | [global] `--noise-level-thr` default to `22600` | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Applied when `--crf [> 30.00]`; Can be overridden |
-| [pd] `--psy-bias-dg 1` | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overridden |
+| [pd] `--psy-bias-dg 1` | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overridden |
 | [me] `--psy-bias-disable-warped-motion 1` | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overridden |
 | [me] `--psy-bias-disable-me-8x8 1` | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overridden |
 | [rc] `--balancing-q-bias 1` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overridden |
@@ -192,7 +192,7 @@ You should use `--lineart-variance-thr` to adjust the threshold above which a de
 | :-- | :--: | :--: | :--: | :--: | :--: | :--: | :--: | :-- |
 | [global] `--noise-psy-bias` | ✕ | ✕ | ✕ | ✕ | `2` | `4` | `6` | Can be overridden |
 | [global] `--scm 0` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overridden |
-| [pd] `--psy-bias-dg 1` | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overridden |
+| [pd] `--psy-bias-dg 1` | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overridden |
 | [rc] `--balancing-q-bias 1` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overridden |
 | [rc] `--balancing-r0-dampening-layer -3` | ✕ | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | Applied when `--balancing-q-bias 1`; Can be overridden |
 | [rc] `--enable-variance-boost 0` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overridden |
@@ -290,7 +290,7 @@ In additional to features in `--high-quality-encode-psy-bias 1`:
 * `--texture-cdef-bias-max-cdef`: Default changed from inheriting `--cdef-bias-max-cdef` to `1,0,0,0`. Can be overridden.  
 * `--texture-cdef-bias-min-cdef`: Default changed from inheriting `--cdef-bias-min-cdef` to `0,0,0,0`. Can be overridden.  
 
-Additionally, `--satd-bias 0.5` could potentially encourage the encoder to keep certain type of texture and might be useful. `--balancing-noise-level-q-bias 1.10` or `1.15` can balance the quality between noisy and static scenes and could be beneficial.  
+Additionally, `--satd-bias 0.5` could potentially encourage the encoder to keep certain type of texture and might be useful.  
 
 ## Rate Control Options
 

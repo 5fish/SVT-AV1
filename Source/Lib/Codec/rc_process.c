@@ -795,58 +795,58 @@ static INLINE int get_qindex_from_qstep(const double target_qstep, const int bit
     }
     return qindex;
 }
-static int balancing_noise_level_q_bias_core(PictureControlSet *pcs, SequenceControlSet *scs, int qindex, double *double_frame_qstep) {
-    if (scs->static_config.balancing_noise_level_q_bias != 1.0 && pcs->ppcs->noise_level) {
-        const int32_t noise_level_thr = CLIP3(13500, 17500, pcs->ppcs->noise_level_thr);
-        // 16000 ~ 32000
-        double qstep_ratio = CLIP3(0.0, 1.0, (double)(pcs->ppcs->noise_level - noise_level_thr) / noise_level_thr);
-        if (scs->static_config.balancing_noise_level_q_bias > 1.0)
-            qstep_ratio = (scs->static_config.balancing_noise_level_q_bias - 1.0) * (qstep_ratio - 1.0) + 1.0;
-        else // < 0
-            qstep_ratio = (scs->static_config.balancing_noise_level_q_bias - 1.0) * qstep_ratio + 1.0;
+// static int balancing_noise_level_q_bias_core(PictureControlSet *pcs, SequenceControlSet *scs, int qindex, double *double_frame_qstep) {
+//     if (scs->static_config.balancing_noise_level_q_bias != 1.0 && pcs->ppcs->noise_level) {
+//         const int32_t noise_level_thr = CLIP3(13500, 17500, pcs->ppcs->noise_level_thr);
+//         // 16000 ~ 32000
+//         double qstep_ratio = CLIP3(0.0, 1.0, (double)(pcs->ppcs->noise_level - noise_level_thr) / noise_level_thr);
+//         if (scs->static_config.balancing_noise_level_q_bias > 1.0)
+//             qstep_ratio = (scs->static_config.balancing_noise_level_q_bias - 1.0) * (qstep_ratio - 1.0) + 1.0;
+//         else // < 0
+//             qstep_ratio = (scs->static_config.balancing_noise_level_q_bias - 1.0) * qstep_ratio + 1.0;
 
-        if (*double_frame_qstep != INVALID_DOUBLE_QSTEP) {
-            *double_frame_qstep *= qstep_ratio;
-            *double_frame_qstep = CLIP3(svt_aom_dc_quant_qtx(quantizer_to_qindex[scs->static_config.min_qp_allowed], 0, scs->static_config.encoder_bit_depth),
-                                        svt_aom_dc_quant_qtx(quantizer_to_qindex[scs->static_config.max_qp_allowed], 0, scs->static_config.encoder_bit_depth),
-                                        *double_frame_qstep);
+//         if (*double_frame_qstep != INVALID_DOUBLE_QSTEP) {
+//             *double_frame_qstep *= qstep_ratio;
+//             *double_frame_qstep = CLIP3(svt_aom_dc_quant_qtx(quantizer_to_qindex[scs->static_config.min_qp_allowed], 0, scs->static_config.encoder_bit_depth),
+//                                         svt_aom_dc_quant_qtx(quantizer_to_qindex[scs->static_config.max_qp_allowed], 0, scs->static_config.encoder_bit_depth),
+//                                         *double_frame_qstep);
 
-            qindex = get_qindex_from_qstep(*double_frame_qstep, scs->static_config.encoder_bit_depth);
-        }
-        else {
-            qindex = svt_av1_get_q_index_from_qstep_ratio(qindex, qstep_ratio, scs->static_config.encoder_bit_depth);
+//             qindex = get_qindex_from_qstep(*double_frame_qstep, scs->static_config.encoder_bit_depth);
+//         }
+//         else {
+//             qindex = svt_av1_get_q_index_from_qstep_ratio(qindex, qstep_ratio, scs->static_config.encoder_bit_depth);
 
-            qindex = CLIP3(quantizer_to_qindex[scs->static_config.min_qp_allowed],
-                           quantizer_to_qindex[scs->static_config.max_qp_allowed],
-                           qindex);
-        }
-    }
-    return qindex;
-}
-static int balancing_mg_dist_q_bias_core(PictureControlSet *pcs, SequenceControlSet *scs, int qindex, double *double_frame_qstep) {
-    if (scs->static_config.balancing_mg_dist_q_bias) {
-        double qstep_ratio = ((double)pcs->ppcs->balancing_mg_dist * pcs->ppcs->balancing_mg_dist) /
-                             (((double)pcs->ppcs->balancing_mg_dist * pcs->ppcs->balancing_mg_dist) + ((double)16 * 16 * 8 * 16 * 16 * 8));
-        qstep_ratio = 1 - qstep_ratio * scs->static_config.balancing_mg_dist_q_bias;
+//             qindex = CLIP3(quantizer_to_qindex[scs->static_config.min_qp_allowed],
+//                            quantizer_to_qindex[scs->static_config.max_qp_allowed],
+//                            qindex);
+//         }
+//     }
+//     return qindex;
+// }
+// static int balancing_mg_dist_q_bias_core(PictureControlSet *pcs, SequenceControlSet *scs, int qindex, double *double_frame_qstep) {
+//     if (scs->static_config.balancing_mg_dist_q_bias) {
+//         double qstep_ratio = ((double)pcs->ppcs->balancing_mg_dist * pcs->ppcs->balancing_mg_dist) /
+//                              (((double)pcs->ppcs->balancing_mg_dist * pcs->ppcs->balancing_mg_dist) + ((double)16 * 16 * 12 * 16 * 16 * 12));
+//         qstep_ratio = 1 - qstep_ratio * scs->static_config.balancing_mg_dist_q_bias;
 
-        if (*double_frame_qstep != INVALID_DOUBLE_QSTEP) {
-            *double_frame_qstep *= qstep_ratio;
-            *double_frame_qstep = CLIP3(svt_aom_dc_quant_qtx(quantizer_to_qindex[scs->static_config.min_qp_allowed], 0, scs->static_config.encoder_bit_depth),
-                                        svt_aom_dc_quant_qtx(quantizer_to_qindex[scs->static_config.max_qp_allowed], 0, scs->static_config.encoder_bit_depth),
-                                        *double_frame_qstep);
+//         if (*double_frame_qstep != INVALID_DOUBLE_QSTEP) {
+//             *double_frame_qstep *= qstep_ratio;
+//             *double_frame_qstep = CLIP3(svt_aom_dc_quant_qtx(quantizer_to_qindex[scs->static_config.min_qp_allowed], 0, scs->static_config.encoder_bit_depth),
+//                                         svt_aom_dc_quant_qtx(quantizer_to_qindex[scs->static_config.max_qp_allowed], 0, scs->static_config.encoder_bit_depth),
+//                                         *double_frame_qstep);
 
-            qindex = get_qindex_from_qstep(*double_frame_qstep, scs->static_config.encoder_bit_depth);
-        }
-        else {
-            qindex = svt_av1_get_q_index_from_qstep_ratio(qindex, qstep_ratio, scs->static_config.encoder_bit_depth);
+//             qindex = get_qindex_from_qstep(*double_frame_qstep, scs->static_config.encoder_bit_depth);
+//         }
+//         else {
+//             qindex = svt_av1_get_q_index_from_qstep_ratio(qindex, qstep_ratio, scs->static_config.encoder_bit_depth);
 
-            qindex = CLIP3(quantizer_to_qindex[scs->static_config.min_qp_allowed],
-                           quantizer_to_qindex[scs->static_config.max_qp_allowed],
-                           qindex);
-        }
-    }
-    return qindex;
-}
+//             qindex = CLIP3(quantizer_to_qindex[scs->static_config.min_qp_allowed],
+//                            quantizer_to_qindex[scs->static_config.max_qp_allowed],
+//                            qindex);
+//         }
+//     }
+//     return qindex;
+// }
 static const double r0_weight[3] = {0.75 /* I_SLICE */, 0.9 /* BASE */, 1 /* NON-BASE */};
 /******************************************************
  * crf_qindex_calc
@@ -3588,15 +3588,15 @@ void *svt_aom_rate_control_kernel(void *input_ptr) {
                                     av1_rc_init(scs);
                                 }
 
-                                new_qindex = balancing_noise_level_q_bias_core(pcs, scs, rc->active_worst_quality, &double_frame_qstep);
-                                new_qindex = balancing_mg_dist_q_bias_core(pcs, scs, new_qindex, &double_frame_qstep);
+                                // new_qindex = balancing_noise_level_q_bias_core(pcs, scs, rc->active_worst_quality, &double_frame_qstep);
+                                // new_qindex = balancing_mg_dist_q_bias_core(pcs, scs, new_qindex, &double_frame_qstep);
 
-                                new_qindex = crf_qindex_calc(pcs, rc, new_qindex, &double_frame_qstep);
+                                new_qindex = crf_qindex_calc(pcs, rc, rc->active_worst_quality, &double_frame_qstep);
                             } else { // if CQP
-                                new_qindex = balancing_noise_level_q_bias_core(pcs, scs, scs_qindex, &double_frame_qstep);
-                                new_qindex = balancing_mg_dist_q_bias_core(pcs, scs, new_qindex, &double_frame_qstep);
+                                // new_qindex = balancing_noise_level_q_bias_core(pcs, scs, scs_qindex, &double_frame_qstep);
+                                // new_qindex = balancing_mg_dist_q_bias_core(pcs, scs, new_qindex, &double_frame_qstep);
 
-                                new_qindex = cqp_qindex_calc(pcs, new_qindex, &double_frame_qstep);
+                                new_qindex = cqp_qindex_calc(pcs, scs_qindex, &double_frame_qstep);
                             }
                             frm_hdr->quantization_params.base_q_idx = (uint8_t)CLIP3(
                                 (int32_t)quantizer_to_qindex[scs->static_config.min_qp_allowed],

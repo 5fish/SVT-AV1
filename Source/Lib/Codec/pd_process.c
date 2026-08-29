@@ -914,9 +914,17 @@ static void initialize_mini_gop_activity_array(SequenceControlSet* scs, PictureP
 
     if (scs->enable_dg && scs->static_config.psy_bias_dg) {
         psy_bias_dg(enc_ctx, ctx);
-        // fprintf(stderr, "\n%03u / E / ", enc_ctx->intra_period_position);
-        // for (uint8_t i = 0; i <= enc_ctx->pre_assignment_buffer_count - 1; i++)
-        //     fprintf(stderr, "%4llu ", ((PictureParentControlSet *)enc_ctx->pre_assignment_buffer[i]->object_ptr)->balancing_mg_dist);
+        if (scs->static_config.psy_bias_dg == -2) {
+            if (ctx->prev_delayed_intra && ctx->prev_delayed_intra->picture_number == 0) {
+                fprintf(stderr, "\nSvt[info]: -------------------------------------------");
+                fprintf(stderr, "\nSvt[info]: psy-bias-dg has been set to print mode");
+                fprintf(stderr, "\nSvt[info]: It will now print the dist for each Mini-GOP here");
+                fprintf(stderr, "\nSvt[info]: -------------------------------------------");
+            }
+            fprintf(stderr, "\nSvt[info]: Mini-GOP dist / Mini-GOP %3u / ", enc_ctx->intra_period_position);
+            for (uint8_t i = 0; i <= enc_ctx->pre_assignment_buffer_count - 1; i++)
+                fprintf(stderr, "%4llu ", ((PictureParentControlSet *)enc_ctx->pre_assignment_buffer[i]->object_ptr)->balancing_mg_dist);
+        }
     }
     // 6L vs. 5L
     else if (scs->enable_dg && ctx->mini_gop_activity_array[L6_INDEX] == FALSE)
@@ -2910,16 +2918,17 @@ static int32_t get_noise_level_thr(PictureParentControlSet *pcs, PictureDecision
     else if (pcs->scs->static_config.noise_level_thr == -2) {
         if (print) {
             if (pcs->picture_number == 0) {
-                SVT_INFO("noise-level-thr has been set to print mode\n");
-                SVT_INFO("it will now print the noise level of each frame here\n");
-                SVT_INFO("-------------------------------------------\n");
+                fprintf(stderr, "\nSvt[info]: -------------------------------------------");
+                fprintf(stderr, "\nSvt[info]: noise-level-thr has been set to print mode");
+                fprintf(stderr, "\nSvt[info]: It will now print the noise level of each frame here");
+                fprintf(stderr, "\nSvt[info]: The current default noise level thr is %5d", default_noise_level_thr);
+                fprintf(stderr, "\nSvt[info]: -------------------------------------------");
                 if (pcs->scs->static_config.enable_tf == 0) {
-                    SVT_INFO("the noise adaptive filtering system might not be functional when enable-tf is set to 0\n");
-                    SVT_INFO("-------------------------------------------\n");
+                    fprintf(stderr, "\nSvt[info]: The noise adaptive filtering system might not be functional when enable-tf is set to 0");
+                    fprintf(stderr, "\nSvt[info]: -------------------------------------------");
                 }
-                SVT_INFO("encoder current default noise level thr: %5ld\n", default_noise_level_thr);
             }
-            SVT_INFO("noise level for frame %2llu: %5ld\n", pcs->picture_number, pd_ctx->last_i_noise_levels_log1p_fp16[0]);
+            fprintf(stderr, "\nSvt[info]: Noise level / frame %3llu / %5d", pcs->picture_number, pd_ctx->last_i_noise_levels_log1p_fp16[0]);
         }
 
         return default_noise_level_thr;
