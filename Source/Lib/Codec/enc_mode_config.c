@@ -7099,7 +7099,7 @@ static void set_mds0_controls(ModeDecisionContext *ctx, uint8_t mds0_level, doub
         else
             ctrls->mds0_dist_type           = VAR;
         ctrls->mds0_dist_type_uv            = SSD;
-        ctrls->enable_cost_based_early_exit = psy_bias_mds0_sad;
+        ctrls->enable_cost_based_early_exit = 0;
         ctrls->mds0_distortion_th           = 0;
         break;
     case 3:
@@ -7108,7 +7108,7 @@ static void set_mds0_controls(ModeDecisionContext *ctx, uint8_t mds0_level, doub
         else
             ctrls->mds0_dist_type           = VAR;
         ctrls->mds0_dist_type_uv            = VAR;
-        ctrls->enable_cost_based_early_exit = psy_bias_mds0_sad;
+        ctrls->enable_cost_based_early_exit = 0;
         ctrls->mds0_distortion_th           = 0;
         break;
     case 4:
