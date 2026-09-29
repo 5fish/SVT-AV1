@@ -3982,9 +3982,16 @@ static void set_param_based_on_input(SequenceControlSet *scs)
     }
 
     // `-psy-bias`s PD
-    if (scs->static_config.startup_mg_size == 0) {
-        if (scs->static_config.lineart_psy_bias >= 5.0)
-            scs->static_config.startup_mg_size = CLIP3(2, 4, scs->static_config.hierarchical_levels - 1);
+    // if (scs->static_config.startup_mg_size == 0) {
+    //     if (scs->static_config.lineart_psy_bias >= 5.0)
+    //         scs->static_config.startup_mg_size = CLIP3(2, 4, scs->static_config.hierarchical_levels - 1);
+    // }
+    // `--balancing-mg-dist-q-bias` will switch it on later
+    if (scs->static_config.psy_bias_dg == INT8_DEFAULT) {
+        if (scs->static_config.lineart_psy_bias >= 2.0 || scs->static_config.texture_psy_bias >= 2.0)
+            scs->static_config.psy_bias_dg = 1;
+        else
+            scs->static_config.psy_bias_dg = 0;
     }
 
     // `-psy-bias`s RC
@@ -4539,6 +4546,11 @@ static void set_param_based_on_input(SequenceControlSet *scs)
         scs->enable_dg = 0;
     else
         scs->enable_dg = scs->static_config.enable_dg;
+    if (scs->static_config.balancing_mg_dist_q_bias) {
+        if (scs->static_config.psy_bias_dg != -2)
+            scs->static_config.psy_bias_dg = 1;
+        scs->static_config.enable_dg = 1;
+    }
     // Set hbd_md OFF for high encode modes or bitdepth < 10
     if (scs->static_config.encoder_bit_depth < 10)
         scs->enable_hbd_mode_decision = 0;
@@ -4808,6 +4820,7 @@ static void copy_api_from_app(
     scs->static_config.balancing_q_bias = config_struct->balancing_q_bias;
     scs->static_config.balancing_luminance_q_bias = config_struct->balancing_luminance_q_bias;
     scs->static_config.balancing_noise_level_q_bias = config_struct->balancing_noise_level_q_bias;
+    scs->static_config.balancing_mg_dist_q_bias = config_struct->balancing_mg_dist_q_bias;
     scs->static_config.balancing_luminance_lambda_bias = config_struct->balancing_luminance_lambda_bias;
     scs->static_config.balancing_texture_lambda_bias = config_struct->balancing_texture_lambda_bias;
     scs->static_config.balancing_r0_dampening_layer = config_struct->balancing_r0_dampening_layer;
@@ -4842,6 +4855,7 @@ static void copy_api_from_app(
     scs->static_config.psy_bias_sharpness_rounding = config_struct->psy_bias_sharpness_rounding;
     scs->static_config.psy_bias_optimize_b = config_struct->psy_bias_optimize_b;
     scs->static_config.texture_psy_bias_optimize_b = config_struct->texture_psy_bias_optimize_b;
+    scs->static_config.psy_bias_dg = config_struct->psy_bias_dg;
 
     scs->static_config.high_quality_encode_psy_bias = config_struct->high_quality_encode_psy_bias;
     scs->static_config.high_fidelity_encode_psy_bias = config_struct->high_fidelity_encode_psy_bias;
@@ -4876,8 +4890,8 @@ static void copy_api_from_app(
                 ? 4
                 : 5;
 
-        if (scs->static_config.high_quality_encode_psy_bias)
-            scs->static_config.hierarchical_levels = AOMMIN(scs->static_config.hierarchical_levels, 4);
+        // if (scs->static_config.high_quality_encode_psy_bias)
+        //     scs->static_config.hierarchical_levels = AOMMIN(scs->static_config.hierarchical_levels, 4);
     }
     if (scs->static_config.pass == ENC_SINGLE_PASS && scs->static_config.pred_structure == SVT_AV1_PRED_LOW_DELAY_B) {
         if (scs->static_config.hierarchical_levels != 2) {
