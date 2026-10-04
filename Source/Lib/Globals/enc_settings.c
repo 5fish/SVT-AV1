@@ -1326,11 +1326,11 @@ EbErrorType svt_av1_verify_settings(SequenceControlSet *scs) {
         return_error = EB_ErrorBadParameter;
     }
     if (!(config->balancing_mg_dist_q_bias >= 0.0)) {
-        SVT_ERROR("Instance %u: balancing-mg-dist-q-bias must be between 0.0 and 8.0 or -2\n", channel_number + 1);
+        SVT_ERROR("Instance %u: balancing-mg-dist-q-bias must be between 0.0 and 8.0\n", channel_number + 1);
         return_error = EB_ErrorBadParameter;
     }
     if (!(config->balancing_noise_level_q_bias >= 0.0)) {
-        SVT_ERROR("Instance %u: balancing-noise-level-q-bias must be between 0.0 and 8.0 or -2\n", channel_number + 1);
+        SVT_ERROR("Instance %u: balancing-noise-level-q-bias must be between 0.0 and 8.0\n", channel_number + 1);
         return_error = EB_ErrorBadParameter;
     }
 
@@ -1590,8 +1590,8 @@ EbErrorType svt_av1_set_default_params(EbSvtAv1EncConfiguration *config_ptr) {
     config_ptr->texture_cdef_bias_max_sec_cdef_rel = 0;
     config_ptr->cdef_bias_damping_offset          = 0;
     config_ptr->balancing_q_bias                  = UINT8_DEFAULT;
-    config_ptr->balancing_mg_dist_q_bias          = 0.0;
-    config_ptr->balancing_noise_level_q_bias      = 0.0;
+    config_ptr->balancing_mg_dist_q_bias          = 8.0;
+    config_ptr->balancing_noise_level_q_bias      = 2.0;
     config_ptr->balancing_luminance_q_bias        = UINT8_DEFAULT;
     config_ptr->balancing_luminance_lambda_bias   = DEFAULT;
     config_ptr->balancing_texture_lambda_bias     = DEFAULT;
