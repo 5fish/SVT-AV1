@@ -826,6 +826,8 @@ typedef struct PictureParentControlSet {
     uint32_t         pre_assignment_buffer_count;
     uint16_t         pic_avg_variance;
 
+    uint64_t balancing_mg_dist;
+
     uint32_t ***picture_histogram;
     uint64_t    average_intensity_per_region[MAX_NUMBER_OF_REGIONS_IN_WIDTH][MAX_NUMBER_OF_REGIONS_IN_HEIGHT];
     // Segments
