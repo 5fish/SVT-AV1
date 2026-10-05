@@ -8,14 +8,11 @@ jobs:
   tag:
     runs-on: "ubuntu-latest"
     outputs:
-      tag: ${{ steps.generate-tag.outputs.tag }}
-      name: ${{ steps.generate-name.outputs.name }}
+      tag: ${{ steps.generate.outputs.tag }}
     steps:
     - uses: actions/checkout@v7
-    - id: generate-tag
-      run: echo tag=pgo-build-$(git log -1 "--date=format:%F" "--format=%ad-%h") >> "$GITHUB_OUTPUT"
-    - id: generate-name
-      run: echo name=$(git log -1 "--date=format:%F" "--format=%ad %h") >> "$GITHUB_OUTPUT"
+    - id: generate
+      run: echo tag=v$(git log -1 "--date=format:%y%m%d" "--format=4.3.%ad") >> "$GITHUB_OUTPUT"
 
 
   release:
@@ -23,23 +20,16 @@ jobs:
     runs-on: "ubuntu-latest"
     steps:
     - uses: actions/checkout@v7
-      with:
-        ref: "refs/heads/pgo-build-tags"
     - run: GH_TOKEN=${{ github.token }} gh release delete ${{ needs.tag.outputs.tag }} --cleanup-tag
       continue-on-error: true
-    - name: Commit and push tag to pgo-build-tags branch
-      run: |
-        git config user.name "github-actions[bot]"
-        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-        git fetch origin pgo-build-tags
-        NEW_COMMIT=$(git commit-tree HEAD^{tree} -p FETCH_HEAD -m "${{ needs.tag.outputs.tag }}")
-        git push origin $NEW_COMMIT:refs/heads/pgo-build-tags
     - uses: softprops/action-gh-release@v3
       with:
         tag_name: ${{ needs.tag.outputs.tag }}
-        target_commitish: pgo-build-tags
-        name: SVT-AV1-Tritium ${{ needs.tag.outputs.name }}
+        target_commitish: ${{ github.sha }}
+        name: 5fish/SVT-AV1 ${{ needs.tag.outputs.tag }}
         body: |
+          ### Build Information
+
           Ref `${{ github.ref }}` | Commit `${{ github.sha }}` | Dolby Vision & HDR10+ | FFMS2  
           Windows | x86-64 | LLVM Project Clang LLD | winthread | `icelake-server` + `znver5` | LTO PGO  
           Windows | x86-64 | LLVM Project Clang LLD | winthread | `znver2` | LTO PGO  
@@ -70,15 +60,13 @@ jobs:
         shell: msys2 {0}
     steps:
     - uses: actions/checkout@v7
-      with:
-        fetch-depth: 0
-        fetch-tags: true
 
     - uses: Akatmks/build-svt-av1@v2
       with:
-        pgo-video: "FoodMarket2"
-        pgo-parameters: "--crf 20.00 --tune 0 --film-grain 8 --enable-dlf 2"
+        pgo-video: "SolLevante"
+        pgo-parameters: "--crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5"
         ffms2: "true"
+        cmakeflags: "-DUSE_WEBM_IO=ON"
 
     - id: detect-icelake-server-znver5
       run: ls BuildAction/icelake-server+znver5/static/ffms2/SvtAv1EncApp.exe
@@ -118,15 +106,13 @@ jobs:
         shell: msys2 {0}
     steps:
     - uses: actions/checkout@v7
-      with:
-        fetch-depth: 0
-        fetch-tags: true
 
     - uses: Akatmks/build-svt-av1@v2
       with:
-        pgo-video: "FoodMarket2"
-        pgo-parameters: "--crf 20.00 --tune 0 --film-grain 8 --enable-dlf 2"
+        pgo-video: "SolLevante"
+        pgo-parameters: "--crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5"
         ffms2: "true"
+        cmakeflags: "-DUSE_WEBM_IO=ON"
 
     - run: ls BuildAction/armv8.7-a+crypto+sm4+sha3+fp16+sve+sve2+oryon-1/static/ffms2/SvtAv1EncApp.exe
     - run: cd BuildAction/armv8.7-a+crypto+sm4+sha3+fp16+sve+sve2+oryon-1/static/ffms2 && tar cJf Windows_arm64_ffms2_armv8.7-a+crypto+sm4+sha3+fp16+sve+sve2+oryon-1.tar.xz SvtAv1EncApp.exe
@@ -141,15 +127,13 @@ jobs:
     runs-on: "ubuntu-latest"
     steps:
     - uses: actions/checkout@v7
-      with:
-        fetch-depth: 0
-        fetch-tags: true
 
     - uses: Akatmks/build-svt-av1@v2
       with:
-        pgo-video: "FoodMarket2"
-        pgo-parameters: "--crf 20.00 --tune 0 --film-grain 8 --enable-dlf 2"
+        pgo-video: "SolLevante"
+        pgo-parameters: "--crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5"
         ffms2: "true"
+        cmakeflags: "-DUSE_WEBM_IO=ON"
 
     - id: detect-icelake-server-znver5
       run: ls BuildAction/icelake-server+znver5/static/base/SvtAv1EncApp
@@ -172,14 +156,14 @@ jobs:
         tag_name: ${{ needs.tag.outputs.tag }}
         files: BuildAction/znver2/static/base/Linux_x86-64_znver2.tar.xz
       if: ${{ steps.detect-znver2.outcome != 'failure' }}
-    
+
     - run: ls BuildAction/x86-64-v3+znver2/static/base/SvtAv1EncApp
     - run: cd BuildAction/x86-64-v3+znver2/static/base && tar cJf Linux_x86-64_x86-64-v3+znver2.tar.xz SvtAv1EncApp
     - uses: softprops/action-gh-release@v3
       with:
         tag_name: ${{ needs.tag.outputs.tag }}
         files: BuildAction/x86-64-v3+znver2/static/base/Linux_x86-64_x86-64-v3+znver2.tar.xz
-  
+
     - run: ls BuildAction/icelake-server+znver5/static/ffms2/SvtAv1EncApp
       if: ${{ steps.detect-icelake-server-znver5.outcome != 'failure' }}
     - run: cd BuildAction/icelake-server+znver5/static/ffms2 && tar cJf Linux_x86-64_ffms2_icelake-server+znver5.tar.xz SvtAv1EncApp
@@ -213,15 +197,13 @@ jobs:
     runs-on: "macos-latest"
     steps:
     - uses: actions/checkout@v7
-      with:
-        fetch-depth: 0
-        fetch-tags: true
 
     - uses: Akatmks/build-svt-av1@v2
       with:
-        pgo-video: "FoodMarket2"
-        pgo-parameters: "--crf 20.00 --tune 0 --film-grain 8 --enable-dlf 2"
+        pgo-video: "SolLevante"
+        pgo-parameters: "--crf 20.00 --lineart-psy-bias 5 --texture-psy-bias 5"
         ffms2: "true"
+        cmakeflags: "-DUSE_WEBM_IO=ON"
 
     - run: ls BuildAction/armv8.5-a+simd+crypto+apple-m3/static/base/SvtAv1EncApp
     - run: cd BuildAction/armv8.5-a+simd+crypto+apple-m3/static/base && tar cJf macOS_arm64_armv8.5-a+simd+crypto+apple-m3.tar.xz SvtAv1EncApp
