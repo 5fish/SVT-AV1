@@ -1326,11 +1326,11 @@ EbErrorType svt_av1_verify_settings(SequenceControlSet *scs) {
         return_error = EB_ErrorBadParameter;
     }
     if (!(config->balancing_mg_dist_q_bias >= 0.0)) {
-        SVT_ERROR("Instance %u: balancing-mg-dist-q-bias must be between 0.0 and 8.0\n", channel_number + 1);
+        SVT_ERROR("Instance %u: balancing-mg-dist-q-bias must be between 0.0 and 8.0 or -2\n", channel_number + 1);
         return_error = EB_ErrorBadParameter;
     }
     if (!(config->balancing_noise_level_q_bias >= 0.0)) {
-        SVT_ERROR("Instance %u: balancing-noise-level-q-bias must be between 0.0 and 8.0\n", channel_number + 1);
+        SVT_ERROR("Instance %u: balancing-noise-level-q-bias must be between 0.0 and 8.0 or -2\n", channel_number + 1);
         return_error = EB_ErrorBadParameter;
     }
 
