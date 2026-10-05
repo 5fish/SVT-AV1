@@ -2075,24 +2075,7 @@ int get_version(int argc, char* const argv[], bool color) {
     if (find_token(argc, argv, VERSION_TOKEN, NULL)) {
         return 0;
     }
-    printf("SVT-AV1-Tritium %s (" BUILD_TYPE_STRING ")\n", svt_av1_get_version());
-#if defined(_WIN64) || defined(_MSC_VER) || defined(_WIN32)
-    printf("Tritium Release: %s\n", svt_hdr_get_version());
-#else
-    if (strcmp(svt_hdr_get_version(), "N/A")) {
-        if (color) {
-            printf("Tritium Release: \x1b[32m%s\x1b[0m\n", svt_hdr_get_version());
-        } else {
-            printf("Tritium Release: %s\n", svt_hdr_get_version());
-        }
-    } else {
-        if (color) {
-            printf("Tritium Release: \x1b[38;5;248m%s\x1b[0m\n", svt_hdr_get_version());
-        } else {
-            printf("Tritium Release: %s\n", svt_hdr_get_version());
-        }
-    }
-#endif
+    printf("SVT-AV1 [5fish] %s (" BUILD_TYPE_STRING ")\n", svt_av1_get_version());
     return 1;
 #undef BUILD_TYPE_STRING
 }
@@ -2202,76 +2185,76 @@ uint32_t get_color_help(int32_t argc, char* const argv[]) {
         "\t13: chroma-cl, Chromaticity-derived constant luminance\n"
         "\t14: ictcp, BT.2100 ICtCp\n\n");
 
-#if defined(_WIN64) || defined(_MSC_VER) || defined(_WIN32)
-    printf(
-        "The available options for --color-range are:\n\n"
-#else
+// #if defined(_WIN64) || defined(_MSC_VER) || defined(_WIN32)
+//     printf(
+//         "The available options for --color-range are:\n\n"
+// #else
     printf(
         "The available options for \x1b[32m--color-range\x1b[0m are:\n\n"
-#endif
+// #endif
         "\t0: studio (default)\n"
         "\t1: full\n\n");
 
-#if defined(_WIN64) || defined(_MSC_VER) || defined(_WIN32)
-    printf(
-        "The available options for --chroma-sample-position are:\n\n"
-#else
+// #if defined(_WIN64) || defined(_MSC_VER) || defined(_WIN32)
+//     printf(
+//         "The available options for --chroma-sample-position are:\n\n"
+// #else
     printf(
         "The available options for \x1b[32m--chroma-sample-position\x1b[0m are:\n\n"
-#endif
+// #endif
         "\t0: unknown, default\n"
         "\t1: vertical/left, horizontally co-located with luma samples, vertical position in the middle between "
         "two luma samples\n"
         "\t2: colocated/topleft, co-located with luma samples\n\n");
 
-#if defined(_WIN64) || defined(_MSC_VER) || defined(_WIN32)
-    printf(
-        "The --mastering-display and --content-light parameters are used to set the mastering display and "
-        "content light level in the AV1 bitstream.\n\n");
-#else
+// #if defined(_WIN64) || defined(_MSC_VER) || defined(_WIN32)
+//     printf(
+//         "The --mastering-display and --content-light parameters are used to set the mastering display and "
+//         "content light level in the AV1 bitstream.\n\n");
+// #else
     printf(
         "The \x1b[32m--mastering-display\x1b[0m and \x1b[32m--content-light\x1b[0m parameters are used to set the "
         "mastering display and content light level in the AV1 bitstream.\n\n");
-#endif
+// #endif
 
-#if defined(_WIN64) || defined(_MSC_VER) || defined(_WIN32)
-    printf(
-        "--mastering-display takes the format of G(x,y)B(x,y)R(x,y)WP(x,y)L(max,min) where\n\n"
-#else
+// #if defined(_WIN64) || defined(_MSC_VER) || defined(_WIN32)
+//     printf(
+//         "--mastering-display takes the format of G(x,y)B(x,y)R(x,y)WP(x,y)L(max,min) where\n\n"
+// #else
     printf(
         "\x1b[32m--mastering-display\x1b[0m takes the format of G(x,y)B(x,y)R(x,y)WP(x,y)L(max,min) where\n\n"
-#endif
+// #endif
         "\t- G(x,y) is the green channel of the mastering display\n"
         "\t- B(x,y) is the blue channel of the mastering display\n"
         "\t- R(x,y) is the red channel of the mastering display\n"
         "\t- WP(x,y) is the white point of the mastering display\n"
         "\t- L(max,min) is the light level of the mastering display\n\n");
 
-#if defined(_WIN64) || defined(_MSC_VER) || defined(_WIN32)
-    printf(
-        "The x & y values can be coordinates from 0.0 to 1.0, as specified in CIE 1931 while the min,max values "
-        "can be floating point values representing candelas per square meter, or nits.\n"
-        "The max,min values are generally specified in the range of 0.0 to 1.0 but there are no constraints on "
-        "the provided values.\n"
-        "Invalid values will be clipped accordingly.\n\n");
-#else
+// #if defined(_WIN64) || defined(_MSC_VER) || defined(_WIN32)
+//     printf(
+//         "The x & y values can be coordinates from 0.0 to 1.0, as specified in CIE 1931 while the min,max values "
+//         "can be floating point values representing candelas per square meter, or nits.\n"
+//         "The max,min values are generally specified in the range of 0.0 to 1.0 but there are no constraints on "
+//         "the provided values.\n"
+//         "Invalid values will be clipped accordingly.\n\n");
+// #else
     printf(
         "\x1b[38;5;248mThe x & y values can be coordinates from 0.0 to 1.0, as specified in CIE 1931 while the min,max "
         "values can be floating point values representing candelas per square meter, or nits.\n"
         "The max,min values are generally specified in the range of 0.0 to 1.0 but there are no constraints on the "
         "provided values.\n"
         "Invalid values will be clipped accordingly.\x1b[0m\n\n");
-#endif
+// #endif
 
-#if defined(_WIN64) || defined(_MSC_VER) || defined(_WIN32)
-    printf(
-        "--content-light takes the format of max_cll,max_fall where both values are integers clipped into a "
-        "range of 0 to 65535.\n");
-#else
+// #if defined(_WIN64) || defined(_MSC_VER) || defined(_WIN32)
+//     printf(
+//         "--content-light takes the format of max_cll,max_fall where both values are integers clipped into a "
+//         "range of 0 to 65535.\n");
+// #else
     printf(
         "\x1b[32m--content-light\x1b[0m takes the format of max_cll,max_fall where both values are integers clipped "
         "into a range of 0 to 65535.\n");
-#endif
+// #endif
 
     return 1;
 }

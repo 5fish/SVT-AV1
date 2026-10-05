@@ -1303,16 +1303,10 @@ typedef struct EbSvtAv1EncConfiguration {
 } EbSvtAv1EncConfiguration;
 
 /**
- * Returns a string containing "v$tag-$commit_count-g$hash${dirty:+-dirty}"
+ * Returns a string containing "v4.2.YYMMDD"
  * @param[out] SVT_AV1_CVS_VERSION
  */
 EB_API const char* svt_av1_get_version(void);
-
-/**
- * Returns a string containing only the SVT-AV1-HDR micro-release letter
- * @param[out] SVT_AV1_HDR_RELEASE
- */
-EB_API const char* svt_hdr_get_version(void);
 
 /**
  * Prints the version header and build information to the file

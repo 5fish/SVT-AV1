@@ -1,4 +1,4 @@
-name: pgo-build
+name: pgo-build-testing
 on: workflow_dispatch
 # on: push # testing only
 
@@ -26,6 +26,10 @@ jobs:
         target_commitish: ${{ github.sha }}
         name: 5fish/SVT-AV1 ${{ needs.tag.outputs.tag }}
         body: |
+          ### Testing
+
+          **This version is currently in testing**, which means although we've seen improvements on the sources we've tested, we're not yet sure that we'll see improvements and not degradations on different kinds of sources. Use with caution.  
+
           ### Build Information
 
           Ref `${{ github.ref }}` | Commit `${{ github.sha }}` | Dolby Vision & HDR10+ | FFMS2  
@@ -46,7 +50,7 @@ jobs:
           Some versions might not be available if the GitHub Actions runners we get this time don't support the respective features.  
 
           Thanks to studies and contributions from afed, Emre, Ironclad, Itachi Uchiha, Khaoklong, Miss Ashenlight, Soda, SwareJonge, Trix, Yiss, and other people in the community for discovering the method to build the fastest binary.  
-        prerelease: false
+        prerelease: true
         make_latest: "true"
 
 

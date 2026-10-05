@@ -6151,19 +6151,16 @@ EB_API const char* svt_av1_get_version(void) {
     return SVT_AV1_CVS_VERSION;
 }
 
-EB_API const char* svt_hdr_get_version(void) {
-    return SVT_AV1_HDR_RELEASE;
-}
-
 EB_API void svt_av1_print_version(void) {
     SVT_INFO("-------------------------------------------\n");
-    SVT_INFO("SVT [version]:\tSVT-AV1-Tritium Encoder Lib %s \"Ghost Robot\"\n", SVT_AV1_CVS_VERSION);
+    SVT_INFO("SVT [version]: SVT-AV1 [5fish] %s\n", SVT_AV1_CVS_VERSION);
     const char* compiler =
 #if defined(__clang__) && defined(__apple_build_version__)
-        __VERSION__ "\t"
+    "Apple LLVM " CONVERT_TO_STR_COMPILE_TIME(__clang_major__) "." CONVERT_TO_STR_COMPILE_TIME(__clang_minor__) "." CONVERT_TO_STR_COMPILE_TIME(__clang_patchlevel__)
+#elif defined(__clang__) && defined(__INTEL_LLVM_COMPILER)
+    __VERSION__
 #elif defined(__clang__)
-        "Clang " CONVERT_TO_STR_COMPILE_TIME(__clang_major__) "." CONVERT_TO_STR_COMPILE_TIME(
-            __clang_minor__) "." CONVERT_TO_STR_COMPILE_TIME(__clang_patchlevel__) "\t"
+    "Clang " CONVERT_TO_STR_COMPILE_TIME(__clang_major__) "." CONVERT_TO_STR_COMPILE_TIME(__clang_minor__) "." CONVERT_TO_STR_COMPILE_TIME(__clang_patchlevel__)
 #elif defined(__GNUC__)
         "GCC " __VERSION__ "\t"
 #elif defined(_MSC_VER) && (_MSC_VER >= 1950)
@@ -6182,9 +6179,10 @@ EB_API void svt_av1_print_version(void) {
         "unknown compiler"
 #endif
         ;
-    SVT_INFO("SVT [build]  :\t%s %zu bit\n", compiler, sizeof(void*) * 8);
 #if !REPRODUCIBLE_BUILDS
-    SVT_INFO("LIB Build date: %s %s\n", __DATE__, __TIME__);
+    SVT_INFO("SVT [build]  : %s / %06d\n", compiler, PF_BUILD_DATE);
+#else
+    SVT_INFO("SVT [build]  : %s\n", compiler);
 #endif
     SVT_INFO("-------------------------------------------\n");
 }
