@@ -780,6 +780,7 @@ void *svt_aom_picture_manager_kernel(void *input_ptr) {
                                   REF_LIST_MAX_DEPTH * sizeof(EbObjectWrapper *));
                         EB_MEMSET(child_pcs->ref_pic_qp_array[REF_LIST_0], 0, REF_LIST_MAX_DEPTH * sizeof(uint8_t));
                         EB_MEMSET(child_pcs->ref_pic_qp_array[REF_LIST_1], 0, REF_LIST_MAX_DEPTH * sizeof(uint8_t));
+                        EB_MEMSET(child_pcs->ref_pic_qindex_array, 0, sizeof(child_pcs->ref_pic_qindex_array));
                         EB_MEMSET(
                             child_pcs->ref_slice_type_array[REF_LIST_0], 0, REF_LIST_MAX_DEPTH * sizeof(SliceType));
                         EB_MEMSET(
@@ -833,6 +834,8 @@ void *svt_aom_picture_manager_kernel(void *input_ptr) {
                                 child_pcs->ref_pic_ptr_array[list_idx][ref_idx] = ref_entry->reference_object_ptr;
                                 child_pcs->ref_pic_qp_array[list_idx][ref_idx] =
                                     (uint8_t)((EbReferenceObject *)ref_entry->reference_object_ptr->object_ptr)->qp;
+                                child_pcs->ref_pic_qindex_array[list_idx][ref_idx] =
+                                    ((EbReferenceObject *)ref_entry->reference_object_ptr->object_ptr)->qindex;
                                 child_pcs->ref_slice_type_array[list_idx][ref_idx] =
                                     ((EbReferenceObject *)ref_entry->reference_object_ptr->object_ptr)->slice_type;
                                 child_pcs->ref_pic_r0[list_idx][ref_idx] =
@@ -867,6 +870,8 @@ void *svt_aom_picture_manager_kernel(void *input_ptr) {
                                         child_pcs->ref_pic_ptr_array[REF_LIST_0][0];
                                     child_pcs->ref_pic_qp_array[REF_LIST_1][ref_idx] =
                                         child_pcs->ref_pic_qp_array[REF_LIST_0][0];
+                                    child_pcs->ref_pic_qindex_array[REF_LIST_1][ref_idx] =
+                                        child_pcs->ref_pic_qindex_array[REF_LIST_0][0];
                                     child_pcs->ref_slice_type_array[REF_LIST_1][ref_idx] =
                                         child_pcs->ref_slice_type_array[REF_LIST_0][0];
                                     child_pcs->ref_pic_r0[REF_LIST_1][ref_idx] =

@@ -1764,6 +1764,8 @@ void pad_ref_and_set_flags(PictureControlSet *pcs, SequenceControlSet *scs) {
 
     // set up the QP
     ref_object->qp = (uint8_t)pcs->ppcs->picture_qp;
+    // and the unrounded qindex it is derived from
+    ref_object->qindex = pcs->ppcs->picture_qindex;
 
     // set up the Slice Type
     ref_object->slice_type = pcs->ppcs->slice_type;
@@ -2763,6 +2765,8 @@ static void recode_loop_decision_maker(PictureControlSet *pcs, SequenceControlSe
                                           (int32_t)scs->static_config.max_qp_allowed,
                                           (frm_hdr->quantization_params.base_q_idx + 2) >> 2);
         pcs->picture_qp  = ppcs->picture_qp;
+        // unrounded qindex behind picture_qp, read by crf_qindex_calc() of the frames that reference this one
+        ppcs->picture_qindex = frm_hdr->quantization_params.base_q_idx;
 
         // set initial SB base_q_idx values
         pcs->ppcs->frm_hdr.delta_q_params.delta_q_present = 0;

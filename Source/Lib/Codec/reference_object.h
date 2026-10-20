@@ -33,6 +33,7 @@ typedef struct EbReferenceObject {
     EbHandle             resize_mutex[NUM_SR_SCALES + 1][NUM_RESIZE_SCALES + 1];
     uint64_t             ref_poc;
     uint16_t             qp;
+    uint8_t              qindex;
     SliceType            slice_type;
     uint8_t              intra_coded_area; //percentage of intra coded area 0-100%
     uint8_t              skip_coded_area;

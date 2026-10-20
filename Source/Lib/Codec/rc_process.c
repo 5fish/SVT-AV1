@@ -849,6 +849,19 @@ static INLINE int get_qindex_from_qstep(const double target_qstep, const int bit
 // }
 static const double r0_weight[3] = {0.75 /* I_SLICE */, 0.9 /* BASE */, 1 /* NON-BASE */};
 /******************************************************
+ * ref_qindex_on_crf_grid
+ * Rounds a reference qindex to the qindex grid of --crf: steps of 4 shifted by
+ * extended_crf_qindex_offset. For an integer --crf (offset 0) this is
+ * quantizer_to_qindex[ref qp]; a fractional --crf keeps its offset.
+ ******************************************************/
+static int ref_qindex_on_crf_grid(const SequenceControlSet *scs, uint8_t ref_qindex) {
+    const int offset = (int)scs->static_config.extended_crf_qindex_offset;
+    const int qp     = CLIP3((int)scs->static_config.min_qp_allowed,
+                             (int)scs->static_config.max_qp_allowed,
+                             (MAX((int)ref_qindex - offset, 0) + 2) >> 2);
+    return MIN((int)quantizer_to_qindex[qp] + offset, MAX_Q_INDEX);
+}
+/******************************************************
  * crf_qindex_calc
  * Assign the q_index per frame.
  * Used in the one pass encoding with tpl stats
@@ -884,9 +897,9 @@ static int crf_qindex_calc(PictureControlSet *pcs, RATE_CONTROL *rc, int qindex,
     } else {
         // new code that accurately converts back arf qindex values
         // prevents the case of unintentional qindex drifting due to repeatedly adding 2 to each calculated temporal layer's qindex
-        rc->arf_q = MAX(rc->arf_q, quantizer_to_qindex[pcs->ref_pic_qp_array[0][0]]);
+        rc->arf_q = MAX(rc->arf_q, ref_qindex_on_crf_grid(scs, pcs->ref_pic_qindex_array[0][0]));
         if (pcs->slice_type == B_SLICE)
-            rc->arf_q = MAX(rc->arf_q, quantizer_to_qindex[pcs->ref_pic_qp_array[1][0]]);
+            rc->arf_q = MAX(rc->arf_q, ref_qindex_on_crf_grid(scs, pcs->ref_pic_qindex_array[1][0]));
     }
 #if DEBUG_QP_SCALING
     printf("Frame %llu, temp. level %i, active worst quality %i, qstep based calc %i\n",
@@ -3718,6 +3731,9 @@ void *svt_aom_rate_control_kernel(void *input_ptr) {
                     frm_hdr->quantization_params.delta_q_ac[1] = frm_hdr->quantization_params.delta_q_ac[2] =
                     CLIP3(-64, 63, chroma_qindex - frm_hdr->quantization_params.base_q_idx);
 
+                    // unrounded qindex behind picture_qp, read by crf_qindex_calc() of the frames that reference this one
+                    pcs->ppcs->picture_qindex = frm_hdr->quantization_params.base_q_idx;
+
                     if (scs->enable_qp_scaling_flag && pcs->ppcs->qp_on_the_fly == FALSE) {
                         // max bit rate is only active for 1 pass CRF
                         if (scs->static_config.rate_control_mode == SVT_AV1_RC_MODE_CQP_OR_CRF &&
@@ -3805,6 +3821,7 @@ void *svt_aom_rate_control_kernel(void *input_ptr) {
                     }
 
                     frm_hdr->quantization_params.base_q_idx = quantizer_to_qindex[pcs->picture_qp];
+                    pcs->ppcs->picture_qindex               = frm_hdr->quantization_params.base_q_idx;
                 }
                 if (pcs->ppcs->slice_type == I_SLICE) {
                     pcs->ppcs->rate_control_param_ptr->last_i_qp = pcs->picture_qp;
@@ -3818,6 +3835,7 @@ void *svt_aom_rate_control_kernel(void *input_ptr) {
                 PictureParentControlSet *overlay_ppcs_ptr = pcs->ppcs->overlay_ppcs_ptr;
                 FrameHeader             *overlay_frm_hdr  = &overlay_ppcs_ptr->frm_hdr;
                 overlay_ppcs_ptr->picture_qp              = pcs->picture_qp;
+                overlay_ppcs_ptr->picture_qindex          = pcs->ppcs->picture_qindex;
                 memcpy(&overlay_frm_hdr->quantization_params,
                        &frm_hdr->quantization_params,
                        sizeof(overlay_frm_hdr->quantization_params));

@@ -239,6 +239,7 @@ typedef struct PictureControlSet {
     // EB_S64 refPicPocArray[MAX_NUM_OF_REF_PIC_LIST][REF_LIST_MAX_DEPTH];
 
     uint8_t   ref_pic_qp_array[MAX_NUM_OF_REF_PIC_LIST][REF_LIST_MAX_DEPTH];
+    uint8_t   ref_pic_qindex_array[MAX_NUM_OF_REF_PIC_LIST][REF_LIST_MAX_DEPTH];
     SliceType ref_slice_type_array[MAX_NUM_OF_REF_PIC_LIST][REF_LIST_MAX_DEPTH];
     double    ref_pic_r0[MAX_NUM_OF_REF_PIC_LIST][REF_LIST_MAX_DEPTH];
     // GOP
@@ -764,6 +765,7 @@ typedef struct PictureParentControlSet {
     int8_t    transition_present; // -1: not computed
     Bool      end_of_sequence_flag;
     uint8_t   picture_qp;
+    uint8_t   picture_qindex; // unrounded qindex picture_qp is derived from (before variance boost)
     uint64_t  picture_number;
     uint32_t  cur_order_hint;
     uint32_t  ref_order_hint[INTER_REFS_PER_FRAME];
