@@ -640,3 +640,78 @@ When enabled, the `--luminance-qp-bias` parameter enables frame-level luma bias 
 ### `--sharpness [-7-7]`
 The `--sharpness` parameter allows users to manually configure deblocking loop filter sharpness, and it also affects rate control. It is used in Tune 3 (IQ) and Tune 4 (MS_SSIM), which is designed for still image compression; that being said, it still may be useful for perceptual fidelity in video.
 By default, sharpness is set to 0.
+
+## `--psy-bias` Family and `--balancing` Family Options
+
+Please check [README](../README.md#usage) for the recommended parameters.  
+
+| **Configuration file parameter** | **Command line** | **Range** | **Default without `--psy-bias`** | **Description** |
+| :-- | :-- | :-- | :-- | :-- |
+| **LineartPsyBias** | --lineart-psy-bias | [0-7] | 3 | Improve lineart retention. Check below for more information. |
+| **TexturePsyBias** | --texture-psy-bias | [0-7] | 2 | Improve texture retention. Check below for more information. |
+| **CrfThrOffset** | --crf-thr-offset | [-64.0-64.0] | 0.0 | Offset `--crf` threshold used in various decisions. Further explanations can be found below. |
+| **PsyBiasDyamicMG** | --psy-bias-dynamic-mg | [-2,0-1] | 0 | `--psy-bias` dynamic mini-gop. Sets `--dynamic-dg 1`. [-2: print out mini-gop dist for split decision and for `--balancing-mg-dist-r0-bias`] |
+| **NoiseLevelThr** | --noise-level-thr | [-2,0-`(2^31)-1`] | 15000 | Change encoder noise level threshold. Further explanations can be found below. [-2: print the noise level, >0: set the noise level threshold] |
+
+### `--lineart-psy-bias`
+
+| `--lineart-psy-bias` level | `1` | `2` | `3` | `4` | `5` | `6` | `7` | Note |
+| :-- | :--: | :--: | :--: | :--: | :--: | :--: | :--: | :-- |
+| [global] `--tune 0` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overridden |
+| [global] `--scm 0` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overridden |
+| [global] `--noise-level-thr` | `16000` | `16000` | `16000` | `16000` | `16000` | `16000` | `16000` | Applied when `--crf [<= 30.00]`; Can be overridden |
+| [global] `--noise-level-thr` | `16000` | `22600` | `22600` | `22600` | `22600` | `22600` | `22600` | Applied when `--crf [> 30.00]`; Can be overridden |
+| [md quant] `--qm-min` | `8` | `8` | `8` | `8` | `8` | `8` | `8` | Can be overridden |
+| [md quant] `--chroma-qm-min` | `10` | `10` | `11` | `11` | `11` | `11` | `11` | Can be overridden |
+| [md quant] `--sharpness 2` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Default from original -PSY; Can be overridden |
+| [md quant] `--noise-norm-strength 0` | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | Can be overridden |
+| [md search] use better `pic_obmc_level` | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | |
+| [md search] alternative tx search grouping | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | |
+| [md search] `NEARESTMV` rate adjustment | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | |
+| [fgs] `--photon-noise 200` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overridden by any FGS parameters |
+
+<ins>To use `--lineart-psy-bias`</ins>, select a level based on how much effort you want to spend on lineart retention. Specifically:  
+* `--lineart-psy-bias 3` is generally good for all sources, especially sources without weak lineart and easier to handle.  
+* `--lineart-psy-bias 4` puts a little bit more focus on weak lineart retention than `--lineart-psy-bias 3`.  
+* `--lineart-psy-bias 5` and above is optimised for weak lineart retention.  
+* At higher levels, some features might be aggressive and could introduce blocking and other issues at numerically high `--crf` encodes. Some features here trade overall efficiency for better weak lineart retention, such as variance skip taper enabled at `--lineart-psy-bias 6` and variance 32x32 blk size taper enabled at `--lineart-psy-bias 7`.  
+
+### `--texture-psy-bias`
+
+| `--texture-psy-bias` level | `1` | `2` | `3` | `4` | `5` | `6` | `7` | Note |
+| :-- | :--: | :--: | :--: | :--: | :--: | :--: | :--: | :-- |
+| [global] `--tune 0` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overridden |
+| [global] `--scm 0` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overridden |
+| [global] `--noise-level-thr 16000` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overridden |
+| [md quant] `--qm-min` | `8` | `8` | `9` | `9` | `9` | `9` | `9` | Overrides `--lineart-psy-bias` default; Can be overridden |
+| [md quant] `--sharpness 2` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Default from original -PSY; Can be overridden |
+| [md quant] `--noise-norm-strength` | － | － | `1` | `1` | `4` | `4` | `4` | Overrides `--lineart-psy-bias` default; Can be overridden |
+| [md search] `NEARESTMV` rate adjustment | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | |
+| [md search] `GLOBALMV` bias | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | |
+| [fgs] `--photon-noise 200` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overridden by any FGS parameters |
+
+<ins>To use `--texture-psy-bias`</ins>, select a level based on how much effort you want to spend on texture retention. Specifically:  
+* `--texture-psy-bias 2` is fine to use on sources with little texture.  
+* `--texture-psy-bias 3` puts a little bit of focus on texture, and can be used on sources with occasional texture.  
+* `--texture-psy-bias 4` is suitable for sources with detailed texture. At this level, it starts to harm especially weak lineart in clean sources a little bit, but should still generally be fine for most sources.  
+* `--texture-psy-bias 5` and above is suitable for encodes where texture retention is a great priority, or when the source is very texture heavy.  
+* Additionally, `--texture-psy-bias 6` and above contains more settings to accommodate noisy sources.  
+* Black cat prevention also starts to be applied at `--texture-psy-bias 5` and above, which will trade efficiency for safety.  
+
+### `--crf-thr-offset`
+
+Various `--psy-bias` and mainline features are enabled only at `--crf` deemed safe for enabling.  
+
+When `--balancing-bias` is not used, this is based on `--crf` or `--crf` specified in `--zones`.  
+When `--balancing-bias` is used, for most features, this is changed to instead based on every frame's `base_q_idx`, which includes everything from r0 based rate control to `--mbr`. Although for some features it's still based on `--crf`.  
+
+`--crf-thr-offset` can be used to offset the threshold used in these decisions, so that these features are enabled or disabled even when you're not encoding at the designed `--crf`.  
+
+### `--noise-level-thr`
+
+SVT-AV1's noise level threshold is conservative, which is inherently a good thing. Tools like CDEF can produce very awkward results in noisy sources, and it's good for the encoder's default behaviour to be conservative.  
+In practice, sometimes this is overly conservative, and people have been talking about using `--filtering-noise-detection`, also known as `--noise-adaptive-filtering` in some forks. However, that parameter universally disabled this protection, which may cause issues when encoding a mixture of clean and noisy materials.  
+Instead, you can use this parameter to control this threshold so that certain feature are available when you need it and still disabled in noisy materials.  
+
+To adjust the noise level, use `--noise-level-thr -2` to run a short test encode. This will print the detected noise level for each frame. You can then set the threshold between the frames you want features to be enabled and frames you want features to be disabled.
+Try not to deviate too much from `--psy-bias`' default threshold, which is `16000`. This noise level detection is connected to various features in mode decision and other parts of the encoder in addition to CDEF and restoration.  
