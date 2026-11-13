@@ -14,6 +14,7 @@
 #include "entropy_coding.h"
 #include "utility.h"
 #include "md_process.h"
+#include "inv_transforms.h"
 
 #include "rc_process.h"
 
@@ -41,7 +42,8 @@ static EbReferenceObject* get_ref_obj(PictureControlSet* pcs, RefList ref_list, 
  * Update the qindex and active worse quality based on the already
  *  spent bits in the sliding window
  ******************************************************/
-static int32_t svt_aom_crf_assign_max_rate(PictureParentControlSet* ppcs) {
+static int32_t svt_aom_crf_assign_max_rate(PictureControlSet* pcs, int32_t new_qindex) {
+    PictureParentControlSet* ppcs           = pcs->ppcs;
     SequenceControlSet* scs                 = ppcs->scs;
     EncodeContext*      enc_ctx             = scs->enc_ctx;
     RATE_CONTROL*       rc                  = &enc_ctx->rc;
@@ -105,53 +107,69 @@ static int32_t svt_aom_crf_assign_max_rate(PictureParentControlSet* ppcs) {
                rc->gfu_boost);
 #endif
     }
-    // Increase the qindex based on the status of the spent bits in the window
-    int remaining_frames       = frames_in_sw - coded_frames_num_sw;
-    int available_bit_ratio    = (int)(100 * available_bit_sw / max_bits_sw);
-    int available_frames_ratio = 100 * remaining_frames / frames_in_sw;
-    int buff_lvl_step          = (OPTIMAL_BUFFER_LEVEL - CRITICAL_BUFFER_LEVEL);
-    int adjustment             = 0;
-    if (available_bit_ratio <= OPTIMAL_BUFFER_LEVEL) {
-        if (available_bit_ratio > CRITICAL_BUFFER_LEVEL) {
-            int max_adjustment = (available_bit_ratio + 20 < available_frames_ratio) ? rc->active_worst_quality
-                                                                                     : rc->active_worst_quality / 2;
-            // Adjust up from assigned QP.
-            if (available_bit_ratio < available_frames_ratio + 10) {
-                adjustment = (int)(max_adjustment * (OPTIMAL_BUFFER_LEVEL - available_bit_ratio) / buff_lvl_step);
-            }
-        } else {
-            // Set to worst_quality if buffer is below critical level.
-            adjustment = rc->active_worst_quality;
-        }
-    }
-#if DEBUG_RC_CAP_LOG
-    printf("SW_POC:%lld\t%lld\t%lld\t%d%%\t%d%%\tadj:\t%d\n",
-           ppcs->picture_number,
-           max_bits_sw,
-           available_bit_sw,
-           available_bit_ratio,
-           available_frames_ratio,
-           adjustment);
-#endif
-    // Increase the active_worse_quality based on the adjustment
-    if (ppcs->temporal_layer_index == 0) {
-        rc->active_worst_quality += (adjustment / 2);
-    }
-    // Decrease the active_worse_quality where undershoot happens and active_worst_quality is greater than the input QP
-    if (available_bit_ratio > available_frames_ratio + 20 && available_frames_ratio < 10 &&
-        rc->active_worst_quality > quantizer_to_qindex[scs->static_config.qp]) {
-        rc->active_worst_quality -= rc->active_worst_quality / 10;
-    }
-    rc->active_worst_quality = CLIP3(quantizer_to_qindex[scs->static_config.qp],
-                                     quantizer_to_qindex[scs->static_config.max_qp_allowed],
-                                     rc->active_worst_quality);
 
     // clip the max frame size to 32 bits
     ppcs->max_frame_size = (int)CLIP3(1, (0xFFFFFFFFull >> 1), (uint64_t)max_frame_size);
     // The target is set to 80% of the max.
     ppcs->this_frame_target = ppcs->max_frame_size * 8 / 10;
 
-    return adjustment;
+    // Increase the qindex based on the status of the spent bits in the window
+    if (pcs->balancing_frame_qstep != INVALID_BALANCING_QSTEP) {
+        int    remaining_frames       = frames_in_sw - coded_frames_num_sw;
+        double available_bit_ratio    = (double)available_bit_sw / max_bits_sw;
+        double available_frames_ratio = (double)remaining_frames / frames_in_sw;
+        if (available_bit_ratio <= (double)OPTIMAL_BUFFER_LEVEL / 100 &&
+            available_bit_ratio < available_frames_ratio) {
+            pcs->balancing_frame_qstep *= available_frames_ratio / AOMMAX(available_bit_ratio, 0.01);
+            pcs->balancing_frame_qstep = AOMMIN(pcs->balancing_frame_qstep, (double)svt_aom_dc_quant_qtx(rc->active_worst_quality, 0, scs->static_config.encoder_bit_depth));
+            return get_qindex_from_qstep(pcs->balancing_frame_qstep, scs->static_config.encoder_bit_depth);
+        }
+        else
+            return new_qindex;
+    }
+    else {
+        int remaining_frames       = frames_in_sw - coded_frames_num_sw;
+        int available_bit_ratio    = (int)(100 * available_bit_sw / max_bits_sw);
+        int available_frames_ratio = 100 * remaining_frames / frames_in_sw;
+        int buff_lvl_step          = (OPTIMAL_BUFFER_LEVEL - CRITICAL_BUFFER_LEVEL);
+        int adjustment             = 0;
+        if (available_bit_ratio <= OPTIMAL_BUFFER_LEVEL) {
+            if (available_bit_ratio > CRITICAL_BUFFER_LEVEL) {
+                int max_adjustment = (available_bit_ratio + 20 < available_frames_ratio) ? rc->active_worst_quality
+                                                                                         : rc->active_worst_quality / 2;
+                // Adjust up from assigned QP.
+                if (available_bit_ratio < available_frames_ratio + 10) {
+                    adjustment = (int)(max_adjustment * (OPTIMAL_BUFFER_LEVEL - available_bit_ratio) / buff_lvl_step);
+                }
+            } else {
+                // Set to worst_quality if buffer is below critical level.
+                adjustment = rc->active_worst_quality;
+            }
+        }
+#if DEBUG_RC_CAP_LOG
+        printf("SW_POC:%lld\t%lld\t%lld\t%d%%\t%d%%\tadj:\t%d\n",
+               ppcs->picture_number,
+               max_bits_sw,
+               available_bit_sw,
+               available_bit_ratio,
+               available_frames_ratio,
+               adjustment);
+#endif
+        // Increase the active_worse_quality based on the adjustment
+        if (ppcs->temporal_layer_index == 0) {
+            rc->active_worst_quality += (adjustment / 2);
+        }
+        // Decrease the active_worse_quality where undershoot happens and active_worst_quality is greater than the input QP
+        if (available_bit_ratio > available_frames_ratio + 20 && available_frames_ratio < 10 &&
+            rc->active_worst_quality > quantizer_to_qindex[scs->static_config.qp]) {
+            rc->active_worst_quality -= rc->active_worst_quality / 10;
+        }
+        rc->active_worst_quality = CLIP3(quantizer_to_qindex[scs->static_config.qp],
+                                         quantizer_to_qindex[scs->static_config.max_qp_allowed],
+                                         rc->active_worst_quality);
+
+        return new_qindex + adjustment;
+    }
 }
 
 static int svt_av1_frame_type_qdelta(RATE_CONTROL* rc, rate_factor_level rf_lvl, int q, int bit_depth,
@@ -293,7 +311,13 @@ static int crf_qindex_calc(PictureControlSet* pcs, RATE_CONTROL* rc, int qindex)
             qstep_ratio = MIN(weight, qstep_ratio);
         }
 
-        int qindex_from_qstep_ratio = svt_av1_get_q_index_from_qstep_ratio(qindex, qstep_ratio, bit_depth);
+        int qindex_from_qstep_ratio;
+        if (pcs->balancing_frame_qstep != INVALID_BALANCING_QSTEP) {
+            pcs->balancing_frame_qstep *= qstep_ratio;
+            qindex_from_qstep_ratio = get_qindex_from_qstep(pcs->balancing_frame_qstep, bit_depth);
+        }
+        else
+            qindex_from_qstep_ratio = svt_av1_get_q_index_from_qstep_ratio(qindex, qstep_ratio, bit_depth);
 #if DEBUG_QP_SCALING
         SVT_DEBUG("  qstep based calc: r0 weight %f, qstep ratio %f, qindex from qstep ratio %i\n",
                   weight,
@@ -340,6 +364,8 @@ static int crf_qindex_calc(PictureControlSet* pcs, RATE_CONTROL* rc, int qindex)
             SVT_DEBUG("  ref based calc: ref tmp layer %i, delta %i\n", ref_tmp_layer, tmp_layer_delta);
 #endif
         }
+        SVT_ERROR("balancing qstep based RC / Frame %3llu / Supposedly unreachable code reached (!use_qstep_based_q_calc)\n", pcs->picture_number);
+        pcs->balancing_frame_qstep = INVALID_BALANCING_QSTEP;
     }
 
 #if DEBUG_QP_SCALING
@@ -347,6 +373,10 @@ static int crf_qindex_calc(PictureControlSet* pcs, RATE_CONTROL* rc, int qindex)
         "  before tmp layer adj: abq %i, awq %i, arf_q %i\n", active_best_quality, active_worst_quality, rc->arf_q);
 #endif
     if (temporal_layer) {
+        if (rc->arf_q > active_best_quality) {
+            SVT_ERROR("balancing qstep based RC / Frame %3llu / Supposedly unreachable code reached (rc->arf_q > active_best_quality)\n", pcs->picture_number);
+            pcs->balancing_frame_qstep = INVALID_BALANCING_QSTEP;
+        }
         active_best_quality = MAX(active_best_quality, rc->arf_q);
     }
 #if DEBUG_QP_SCALING
@@ -470,6 +500,17 @@ void svt_av1_rc_calc_qindex_crf_cqp(PictureControlSet* pcs, SequenceControlSet* 
     uint8_t scs_qp     = ppcs->is_startup_gop ? clamp_qp(scs, effective_qp.qp + scs->static_config.startup_qp_offset)
                                               : effective_qp.qp;
     int     scs_qindex = clamp_qindex(scs, quantizer_to_qindex[scs_qp] + effective_qp.qindex_offset);
+    pcs->balancing_frame_qstep = INVALID_BALANCING_QSTEP;
+    // if (pcs->scs->static_config.balancing_q_bias) {
+        if (effective_qp.balancing_crf != INVALID_BALANCING_CRF) {
+            const int16_t scs_qstep        = svt_aom_dc_quant_qtx(scs_qindex, 0, scs->static_config.encoder_bit_depth);
+            const int16_t scs_qstep_one_up = svt_aom_dc_quant_qtx(scs_qindex, 1, scs->static_config.encoder_bit_depth);
+            pcs->balancing_frame_qstep     = scs_qstep +
+                                             (scs_qstep_one_up - scs_qstep) * modf(effective_qp.balancing_crf * 4, &(double){0});
+        }
+        else
+            pcs->balancing_frame_qstep     = svt_aom_dc_quant_qtx(scs_qindex, 0, scs->static_config.encoder_bit_depth);
+    // }
 
     // if RC mode is 0, fixed QP is used
     // QP scaling based on POC number for Flat IPPP structure
@@ -480,6 +521,8 @@ void svt_av1_rc_calc_qindex_crf_cqp(PictureControlSet* pcs, SequenceControlSet* 
     int32_t new_qindex = scs_qindex;
     if (ppcs->qp_on_the_fly) {
         new_qindex = quantizer_to_qindex[ppcs->picture_qp];
+        if (pcs->balancing_frame_qstep != INVALID_BALANCING_QSTEP)
+            pcs->balancing_frame_qstep = svt_aom_dc_quant_qtx(new_qindex, 0, scs->static_config.encoder_bit_depth);
     } else {
         int  active_ext_crf_qindex_offset = effective_qp.extended_crf_qindex_offset;
         bool active_qp_is_max             = effective_qp.qp_is_max;
@@ -493,9 +536,13 @@ void svt_av1_rc_calc_qindex_crf_cqp(PictureControlSet* pcs, SequenceControlSet* 
                 new_qindex = crf_qindex_calc(pcs, rc, effective_qp.from_zone ? scs_qindex : rc->active_worst_quality);
             } else { // if CQP
                 new_qindex = cqp_qindex_calc(pcs, scs_qindex);
+                if (pcs->balancing_frame_qstep != INVALID_BALANCING_QSTEP)
+                    pcs->balancing_frame_qstep = svt_aom_dc_quant_qtx(new_qindex, 0, scs->static_config.encoder_bit_depth);
             }
             new_qindex = clamp_qindex(scs, new_qindex);
         }
+
+        const int32_t previous_new_qindex = new_qindex;
 
         if (scs->static_config.use_fixed_qindex_offsets) {
             if (scs->static_config.use_fixed_qindex_offsets == 1) {
@@ -531,10 +578,14 @@ void svt_av1_rc_calc_qindex_crf_cqp(PictureControlSet* pcs, SequenceControlSet* 
             new_qindex = clamp_qindex(scs, quantizer_to_qindex[new_qp]);
         }
 
+        if (pcs->balancing_frame_qstep != INVALID_BALANCING_QSTEP)
+            pcs->balancing_frame_qstep *= (double)svt_aom_dc_quant_qtx(new_qindex, 0, scs->static_config.encoder_bit_depth) /
+                                       svt_aom_dc_quant_qtx(previous_new_qindex, 0, scs->static_config.encoder_bit_depth);
+
         if (scs->enable_qp_scaling_flag) {
             // max bit rate is only active for 1 pass CRF
             if (scs->static_config.max_bit_rate) {
-                new_qindex += svt_aom_crf_assign_max_rate(ppcs);
+                new_qindex = svt_aom_crf_assign_max_rate(pcs, new_qindex);
                 new_qindex = clamp_qindex(scs, new_qindex);
             }
         }

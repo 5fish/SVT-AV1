@@ -338,6 +338,14 @@ int svt_av1_get_q_index_from_qstep_ratio(int leaf_qindex, double qstep_ratio, in
     }
     return qindex;
 }
+int get_qindex_from_qstep(const double target_qstep, const int bit_depth) {
+    int qindex;
+    for (qindex = MAXQ; qindex > 0; --qindex) {
+        if (svt_aom_dc_quant_qtx(qindex, 0, bit_depth) <= target_qstep)
+            break;
+    }
+    return qindex;
+}
 
 // Returns the default rd multiplier for inter frames for a given qindex.
 // The function here is a first pass estimate based on data from

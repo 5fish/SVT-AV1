@@ -5276,6 +5276,9 @@ static void copy_api_from_app(SequenceControlSet* scs, EbSvtAv1EncConfiguration*
 
     scs->static_config.hide_banner = config_struct->hide_banner;
 
+    // `--psy-bias` & `--balancing` RC
+    scs->static_config.balancing_crf = config_struct->balancing_crf;
+
     // Override settings for Still IQ tune
     if (scs->static_config.tune == TUNE_IQ) {
         SVT_WARN(

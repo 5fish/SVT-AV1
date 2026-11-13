@@ -211,6 +211,7 @@ typedef struct SvtAv1QualityZone {
     uint32_t end_frame; // inclusive
     int      zone_baseq; // base CRF/CQP value for this zone
     int      zone_qsidx; // quarter step index
+    double   balancing_zone_crf;
 } SvtAv1QualityZone;
 
 // Will contain the EbEncApi which will live in the EncHandle class
@@ -1371,6 +1372,9 @@ typedef struct EbSvtAv1EncConfiguration {
      * Default is 0. 0 = off, 1 = on.
      */
     bool low_q_taper;
+
+    // `--psy-bias` & `--balancing` RC
+    double balancing_crf;
 
     // clang-format off
     /* Add 128 Byte Padding to Struct to avoid changing the size of the public configuration struct */

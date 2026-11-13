@@ -289,6 +289,7 @@ int svt_aom_frame_is_kf_gf_arf(struct PictureParentControlSet* ppcs);
 int svt_av1_rc_bits_per_mb(FrameType frame_type, int qindex, double correction_factor, int bit_depth,
                            int is_screen_content_type);
 int svt_av1_get_q_index_from_qstep_ratio(int leaf_qindex, double qstep_ratio, int bit_depth);
+int get_qindex_from_qstep(const double target_qstep, const int bit_depth);
 int svt_av1_compute_qdelta_by_rate(struct RATE_CONTROL* rc, FrameType frame_type, int qindex, double rate_target_ratio,
                                    int bit_depth, int is_screen_content_type);
 

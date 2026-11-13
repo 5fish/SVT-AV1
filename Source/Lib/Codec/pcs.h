@@ -403,6 +403,9 @@ typedef struct PictureControlSet {
     int64_t best_filt_sse;
     int32_t dlf_dist_dev;
     int32_t cdef_dist_dev;
+
+    // `--psy-bias` & `--balancing` RC
+    double balancing_frame_qstep;
 } PictureControlSet;
 
 // To optimize based on the max input size

@@ -678,6 +678,9 @@ typedef enum ATTRIBUTE_PACKED { PLANE_Y, PLANE_U, PLANE_V, MAX_PLANES } Plane;
 
 typedef enum ATTRIBUTE_PACKED { PLANE_TYPE_Y, PLANE_TYPE_UV, PLANE_TYPES } PlaneType;
 
+#define INVALID_BALANCING_QSTEP -2
+#define INVALID_BALANCING_CRF -2
+
 static INLINE int32_t clamp(int32_t value, int32_t low, int32_t high) {
     return value < low ? low : (value > high ? high : value);
 }

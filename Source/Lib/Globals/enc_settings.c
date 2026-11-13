@@ -1382,6 +1382,10 @@ EbErrorType svt_av1_set_default_params(EbSvtAv1EncConfiguration* config_ptr) {
     config_ptr->enable_daala_filtering   = 0;
     config_ptr->low_memory               = 0;
     config_ptr->hide_banner              = false;
+
+    // `--psy-bias` & `--balancing` RC
+    config_ptr->balancing_crf = INVALID_BALANCING_CRF;
+
     return return_error;
 }
 
@@ -1503,7 +1507,10 @@ static const char* matrix_coefficients_to_str(EbMatrixCoefficients coeff) {
 }
 
 static double get_extended_crf(EbSvtAv1EncConfiguration* config_ptr) {
-    return (double)config_ptr->qp + (double)config_ptr->extended_crf_qindex_offset / 4;
+    if (config_ptr->balancing_crf != INVALID_BALANCING_CRF)
+        return config_ptr->balancing_crf;
+    else
+        return (double)config_ptr->qp + (double)config_ptr->extended_crf_qindex_offset / 4;
 }
 
 //#define DEBUG_BUFFERS
@@ -2009,6 +2016,7 @@ static EbErrorType str_to_crf(const char* nptr, EbSvtAv1EncConfiguration* config
     config_struct->rate_control_mode          = SVT_AV1_RC_MODE_CQP_OR_CRF;
     config_struct->aq_mode                    = 2;
     config_struct->extended_crf_qindex_offset = extended_crf_qindex_offset;
+    config_struct->balancing_crf              = crf;
 
     return EB_ErrorNone;
 }
@@ -2690,6 +2698,7 @@ static EbErrorType parse_zones_string(const char* zones_str, SvtAv1QualityZone**
         zones[parsed_zones].end_frame   = (uint32_t)end;
         zones[parsed_zones].zone_baseq  = rounded_quality / 4;
         zones[parsed_zones].zone_qsidx  = rounded_quality % 4;
+        zones[parsed_zones].balancing_zone_crf = quality;
         parsed_zones++;
 
         p = endptr;
