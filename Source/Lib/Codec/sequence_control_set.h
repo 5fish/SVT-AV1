@@ -314,6 +314,7 @@ typedef struct SvtAv1EffectiveQp {
     uint8_t  qp;
     uint32_t qindex_offset;
     uint32_t extended_crf_qindex_offset;
+    double   balancing_crf;
     bool     qp_is_max;
     bool     from_zone;
 } SvtAv1EffectiveQp;
@@ -323,6 +324,7 @@ static INLINE SvtAv1EffectiveQp svt_av1_get_effective_qp(const SequenceControlSe
         (uint8_t)scs->static_config.qp,
         scs->static_config.extended_crf_qindex_offset,
         scs->static_config.extended_crf_qindex_offset,
+        scs->static_config.balancing_crf,
         scs->static_config.qp == MAX_QP_VALUE,
         false,
     };
@@ -355,6 +357,8 @@ static INLINE SvtAv1EffectiveQp svt_av1_get_effective_qp(const SequenceControlSe
             qp.qindex_offset              = (uint32_t)zone_qsidx;
             qp.extended_crf_qindex_offset = 0;
         }
+
+        qp.balancing_crf                  = zone->balancing_zone_crf;
     }
 
     return qp;

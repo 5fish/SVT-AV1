@@ -1097,6 +1097,9 @@ static EbErrorType picture_control_set_ctor(PictureControlSet* object_ptr, EbPtr
         EB_CALLOC_ALIGNED_ARRAY(object_ptr->tpl_mvs, mem_size);
     }
 
+    // `--psy-bias` & `--balancing` RC
+    object_ptr->balancing_frame_qstep = INVALID_BALANCING_QSTEP;
+
     return EB_ErrorNone;
 }
 
