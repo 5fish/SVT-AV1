@@ -476,15 +476,21 @@ void svt_av1_generate_b64_me_qindex_map(PictureControlSet* pcs) {
     }
 }
 
-static int svt_av1_get_deltaq_offset(EbBitDepth bit_depth, int qindex, double beta, bool is_intra) {
+static int svt_av1_get_deltaq_offset(EbBitDepth bit_depth, int qindex, double beta, bool is_intra, double balancing_sb_qstep) {
     assert(beta > 0.0);
-    int q = svt_aom_dc_quant_qtx(qindex, 0, bit_depth);
-    int newq;
+    double q;
+    if (balancing_sb_qstep != INVALID_BALANCING_QSTEP)
+        q = balancing_sb_qstep;
+    else
+        q = svt_aom_dc_quant_qtx(qindex, 0, bit_depth);
+    double newq;
     // use a less aggressive action when lowering the q for non I_slice
     if (!is_intra && beta > 1) {
-        newq = (int)rint(q / sqrt(sqrt(beta)));
+        // newq = (int)rint(q / sqrt(sqrt(beta)));
+        newq = q / sqrt(sqrt(beta));
     } else {
-        newq = (int)rint(q / sqrt(beta));
+        // newq = (int)rint(q / sqrt(beta));
+        newq = q / sqrt(beta);
     }
     int orig_qindex = qindex;
     if (newq == q) {
@@ -590,8 +596,12 @@ void svt_aom_sb_qp_derivation_tpl_la(PictureControlSet* pcs) {
         for (uint32_t sb_addr = 0; sb_addr < sb_cnt; ++sb_addr) {
             SuperBlock* sb_ptr = pcs->sb_ptr_array[sb_addr];
             double      beta   = ppcs->pa_me_data->tpl_beta[sb_addr];
+            double balancing_sb_qstep = pcs->balancing_frame_qstep;
+            if (balancing_sb_qstep != INVALID_BALANCING_QSTEP)
+                balancing_sb_qstep *= svt_aom_dc_quant_qtx(sb_ptr->qindex, 0, scs->static_config.encoder_bit_depth) /
+                                      svt_aom_dc_quant_qtx(ppcs->frm_hdr.quantization_params.base_q_idx, 0, scs->static_config.encoder_bit_depth);
             int         offset = svt_av1_get_deltaq_offset(
-                scs->static_config.encoder_bit_depth, sb_ptr->qindex, beta, ppcs->slice_type == I_SLICE);
+                scs->static_config.encoder_bit_depth, sb_ptr->qindex, beta, ppcs->slice_type == I_SLICE, balancing_sb_qstep);
             offset = AOMMIN(offset, 9 * 4 - 1);
             offset = AOMMAX(offset, -9 * 4 + 1);
 

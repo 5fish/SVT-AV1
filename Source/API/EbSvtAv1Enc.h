@@ -1,4 +1,4 @@
-/*
+﻿/*
 * Copyright(c) 2019 Intel Corporation
 *
 * This source code is subject to the terms of the BSD 3-Clause Clear License and
@@ -211,6 +211,7 @@ typedef struct SvtAv1QualityZone {
     uint32_t end_frame; // inclusive
     int      zone_baseq; // base CRF/CQP value for this zone
     int      zone_qsidx; // quarter step index
+    double   balancing_zone_crf;
 } SvtAv1QualityZone;
 
 // Will contain the EbEncApi which will live in the EncHandle class
@@ -1451,6 +1452,9 @@ typedef struct EbSvtAv1EncConfiguration {
     *
     * Default is 1. */
     float fgs_multiplier;
+
+    // `--psy-bias` & `--balancing` RC
+    double balancing_crf;
 
     /* The trailing 128-byte padding reserve is fully consumed by the film-grain
      * and mc-denoise fields above, so this struct now grows with new fields.
