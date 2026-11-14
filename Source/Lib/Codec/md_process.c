@@ -384,7 +384,7 @@ EbErrorType svt_aom_mode_decision_context_ctor(ModeDecisionContext* ctx, Sequenc
             if (obmc_allowed) {
                 break;
             }
-            obmc_allowed |= svt_aom_get_obmc_level(enc_mode, qp, seq_qp_mod);
+            obmc_allowed |= svt_aom_get_obmc_level(enc_mode, qp, seq_qp_mod, scs->static_config.lineart_psy_bias);
         }
     }
     if (obmc_allowed) {

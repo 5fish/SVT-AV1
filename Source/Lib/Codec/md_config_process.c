@@ -405,7 +405,9 @@ static void init_frame_rate_tables(PictureControlSet* pcs) {
                                  ppcs->frm_hdr.allow_screen_content_tools,
                                  ppcs->enable_restoration,
                                  ppcs->frm_hdr.allow_intrabc,
-                                 &pcs->md_frame_context);
+                                 &pcs->md_frame_context,
+                                 ppcs->scs->static_config.lineart_psy_bias,
+                                 ppcs->scs->static_config.texture_psy_bias);
     // Initial Rate Estimation of the Motion vectors
     svt_aom_estimate_mv_rate(pcs, md_rate_est_ctx, &pcs->md_frame_context);
     // Initial Rate Estimation of the quantized coefficients

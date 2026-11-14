@@ -2842,7 +2842,9 @@ EbErrorType svt_aom_mode_decision_kernel_iter(void* context) {
                                              pcs->ppcs->frm_hdr.allow_screen_content_tools,
                                              pcs->ppcs->enable_restoration,
                                              pcs->ppcs->frm_hdr.allow_intrabc,
-                                             &pcs->md_frame_context);
+                                             &pcs->md_frame_context,
+                                             pcs->scs->static_config.lineart_psy_bias,
+                                             pcs->scs->static_config.texture_psy_bias);
             }
             if (!pcs->cdf_ctrl.update_coef) {
 #if CONFIG_ENABLE_FAST_DECODE_3
@@ -2940,7 +2942,9 @@ EbErrorType svt_aom_mode_decision_kernel_iter(void* context) {
                                                          pcs->ppcs->frm_hdr.allow_screen_content_tools,
                                                          pcs->ppcs->enable_restoration,
                                                          pcs->ppcs->frm_hdr.allow_intrabc,
-                                                         &pcs->ec_ctx_array[sb_index]);
+                                                         &pcs->ec_ctx_array[sb_index],
+                                                         pcs->scs->static_config.lineart_psy_bias,
+                                                         pcs->scs->static_config.texture_psy_bias);
                         }
                         // Initial Rate Estimation of the Motion vectors
                         if (pcs->cdf_ctrl.update_mv) {
