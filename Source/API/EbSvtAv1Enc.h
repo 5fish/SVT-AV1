@@ -236,6 +236,7 @@ typedef struct EbSvtAv1EncConfiguration {
      * Min value is -3.
      * Max value is 13.
      * Default is 4.
+     * 5fish/ default is 2.
      *
      * When PRESET_CHANGE_EVENT is used to change the preset on the fly, this
      * value is served as minimum possible preset value. The actual preset value
@@ -652,7 +653,9 @@ typedef struct EbSvtAv1EncConfiguration {
 
     /* Flag to signal the content being a screen sharing content type
     *
-    * Default is 0. */
+    * Default is 0.
+    * 5fish/ default is 0.
+    */
     uint32_t screen_content_mode;
 
     /* Adaptive quantization used within a frame.
@@ -677,6 +680,7 @@ typedef struct EbSvtAv1EncConfiguration {
      * @brief Tune for a particular metric; 0: VQ, 1: PSNR, 2: SSIM, 3: IQ (Image Quality), 4: MS-SSIM, 5: VMAF, 6: Film Grain.
      *
      * Default is 1.
+     * 5fish/ default is 0.
      */
     uint8_t tune;
 
@@ -784,6 +788,7 @@ typedef struct EbSvtAv1EncConfiguration {
      * Min value is 0.
      * Max value is 15.
      * Default is 6 in SVT-AV1-HDR, mainline default is 8.
+     * 5fish/ default is 8.
      */
     uint8_t min_qm_level;
     /**
@@ -791,6 +796,7 @@ typedef struct EbSvtAv1EncConfiguration {
      * Min value is 0.
      * Max value is 15.
      * Default is 10 in SVT-AV1-HDR, mainline default is 15.
+     * 5fish/ default is 15.
      */
     uint8_t max_qm_level;
 
@@ -892,7 +898,9 @@ typedef struct EbSvtAv1EncConfiguration {
     /* @brief Bias towards decreased/increased sharpness in the deblocking loop filter & during rate distortion
      * Minimum value is -7 (less sharp).
      * Maximum value is 7 (more sharp).
-     * Default is 1 in SVT-AV1-HDR, mainline default is 0. */
+     * Default is 1 in SVT-AV1-HDR, mainline default is 0. 
+     * 5fish/ default is 2.
+     */
     int8_t sharpness;
 
     /* @brief Enable the user to configure which curve variance boost uses.
@@ -928,6 +936,7 @@ typedef struct EbSvtAv1EncConfiguration {
      * Min value is 0.
      * Max value is 15.
      * Default is 8.
+     * 5fish/ default is 10.
      */
     uint8_t min_chroma_qm_level;
 
@@ -936,6 +945,7 @@ typedef struct EbSvtAv1EncConfiguration {
      * Min value is 0.
      * Max value is 15.
      * Default is 15.
+     * 5fish/ default is 15.
      */
     uint8_t max_chroma_qm_level;
 
@@ -1373,6 +1383,15 @@ typedef struct EbSvtAv1EncConfiguration {
      */
     bool low_q_taper;
 
+    // `--psy-bias`
+    int8_t lineart_psy_bias;
+    int8_t texture_psy_bias;
+    // `--balancing-bias`
+    int8_t balancing_bias;
+    // `--psy-bias` & `--balancing` Global
+    double crf_thr_offset;
+    int8_t psy_bias_dynamic_mg;
+    int32_t noise_level_thr;
     // `--psy-bias` & `--balancing` RC
     double balancing_crf;
 

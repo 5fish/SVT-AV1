@@ -42,6 +42,10 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+#define DEFAULT -1
+#define UINT8_DEFAULT UINT8_MAX
+#define UINT32_DEFAULT UINT32_MAX
+
 #define EB_HME_SEARCH_AREA_COLUMN_MAX_COUNT 2
 #define EB_HME_SEARCH_AREA_ROW_MAX_COUNT 2
 
@@ -75,7 +79,7 @@ void svt_aom_assert_err(uint32_t condition, char* err_msg);
 
 #define DS_SC_FACT 23
 
-#define VQ_NOISE_LVL_TH 15000
+#define VQ_NOISE_LVL_TH 16000 // 5fish/ default change
 #define VQ_STABILITY_ME_VAR_TH 750
 #define VQ_PIC_AVG_VARIANCE_TH 1000
 #define NUM_MV_COMPONENTS 2

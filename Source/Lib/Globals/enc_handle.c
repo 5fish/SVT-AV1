@@ -4168,6 +4168,34 @@ static void set_param_based_on_input(SequenceControlSet* scs) {
     }
     svt_aom_derive_input_resolution(&scs->input_resolution, scs->max_input_luma_width * scs->max_input_luma_height);
 
+    // `--psy-bias` & `--balancing` Global
+    if (scs->static_config.balancing_bias) {
+        if (scs->static_config.psy_bias_dynamic_mg != -2)
+            scs->static_config.psy_bias_dynamic_mg = 1;
+    }
+    // `--psy-bias` & `--balancing` MD Quant
+    if (scs->static_config.min_qm_level == UINT8_DEFAULT)
+        scs->static_config.min_qm_level =
+            scs->static_config.texture_psy_bias >= 3 ? 9
+                                                     : 8;
+    if (scs->static_config.min_chroma_qm_level == UINT8_DEFAULT)
+        scs->static_config.min_chroma_qm_level =
+            scs->static_config.lineart_psy_bias >= 3 ? 11
+                                                     : 10;
+    if (scs->static_config.noise_norm_strength == UINT8_DEFAULT)
+        scs->static_config.noise_norm_strength =
+            scs->static_config.texture_psy_bias >= 5 ? 4
+                : scs->static_config.texture_psy_bias >= 4 ? 2
+                    : scs->static_config.texture_psy_bias >= 3 ? 1
+                        : scs->static_config.lineart_psy_bias >= 4 ? 0
+                                                                   : 1;
+    // `--psy-bias` & `--balancing` FGS
+    if (scs->static_config.photon_noise_iso == UINT32_DEFAULT)
+        scs->static_config.photon_noise_iso =
+            (scs->static_config.lineart_psy_bias >= 1 || scs->static_config.texture_psy_bias >= 1) &&
+            (scs->static_config.film_grain_denoise_strength == 0 && scs->static_config.noise_strength == 0 && !scs->static_config.fgs_table) ? 200
+                                                                                                                                             : 0;
+
     scs->seq_qp_mod = 2;
 
     (allintra       ? set_qp_based_th_scaling_ctrls_all_intra
@@ -4643,6 +4671,16 @@ static void set_still_image_fast_decode(SequenceControlSet* scs, const EbSvtAv1E
 #endif // CONFIG_ENABLE_FAST_DECODE_3
 
 static void copy_api_from_app(SequenceControlSet* scs, EbSvtAv1EncConfiguration* config_struct) {
+    // `--psy-bias`
+    scs->static_config.lineart_psy_bias = config_struct->lineart_psy_bias;
+    scs->static_config.texture_psy_bias = config_struct->texture_psy_bias;
+    // `--balancing-bias`
+    scs->static_config.balancing_bias   = config_struct->balancing_bias;
+    if (scs->static_config.balancing_bias == DEFAULT)
+        scs->static_config.balancing_bias =
+            scs->static_config.lineart_psy_bias >= 1 || scs->static_config.texture_psy_bias >= 1 ? 1
+                                                                                                 : 0;
+
     scs->max_input_luma_width  = config_struct->source_width;
     scs->max_input_luma_height = config_struct->source_height;
     // SB Definitions
@@ -4783,7 +4821,9 @@ static void copy_api_from_app(SequenceControlSet* scs, EbSvtAv1EncConfiguration*
                                                               (scs->static_config.film_grain_denoise_strength != 0 ||
                                                                config_struct->fgs_table != NULL ||
                                                                config_struct->noise_strength > 0 ||
-                                                               config_struct->photon_noise_iso > 0));
+                                                               (config_struct->photon_noise_iso != UINT32_DEFAULT && config_struct->photon_noise_iso != 0) ||
+                                                               (config_struct->photon_noise_iso == UINT32_DEFAULT &&
+                                                                (scs->static_config.lineart_psy_bias >= 1 || scs->static_config.texture_psy_bias >= 1))));
     scs->static_config.fgs_table                  = config_struct->fgs_table;
     scs->static_config.photon_noise_iso           = config_struct->photon_noise_iso;
     scs->static_config.enable_photon_noise_chroma = config_struct->enable_photon_noise_chroma;
@@ -5276,8 +5316,12 @@ static void copy_api_from_app(SequenceControlSet* scs, EbSvtAv1EncConfiguration*
 
     scs->static_config.hide_banner = config_struct->hide_banner;
 
+    // `--psy-bias` & `--balancing` Global
+    scs->static_config.crf_thr_offset      = config_struct->crf_thr_offset;
+    scs->static_config.psy_bias_dynamic_mg = config_struct->psy_bias_dynamic_mg;
+    scs->static_config.noise_level_thr     = config_struct->noise_level_thr;
     // `--psy-bias` & `--balancing` RC
-    scs->static_config.balancing_crf = config_struct->balancing_crf;
+    scs->static_config.balancing_crf       = config_struct->balancing_crf;
 
     // Override settings for Still IQ tune
     if (scs->static_config.tune == TUNE_IQ) {

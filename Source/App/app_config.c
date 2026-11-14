@@ -267,6 +267,16 @@
 #define ENABLE_DAALA_FILTERING_TOKEN "--enable-daala-filtering"
 #define HIDE_BANNER_TOKEN "--hide-banner"
 
+// `--psy-bias`
+#define LINEART_PSY_BIAS_TOKEN "--lineart-psy-bias"
+#define TEXTURE_PSY_BIAS_TOKEN "--texture-psy-bias"
+// `--balancing-bias`
+#define BALANCING_BIAS_TOKEN "--balancing-bias"
+// `--psy-bias` & `--balancing` Global
+#define CRF_THR_OFFSET_TOKEN "--crf-thr-offset"
+#define PSY_BIAS_DYNAMIC_MG_TOKEN "--psy-bias-dynamic-mg"
+#define NOISE_LEVEL_THR_TOKEN "--noise-level-thr"
+
 static EbErrorType validate_error(EbErrorType err, const char* token, const char* value) {
     switch (err) {
     case EB_ErrorNone:
@@ -1322,6 +1332,18 @@ ConfigDescription config_entry_psychovisual[] = {
     // Termination
     {NULL, NULL}};
 
+ConfigDescription config_entry_psy_bias_balancing[] = {
+    // `--psy-bias`
+    {LINEART_PSY_BIAS_TOKEN, "Improve lineart retention. Check `Docs/Parameters.md` in the encoder's repository for more information"},
+    {TEXTURE_PSY_BIAS_TOKEN, "Improve texture retention. Check `Docs/Parameters.md` in the encoder's repository for more information"},
+    // `--balancing-bias`
+    {BALANCING_BIAS_TOKEN, "Full r0 beta based rate control and more balancing features"},
+    // `--psy-bias` & `--balancing` Global
+    {CRF_THR_OFFSET_TOKEN, "Offset crf threshold used in various decisions."},
+    {PSY_BIAS_DYNAMIC_MG_TOKEN, "psy-bias dynamic mini-gop"},
+    {NOISE_LEVEL_THR_TOKEN, "Change encoder noise level threshold"},
+};
+
 ConfigEntry config_entry[] = {
     // Options
     {INPUT_FILE_TOKEN, "InputFile", set_cfg_input_file},
@@ -1607,6 +1629,16 @@ ConfigEntry config_entry[] = {
     {ENABLE_DAALA_TOKEN, "EnableDaala", set_cfg_generic_token},
     {ENABLE_DAALA_RD_TOKEN, "EnableDaalaRd", set_cfg_generic_token},
     {ENABLE_DAALA_FILTERING_TOKEN, "EnableDaalaFiltering", set_cfg_generic_token},
+
+    // `--psy-bias`
+    {LINEART_PSY_BIAS_TOKEN, "LineartPsyBias", set_cfg_generic_token},
+    {TEXTURE_PSY_BIAS_TOKEN, "TexturePsyBias", set_cfg_generic_token},
+    // `--balancing-bias`
+    {BALANCING_BIAS_TOKEN, "Balancing_Bias", set_cfg_generic_token},
+    // `--psy-bias` & `--balancing` Global
+    {CRF_THR_OFFSET_TOKEN, "CrfThrOffset", set_cfg_generic_token},
+    {PSY_BIAS_DYNAMIC_MG_TOKEN, "PsyBiasDyamicMG", set_cfg_generic_token},
+    {NOISE_LEVEL_THR_TOKEN, "NoiseLevelThr", set_cfg_generic_token},
 
     // Termination
     {NULL, NULL, NULL}};
@@ -2241,6 +2273,9 @@ uint32_t get_help(int32_t argc, char* const argv[]) {
     print_options("AV1 Specific Options", config_entry_specific);
     print_options("Color Description Options", config_entry_color_description);
     print_options("Psychovisual Options", config_entry_psychovisual);
+    print_options("psy-bias Family and balancing Family Options", config_entry_psy_bias_balancing);
+
+    printf("\nCheck `Docs/Parameters.md` in the encoder's repository for more information on the parameters.\n");
 
     return 1;
 }
