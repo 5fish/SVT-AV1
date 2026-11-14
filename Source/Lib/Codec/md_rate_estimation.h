@@ -178,7 +178,8 @@ extern void svt_aom_get_syntax_rate_from_cdf(int32_t* costs, const AomCdfProb* c
     ***************************************************************************/
 extern void svt_aom_estimate_syntax_rate(MdRateEstimationContext* md_rate_est_ctx, bool is_i_slice,
                                          uint8_t pic_filter_intra_level, uint8_t allow_screen_content_tools,
-                                         uint8_t enable_restoration, uint8_t allow_intrabc, FRAME_CONTEXT* fc);
+                                         uint8_t enable_restoration, uint8_t allow_intrabc, FRAME_CONTEXT* fc,
+                                         const int8_t lineart_psy_bias, const int8_t texture_psy_bias);
 /**************************************************************************
     * Estimate the rate of the quantized coefficient
     * based on the frame CDF

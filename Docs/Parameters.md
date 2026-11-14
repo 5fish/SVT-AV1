@@ -679,6 +679,7 @@ Please check [README](../README.md#usage) for the recommended usage.
 | [global] `--balancing-bias 1` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overridden |
 | [md quant] `--qm-min 9` | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | Overrides `--lineart-psy-bias` default; Can be overridden |
 | [md quant] `--noise-norm-strength` | － | － | `1` | `2` | `4` | `4` | `4` | Overrides `--lineart-psy-bias` default; Can be overridden |
+| [md search] alternative tx search grouping | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | |
 | [md search] `NEARESTMV` rate adjustment | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | |
 | [md search] `GLOBALMV` bias | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | |
 | [fgs] `--photon-noise 200` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overridden by applying FGS via any parameters or `--photon-noise 0` |

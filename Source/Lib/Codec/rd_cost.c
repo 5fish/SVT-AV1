@@ -1461,6 +1461,19 @@ EbErrorType svt_aom_txb_estimate_coeff_bits(ModeDecisionContext* ctx, uint8_t al
     return return_error;
 }
 
+static void psy_bias_apply(PictureControlSet *pcs, ModeDecisionContext *ctx, struct ModeDecisionCandidateBuffer *cand_bf,
+                           uint64_t *dist, uint64_t *ssim_dist, uint64_t *daala_dist) {
+    UNUSED(ctx);
+
+    if (pcs->scs->static_config.texture_psy_bias >= 1 &&
+        (cand_bf->cand->block_mi.mode == GLOBALMV ||
+         cand_bf->cand->block_mi.mode == GLOBAL_GLOBALMV)) {
+        *dist = (*dist * 9) >> 3;
+        *ssim_dist = (*ssim_dist * 9) >> 3;
+        *daala_dist = (*ssim_dist * 9) >> 3;
+    }
+}
+
 EbErrorType svt_aom_full_cost_pd0(ModeDecisionContext* ctx, ModeDecisionCandidateBuffer* cand_bf,
                                   uint64_t* y_distortion, uint64_t lambda, uint64_t* y_coeff_bits, DistType dist_type,
                                   uint64_t y_daala_dist) {
@@ -1565,6 +1578,8 @@ void svt_aom_full_cost(PictureControlSet* pcs, ModeDecisionContext* ctx, ModeDec
         ? y_distortion[DIST_SSIM][0] + cb_distortion[DIST_SSIM][0] + cr_distortion[DIST_SSIM][0]
         : 0;
     uint64_t mode_daala_distortion = update_full_cost_daala ? y_distortion[DIST_DAALA][0] + mode_distortion : 0;
+    // `--psy-bias` MD Search
+    psy_bias_apply(pcs, ctx, cand_bf, &mode_distortion, &mode_ssim_distortion, &mode_daala_distortion);
     uint64_t mode_cost             = (dist_type == DIST_SSD) ? RDCOST(lambda, mode_rate, mode_distortion)
         : (dist_type == DIST_SSIM)                           ? RDCOST(lambda, mode_rate, mode_ssim_distortion)
         : (dist_type == DIST_DAALA)                          ? RDCOST(lambda, mode_rate, mode_daala_distortion)
@@ -1576,14 +1591,16 @@ void svt_aom_full_cost(PictureControlSet* pcs, ModeDecisionContext* ctx, ModeDec
 
         // Skip mode cost
         const uint64_t skip_mode_rate       = ctx->md_rate_est_ctx->skip_mode_fac_bits[skip_mode_ctx][1];
-        const uint64_t skip_mode_distortion = y_distortion[DIST_SSD][1] + cb_distortion[DIST_SSD][1] +
+        uint64_t skip_mode_distortion = y_distortion[DIST_SSD][1] + cb_distortion[DIST_SSD][1] +
             cr_distortion[DIST_SSD][1];
-        const uint64_t skip_mode_ssim_distortion  = update_full_cost_ssim
+        uint64_t skip_mode_ssim_distortion  = update_full_cost_ssim
             ? y_distortion[DIST_SSIM][1] + cb_distortion[DIST_SSIM][1] + cr_distortion[DIST_SSIM][1]
             : 0;
-        const uint64_t skip_mode_daala_distortion = update_full_cost_daala ? y_distortion[DIST_DAALA][1] +
+        uint64_t skip_mode_daala_distortion = update_full_cost_daala ? y_distortion[DIST_DAALA][1] +
                 skip_mode_distortion // TODO: Do further testing on if this causes additional artifacting
                                                                            : 0;
+        // `--psy-bias` MD Search
+        psy_bias_apply(pcs, ctx, cand_bf, &skip_mode_distortion, &skip_mode_ssim_distortion, &skip_mode_daala_distortion);
         const uint64_t skip_mode_cost = (dist_type == DIST_SSD) ? RDCOST(lambda, skip_mode_rate, skip_mode_distortion)
             : (dist_type == DIST_SSIM)  ? RDCOST(lambda, skip_mode_rate, skip_mode_ssim_distortion)
             : (dist_type == DIST_DAALA) ? RDCOST(lambda, skip_mode_rate, skip_mode_daala_distortion)

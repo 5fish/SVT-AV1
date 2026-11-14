@@ -9064,12 +9064,17 @@ uint8_t svt_aom_get_inter_intra_level(EncMode enc_mode, uint8_t transition_prese
     return inter_intra_level;
 }
 
-uint8_t svt_aom_get_obmc_level(EncMode enc_mode, uint32_t qp, uint8_t seq_qp_mod) {
+uint8_t svt_aom_get_obmc_level(EncMode enc_mode, uint32_t qp, uint8_t seq_qp_mod, const int8_t lineart_psy_bias) {
     uint8_t obmc_level = 0;
 
-    if (enc_mode <= ENC_MR) {
+    if (enc_mode <= ENC_MR ||
+        // `--psy-bias` MD Search
+        (lineart_psy_bias >= 2 && enc_mode <= ENC_M1)) {
         obmc_level = 1;
-    } else if (enc_mode <= ENC_M1) {
+    } else if (lineart_psy_bias >= 2 && enc_mode <= ENC_M2) {
+        obmc_level = 2;
+    } else if (enc_mode <= ENC_M1 ||
+               (lineart_psy_bias >= 2 && enc_mode <= ENC_M4)) {
         obmc_level = 3;
     } else if (enc_mode <= ENC_M5) {
         obmc_level = 5;
@@ -9265,7 +9270,7 @@ void svt_aom_sig_deriv_mode_decision_config_default(SequenceControlSet* scs, Pic
         scs->static_config.resize_mode == RESIZE_NONE;
 
     frm_hdr->is_motion_mode_switchable = frm_hdr->allow_warped_motion;
-    ppcs->pic_obmc_level               = svt_aom_get_obmc_level(enc_mode, sq_qp, scs->seq_qp_mod);
+    ppcs->pic_obmc_level               = svt_aom_get_obmc_level(enc_mode, sq_qp, scs->seq_qp_mod, scs->static_config.lineart_psy_bias);
     // Switchable Motion Mode
     frm_hdr->is_motion_mode_switchable = frm_hdr->is_motion_mode_switchable || ppcs->pic_obmc_level;
 #if MOBILE_BUILD && !CONFIG_ENABLE_OBMC
@@ -9885,7 +9890,7 @@ void svt_aom_sig_deriv_mode_decision_config_rtc(SequenceControlSet* scs, Picture
         scs->static_config.resize_mode == RESIZE_NONE;
 
     frm_hdr->is_motion_mode_switchable = frm_hdr->allow_warped_motion;
-    ppcs->pic_obmc_level               = svt_aom_get_obmc_level(enc_mode, sq_qp, scs->seq_qp_mod);
+    ppcs->pic_obmc_level               = svt_aom_get_obmc_level(enc_mode, sq_qp, scs->seq_qp_mod, scs->static_config.lineart_psy_bias);
     // Switchable Motion Mode
     frm_hdr->is_motion_mode_switchable = frm_hdr->is_motion_mode_switchable || ppcs->pic_obmc_level;
 #if MOBILE_BUILD && !CONFIG_ENABLE_OBMC
