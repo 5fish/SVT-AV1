@@ -75,7 +75,8 @@ void svt_aom_get_syntax_rate_from_cdf(int32_t* costs, const AomCdfProb* cdf, con
  **************************************************************/
 void svt_aom_estimate_syntax_rate(MdRateEstimationContext* md_rate_est_ctx, bool is_i_slice,
                                   uint8_t pic_filter_intra_level, uint8_t allow_screen_content_tools,
-                                  uint8_t enable_restoration, uint8_t allow_intrabc, FRAME_CONTEXT* fc) {
+                                  uint8_t enable_restoration, uint8_t allow_intrabc, FRAME_CONTEXT* fc,
+                                  const int8_t lineart_psy_bias, const int8_t texture_psy_bias) {
     int32_t i, j;
     // These tools are structurally off in RTC-minimal; force the guards to 0 so the compiler
     // DCEs their rate-table builders (bit-exact).
@@ -318,6 +319,9 @@ void svt_aom_estimate_syntax_rate(MdRateEstimationContext* md_rate_est_ctx, bool
         }
         for (i = 0; i < REFMV_MODE_CONTEXTS; ++i) {
             svt_aom_get_syntax_rate_from_cdf(md_rate_est_ctx->ref_mv_mode_fac_bits[i], fc->refmv_cdf[i], NULL);
+            // `--psy-bias` MD Search
+            if (lineart_psy_bias >= 1 || texture_psy_bias >= 1)
+                md_rate_est_ctx->ref_mv_mode_fac_bits[i][INTER_OFFSET(NEARESTMV)] = md_rate_est_ctx->ref_mv_mode_fac_bits[i][INTER_OFFSET(NEARMV)];
         }
         for (i = 0; i < DRL_MODE_CONTEXTS; ++i) {
             svt_aom_get_syntax_rate_from_cdf(md_rate_est_ctx->drl_mode_fac_bits[i], fc->drl_cdf[i], NULL);
@@ -327,6 +331,12 @@ void svt_aom_estimate_syntax_rate(MdRateEstimationContext* md_rate_est_ctx, bool
         for (i = 0; i < INTER_MODE_CONTEXTS; ++i) {
             svt_aom_get_syntax_rate_from_cdf(
                 md_rate_est_ctx->inter_compound_mode_fac_bits[i], fc->inter_compound_mode_cdf[i], NULL);
+            // `--psy-bias` MD Search
+            if (lineart_psy_bias >= 1 || texture_psy_bias >= 1) {
+                md_rate_est_ctx->inter_compound_mode_fac_bits[i][INTER_COMPOUND_OFFSET(NEAREST_NEARESTMV)] = md_rate_est_ctx->inter_compound_mode_fac_bits[i][INTER_COMPOUND_OFFSET(NEAR_NEARMV)];
+                md_rate_est_ctx->inter_compound_mode_fac_bits[i][INTER_COMPOUND_OFFSET(NEAREST_NEWMV)] = md_rate_est_ctx->inter_compound_mode_fac_bits[i][INTER_COMPOUND_OFFSET(NEAR_NEWMV)];
+                md_rate_est_ctx->inter_compound_mode_fac_bits[i][INTER_COMPOUND_OFFSET(NEW_NEARESTMV)] = md_rate_est_ctx->inter_compound_mode_fac_bits[i][INTER_COMPOUND_OFFSET(NEW_NEARMV)];
+            }
         }
         for (i = 0; i < BLOCK_SIZES_ALL; ++i) {
             svt_aom_get_syntax_rate_from_cdf(

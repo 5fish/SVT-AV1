@@ -4995,7 +4995,11 @@ static void tx_type_search(PictureControlSet* pcs, ModeDecisionContext* ctx, Mod
     for (int tx_type_group_idx = 0; tx_type_group_idx < tx_type_tot_group; ++tx_type_group_idx) {
         uint32_t best_tx_non_coeff = 64 * 64;
         for (int tx_type_idx = 0; tx_type_idx < TX_TYPES; ++tx_type_idx) {
-            tx_type = tx_type_group[tx_type_group_idx][tx_type_idx];
+            // `--psy-bias` MD Search
+            if (pcs->scs->static_config.lineart_psy_bias >= 2 || pcs->scs->static_config.texture_psy_bias >= 2)
+                tx_type = tx_type_group_psy_bias[tx_type_group_idx][tx_type_idx];
+            else
+                tx_type = tx_type_group[tx_type_group_idx][tx_type_idx];
             if (tx_type == INVALID_TX_TYPE) {
                 break;
             }
