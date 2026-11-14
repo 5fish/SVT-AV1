@@ -2923,12 +2923,9 @@ static int32_t get_noise_level_thr(PictureParentControlSet *pcs, PictureDecision
                 fprintf(stderr, "\nSvt[info]: It will now print the noise level of each frame here");
                 fprintf(stderr, "\nSvt[info]: The current default noise level thr is %5d", default_noise_level_thr);
                 fprintf(stderr, "\nSvt[info]: -------------------------------------------");
-                if (pcs->scs->static_config.enable_tf == 0) {
-                    fprintf(stderr, "\nSvt[info]: The noise adaptive filtering system might not be functional when enable-tf is set to 0");
-                    fprintf(stderr, "\nSvt[info]: -------------------------------------------");
-                }
             }
-            fprintf(stderr, "\nSvt[info]: Noise level / frame %3llu / %5d", pcs->picture_number, pd_ctx->last_i_noise_levels_log1p_fp16[0]);
+            // fprintf(stderr, "\nSvt[info]: Noise level / frame %3llu / %5d", pcs->picture_number, pd_ctx->last_i_noise_levels_log1p_fp16[0]);
+            fprintf(stderr, "\nSvt[info]: New noise level / frame %3llu / %5d", pcs->picture_number, pcs->noise_level);
         }
 
         return default_noise_level_thr;
@@ -3204,7 +3201,15 @@ static EbErrorType derive_tf_window_params(
             noise_levels_log1p_fp16[0] = pd_ctx->last_i_noise_levels_log1p_fp16[0];
         }
     // Set is_noise_level for the tf off case
-    pcs->noise_level = pd_ctx->last_i_noise_levels_log1p_fp16[0];
+    if (pcs->scs->static_config.balancing_q_bias)
+        pcs->noise_level = svt_aom_noise_log1p_fp16(svt_estimate_noise_fp16(central_picture_ptr->buffer_y +
+                                                                            central_picture_ptr->org_y * central_picture_ptr->stride_y +
+                                                                            central_picture_ptr->org_x,
+                                                                            central_picture_ptr->width,
+                                                                            central_picture_ptr->height,
+                                                                            central_picture_ptr->stride_y));
+    else
+        pcs->noise_level = pd_ctx->last_i_noise_levels_log1p_fp16[0];
     pcs->noise_level_thr = get_noise_level_thr(pcs, pd_ctx, false);
     pcs->is_noise_level = pcs->noise_level >= pcs->noise_level_thr;
     // Adjust the number of filtering frames
@@ -3587,7 +3592,15 @@ static void mctf_frame(
     else
         pcs->do_tf = FALSE; // set temporal filtering flag OFF for current picture
 
-    pcs->noise_level = pd_ctx->last_i_noise_levels_log1p_fp16[0];
+    if (pcs->scs->static_config.balancing_q_bias)
+        pcs->noise_level = svt_aom_noise_log1p_fp16(svt_estimate_noise_fp16(pcs->enhanced_pic->buffer_y +
+                                                                            pcs->enhanced_pic->org_y * pcs->enhanced_pic->stride_y +
+                                                                            pcs->enhanced_pic->org_x,
+                                                                            pcs->enhanced_pic->width,
+                                                                            pcs->enhanced_pic->height,
+                                                                            pcs->enhanced_pic->stride_y));
+    else
+        pcs->noise_level = pd_ctx->last_i_noise_levels_log1p_fp16[0];
     pcs->noise_level_thr = get_noise_level_thr(pcs, pd_ctx, true);
     pcs->is_noise_level = pcs->noise_level >= pcs->noise_level_thr;
 
