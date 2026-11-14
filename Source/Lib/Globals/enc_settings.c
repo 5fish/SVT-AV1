@@ -953,7 +953,7 @@ EbErrorType svt_av1_verify_settings(SequenceControlSet* scs) {
         SVT_ERROR("Photon noise chroma signal can only have a value of 0 or 1.\n");
         return_error = EB_ErrorBadParameter;
     }
-    if (config->photon_noise_iso > 100000) {
+    if (config->photon_noise_iso > 100000 && config->photon_noise_iso != UINT32_DEFAULT) {
         SVT_ERROR("Photon noise ISO value should be in range [0-100000]\n");
         return_error = EB_ErrorBadParameter;
     }
@@ -1020,11 +1020,11 @@ EbErrorType svt_av1_verify_settings(SequenceControlSet* scs) {
             "--tile-columns 1 if you are targeting a high quality encode and a multi-core "
             "high-performance decoder HW\n");
     }
-    if (config->enable_qm && config->min_qm_level > config->max_qm_level) {
+    if (config->enable_qm && config->min_qm_level > config->max_qm_level && config->min_qm_level != UINT8_DEFAULT) {
         SVT_ERROR("Min quant matrix level must not greater than max quant matrix level\n");
         return_error = EB_ErrorBadParameter;
     }
-    if (config->enable_qm && config->min_chroma_qm_level > config->max_chroma_qm_level) {
+    if (config->enable_qm && config->min_chroma_qm_level > config->max_chroma_qm_level && config->min_chroma_qm_level != UINT8_DEFAULT) {
         SVT_ERROR("Min chroma quant matrix level must not greater than max chroma quant matrix level\n");
         return_error = EB_ErrorBadParameter;
     }
@@ -1106,7 +1106,7 @@ EbErrorType svt_av1_verify_settings(SequenceControlSet* scs) {
         return_error = EB_ErrorBadParameter;
     }
 
-    if (config->noise_norm_strength > 4) {
+    if (config->noise_norm_strength > 4 && config->noise_norm_strength != UINT8_DEFAULT) {
         SVT_ERROR("Noise normalization strength must be between 0 and 4\n");
         return_error = EB_ErrorBadParameter;
     }
@@ -1171,6 +1171,34 @@ EbErrorType svt_av1_verify_settings(SequenceControlSet* scs) {
             "Proceed with caution.\n");
     }
 
+    // `--psy-bias`
+    if (!(config->lineart_psy_bias >= 0 && config->lineart_psy_bias <= 7)) {
+        SVT_ERROR("lineart-psy-bias must be between 0 and 7\n");
+        return_error = EB_ErrorBadParameter;
+    }
+    if (!(config->texture_psy_bias >= 0 && config->texture_psy_bias <= 7)) {
+        SVT_ERROR("texture-psy-bias must be between 0 and 7\n");
+        return_error = EB_ErrorBadParameter;
+    }
+    // `--balancing-bias`
+    if (config->balancing_bias != 0 && config->balancing_bias != 1) {
+        SVT_ERROR("balancing-bias must be either 0 or 1\n");
+        return_error = EB_ErrorBadParameter;
+    }
+    // `--psy-bias` & `--balancing` Global
+    if (!(config->crf_thr_offset >= -64.0 && config->crf_thr_offset < 64.0)) {
+        SVT_ERROR("crf-thr-offset must be -64.0 and 64.0\n");
+        return_error = EB_ErrorBadParameter;
+    }
+    if (!(config->noise_level_thr >= 0) && config->noise_level_thr != -2 && config->noise_level_thr != DEFAULT) {
+        SVT_ERROR("noise-level-thr must be greater than 0, or -2\n");
+        return_error = EB_ErrorBadParameter;
+    }
+    if (config->psy_bias_dynamic_mg != 1 && config->psy_bias_dynamic_mg != 0 && config->psy_bias_dynamic_mg != -2) {
+        SVT_ERROR("psy-bias-dynamic-mg must be -2, 0 or 1\n");
+        return_error = EB_ErrorBadParameter;
+    }
+
     return return_error;
 }
 
@@ -1219,7 +1247,7 @@ EbErrorType svt_av1_set_default_params(EbSvtAv1EncConfiguration* config_ptr) {
     config_ptr->max_qp_allowed               = 63;
     config_ptr->min_qp_allowed               = MIN_QP_AUTO;
     config_ptr->aq_mode                      = 2;
-    config_ptr->enc_mode                     = ENC_M4;
+    config_ptr->enc_mode                     = ENC_M2;
     config_ptr->intra_period_length          = -2;
     config_ptr->min_intra_period_length      = -1;
     config_ptr->multiply_keyint              = false;
@@ -1250,7 +1278,7 @@ EbErrorType svt_av1_set_default_params(EbSvtAv1EncConfiguration* config_ptr) {
     config_ptr->starting_buffer_level_ms = 600; // default settings for CBR
     config_ptr->optimal_buffer_level_ms  = 600; // default settings for CBR
     config_ptr->recode_loop              = ALLOW_RECODE_DEFAULT;
-    config_ptr->screen_content_mode      = 2;
+    config_ptr->screen_content_mode      = 0;
     config_ptr->enable_intrabc           = true;
 
     // Annex A parameters
@@ -1265,7 +1293,7 @@ EbErrorType svt_av1_set_default_params(EbSvtAv1EncConfiguration* config_ptr) {
     config_ptr->noise_strength_chroma       = -1;
     config_ptr->noise_chroma_from_luma      = 0;
     config_ptr->noise_size                  = -1;
-    config_ptr->photon_noise_iso            = 0;
+    config_ptr->photon_noise_iso            = UINT32_DEFAULT;
     config_ptr->enable_photon_noise_chroma  = 0;
 
     // CPU Flags
@@ -1282,7 +1310,7 @@ EbErrorType svt_av1_set_default_params(EbSvtAv1EncConfiguration* config_ptr) {
     config_ptr->enable_tf       = 1;
     config_ptr->enable_tf_key   = 1;
     config_ptr->enable_overlays = false;
-    config_ptr->tune            = 1;
+    config_ptr->tune            = 0;
     // Super-resolution default values
     config_ptr->superres_mode      = SUPERRES_NONE;
     config_ptr->superres_denom     = SCALE_NUMERATOR;
@@ -1313,9 +1341,9 @@ EbErrorType svt_av1_set_default_params(EbSvtAv1EncConfiguration* config_ptr) {
 
     // Quant Matrices (QM)
     config_ptr->enable_qm           = 1;
-    config_ptr->min_qm_level        = 6;
-    config_ptr->max_qm_level        = 10;
-    config_ptr->min_chroma_qm_level = 8;
+    config_ptr->min_qm_level        = UINT8_DEFAULT;
+    config_ptr->max_qm_level        = 15;
+    config_ptr->min_chroma_qm_level = UINT8_DEFAULT;
     config_ptr->max_chroma_qm_level = 15;
 
     config_ptr->startup_mg_size                   = 0;
@@ -1334,7 +1362,7 @@ EbErrorType svt_av1_set_default_params(EbSvtAv1EncConfiguration* config_ptr) {
     config_ptr->tf_strength                       = 1;
     config_ptr->variance_boost_curve              = 0;
     config_ptr->luminance_qp_bias                 = 0;
-    config_ptr->sharpness                         = 1;
+    config_ptr->sharpness                         = 2;
     config_ptr->lossless                          = false;
     config_ptr->avif                              = false;
     config_ptr->qp_scale_compress_strength        = 1.0;
@@ -1360,7 +1388,7 @@ EbErrorType svt_av1_set_default_params(EbSvtAv1EncConfiguration* config_ptr) {
 
     config_ptr->max_allowed_consecutive_frames_skips = 0;
 
-    config_ptr->noise_norm_strength      = 1;
+    config_ptr->noise_norm_strength      = UINT8_DEFAULT;
     config_ptr->kf_tf_strength           = 1;
     config_ptr->alt_lambda_factors       = 0;
     config_ptr->sharp_tx                 = 1;
@@ -1383,8 +1411,17 @@ EbErrorType svt_av1_set_default_params(EbSvtAv1EncConfiguration* config_ptr) {
     config_ptr->low_memory               = 0;
     config_ptr->hide_banner              = false;
 
+    // `--psy-bias`
+    config_ptr->lineart_psy_bias    = 3;
+    config_ptr->texture_psy_bias    = 2;
+    // `--balancing-bias`
+    config_ptr->balancing_bias      = DEFAULT;
+    // `--psy-bias` & `--balancing` Global
+    config_ptr->crf_thr_offset      = 0.0;
+    config_ptr->psy_bias_dynamic_mg = 0;
+    config_ptr->noise_level_thr     = DEFAULT;
     // `--psy-bias` & `--balancing` RC
-    config_ptr->balancing_crf = INVALID_BALANCING_CRF;
+    config_ptr->balancing_crf       = INVALID_BALANCING_CRF;
 
     return return_error;
 }
@@ -1614,6 +1651,11 @@ void svt_av1_print_lib_params(SequenceControlSet* scs) {
                 break;
             }
         }
+        if (config->lineart_psy_bias >= 1 || config->texture_psy_bias >= 1)
+            SVT_INFO("SVT [config]: lineart psy bias / texture psy bias \t\t\t\t: %d / %d\n",
+                     config->lineart_psy_bias,
+                     config->texture_psy_bias);
+
         if (config->rate_control_mode != SVT_AV1_RC_MODE_CBR) {
             if (!config->enable_variance_boost) {
                 SVT_INFO("SVT [config]: AQ mode / Variance Boost \t\t\t\t\t: %d / %d\n",
@@ -2712,6 +2754,18 @@ static EbErrorType parse_zones_string(const char* zones_str, SvtAv1QualityZone**
     return EB_ErrorNone;
 }
 
+static EbErrorType str_to_crf_thr_offset(const char* nptr, EbSvtAv1EncConfiguration* config_struct) {
+    double      crf;
+
+    const EbErrorType return_error = str_to_double(nptr, &crf, NULL);
+    if (return_error)
+        return return_error;
+
+    config_struct->crf_thr_offset = crf * 4;
+
+    return EB_ErrorNone;
+}
+
 EB_API EbErrorType svt_av1_enc_parse_parameter(EbSvtAv1EncConfiguration* config_struct, const char* name,
                                                const char* value) {
 #endif
@@ -2901,6 +2955,11 @@ EB_API EbErrorType svt_av1_enc_parse_parameter(EbSvtAv1EncConfiguration* config_
         return EB_ErrorNone;
     }
 
+    // `--psy-bias` & `--balancing` Global
+    if (!strcmp(name, "crf-thr-offset")) {
+        return str_to_crf_thr_offset(value, config_struct);
+    }
+
     // uint32_t fields
     const struct {
         const char* name;
@@ -3073,6 +3132,8 @@ EB_API EbErrorType svt_av1_enc_parse_parameter(EbSvtAv1EncConfiguration* config_
         {"sframe-dist", &config_struct->sframe_dist},
         {"hbd-mds", &config_struct->hbd_mds},
         {"noise-chroma", &config_struct->noise_strength_chroma},
+        // `--psy-bias` & `--balancing` Global
+        {"noise-level-thr", &config_struct->noise_level_thr},
     };
 
     const size_t int_opts_size = sizeof(int_opts) / sizeof(int_opts[0]);
@@ -3093,6 +3154,13 @@ EB_API EbErrorType svt_av1_enc_parse_parameter(EbSvtAv1EncConfiguration* config_
         {"startup-qp-offset", &config_struct->startup_qp_offset},
         {"noise-size", &config_struct->noise_size},
         {"enable-qmpsnr", &config_struct->enable_qmpsnr},
+        // `--psy-bias`
+        {"lineart-psy-bias", &config_struct->lineart_psy_bias},
+        {"texture-psy-bias", &config_struct->texture_psy_bias},
+        // `--balancing-bias`
+        {"balancing-bias", &config_struct->balancing_bias},
+        // `--psy-bias` & `--balancing` Global
+        {"psy-bias-dynamic-mg", &config_struct->psy_bias_dynamic_mg},
     };
 
     const size_t int8_opts_size = sizeof(int8_opts) / sizeof(int8_opts[0]);

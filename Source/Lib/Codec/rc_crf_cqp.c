@@ -501,7 +501,7 @@ void svt_av1_rc_calc_qindex_crf_cqp(PictureControlSet* pcs, SequenceControlSet* 
                                               : effective_qp.qp;
     int     scs_qindex = clamp_qindex(scs, quantizer_to_qindex[scs_qp] + effective_qp.qindex_offset);
     pcs->balancing_frame_qstep = INVALID_BALANCING_QSTEP;
-    // if (pcs->scs->static_config.balancing_q_bias) {
+    if (pcs->scs->static_config.balancing_bias) {
         if (effective_qp.balancing_crf != INVALID_BALANCING_CRF) {
             const int16_t scs_qstep        = svt_aom_dc_quant_qtx(scs_qindex, 0, scs->static_config.encoder_bit_depth);
             const int16_t scs_qstep_one_up = svt_aom_dc_quant_qtx(scs_qindex, 1, scs->static_config.encoder_bit_depth);
@@ -510,7 +510,7 @@ void svt_av1_rc_calc_qindex_crf_cqp(PictureControlSet* pcs, SequenceControlSet* 
         }
         else
             pcs->balancing_frame_qstep     = svt_aom_dc_quant_qtx(scs_qindex, 0, scs->static_config.encoder_bit_depth);
-    // }
+    }
 
     // if RC mode is 0, fixed QP is used
     // QP scaling based on POC number for Flat IPPP structure

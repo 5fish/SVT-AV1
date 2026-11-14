@@ -30,7 +30,7 @@ The encoder parameters are listed in this table below along with their
 | **Progress**                       | --progress           | [0-2]        | 1             | Verbosity of the output [0: no progress is printed, 1: default output, 2: detailed output]                        |
 | **NoProgress**                     | --no-progress        | [0-1]        | 0             | Do not print out progress [1: `--progress 0`, 0: `--progress 1`]                                                  |
 | **HideBanner**                     | --hide-banner        | [0-1]        | 0             | Do not print out encoder parameters [0: params are printed (Default), 1: no param is printed]                     |
-| **EncoderMode**                    | --preset             | [-3-13]      | 4             | Encoder preset, presets < 0 are for research purposes. Higher presets means faster encodes, but with a quality tradeoff |
+| **EncoderMode**                    | --preset             | [-3-13]      | 2             | Encoder preset, presets < 0 are for research purposes. Higher presets means faster encodes, but with a quality tradeoff |
 | **SvtAv1Params**                   | --svtav1-params      | any string   | None          | Colon-separated list of `key=value` pairs of parameters with keys based on command line options without `--`      |
 
 #### Usage of **SvtAv1Params**
@@ -79,7 +79,7 @@ For more information on valid values for specific keys, refer to the [EbEncSetti
 | **LevelOfParallelism**           | --lp                        | [0, 6]                         | 0           | Controls the number of threads to create and the number of picture buffers to allocate (higher level means more parallelism). 0 means choose level based on machine core count. Refer to Appendix A.1 |
 | **PinnedExecution**              | --pin                       | [0, core count]                | 0           | Pin the execution to the first N cores. If `--lp` is not specified, the default parallelism is based on N cores instead of all cores. Refer to Appendix A.1 |
 | **FastDecode**                   | --fast-decode               | [0,3]                          | 0           | Tune settings to output bitstreams that can be decoded faster, [0 = OFF, 1,2 = levels for decode-targeted optimization (2 yields faster decoder speed), 3 = experimental, needs the ENABLE_FAST_DECODE_3 build option: 2 plus, for still images (--avif 1), CDEF and loop restoration off, quantization matrices on (luma 5, chroma 4), key-frame lambda scale 192, filter intra off and decoder-complexity RD terms; options set on the command line or through svt_av1_enc_parse_parameter() win (API callers assigning default values directly mark them in fast_decode_user_opts), other encodes behave as 2]. Defaults to 5 temporal layers structure but may override with --hierarchical-levels|
-| **Tune**                         | --tune                      | [0-6]                          | 1           | Optimize the encoding process for different desired outcomes [0 = VQ (video and still image), 1 = PSNR (video and still image), 2 = SSIM (video and still image), 3 = IQ (still image only), 4 = MS-SSIM (video and still image), 5 = VMAF (video only), 6 = Film Grain]  |
+| **Tune**                         | --tune                      | [0-6]                          | 0           | Optimize the encoding process for different desired outcomes [0 = VQ (video and still image), 1 = PSNR (video and still image), 2 = SSIM (video and still image), 3 = IQ (still image only), 4 = MS-SSIM (video and still image), 5 = VMAF (video only), 6 = Film Grain]  |
 | **AdaptiveFilmGrain**            | --adaptive-film-grain       | [0,1]                          | 1           | Allows film grain synthesis to be sourced from different block sizes depending on resolution                  |
 | **MaxTxSize**                    | --max-tx-size               | [32,64]                        | 64          | Restricts use of block transform sizes to the specified value                                                 |
 | **NoiseNormStrength**            |  --noise-norm-strength      | [0-4]                          | 1           | Selectively boost AC coefficients to improve fine detail retention in certain circumstances                   |
@@ -139,9 +139,9 @@ For more information on valid values for specific keys, refer to the [EbEncSetti
 | **MaxSectionPct**                | --maxsection-pct                 | [0-10000]  | 2000        | GOP max bitrate (expressed as a percentage of the target rate)                                                                                       |
 | **GopConstraintRc**              | --gop-constraint-rc              | [0-1]      | 0           | Constrains the rate control to match the target rate for each GoP [0 = OFF, 1 = ON]                                                                  |
 | **EnableQM**                     | --enable-qm                      | [0-1]      | 1           | Enable quantisation matrices                                                                                                                         |
-| **MinQmLevel**                   | --qm-min                         | [0-15]     | 6           | Min quant matrix flatness                                                                                                                            |
-| **MaxQmLevel**                   | --qm-max                         | [0-15]     | 10          | Max quant matrix flatness                                                                                                                            |
-| **MinChromaQmLevel**             | --chroma-qm-min                  | [0-15]     | 8           | Min chroma quant matrix flatness                                                                                                                     |
+| **MinQmLevel**                   | --qm-min                         | [0-15]     | 8           | Min quant matrix flatness                                                                                                                            |
+| **MaxQmLevel**                   | --qm-max                         | [0-15]     | 15          | Max quant matrix flatness                                                                                                                            |
+| **MinChromaQmLevel**             | --chroma-qm-min                  | [0-15]     | 10           | Min chroma quant matrix flatness                                                                                                                     |
 | **MaxChromaQmLevel**             | --chroma-qm-max                  | [0-15]     | 15          | Max chroma quant matrix flatness                                                                                                                     |
 | **LambdaScaleFactors**           | --lambda-scale-factors           | [0- ]      | '128,.,128' | list of scale factors for lambda values used for different SvtAv1FrameUpdateType, separated by `,` divide by 128 is the actual scale factor in float |
 | **RoiMapFile**                   | --roi-map-file                   | any string | Null        | Path to a file containing picture based QP offset map                                                                                                |
@@ -643,32 +643,28 @@ By default, sharpness is set to 0.
 
 ## `--psy-bias` Family and `--balancing` Family Options
 
-Please check [README](../README.md#usage) for the recommended parameters.  
+Please check [README](../README.md#usage) for the recommended usage.  
 
 | **Configuration file parameter** | **Command line** | **Range** | **Default without `--psy-bias`** | **Description** |
 | :-- | :-- | :-- | :-- | :-- |
 | **LineartPsyBias** | --lineart-psy-bias | [0-7] | 3 | Improve lineart retention. Check below for more information. |
 | **TexturePsyBias** | --texture-psy-bias | [0-7] | 2 | Improve texture retention. Check below for more information. |
+| **BalancingBias** | --balancing-bias | [0-1] | 0 | Full `r0` `beta` based rate control and more `--balancing` features. Check below for more description. |
 | **CrfThrOffset** | --crf-thr-offset | [-64.0-64.0] | 0.0 | Offset `--crf` threshold used in various decisions. Further explanations can be found below. |
 | **PsyBiasDyamicMG** | --psy-bias-dynamic-mg | [-2,0-1] | 0 | `--psy-bias` dynamic mini-gop. Sets `--dynamic-dg 1`. [-2: print out mini-gop dist for split decision and for `--balancing-mg-dist-r0-bias`] |
-| **NoiseLevelThr** | --noise-level-thr | [-2,0-`(2^31)-1`] | 15000 | Change encoder noise level threshold. Further explanations can be found below. [-2: print the noise level, >0: set the noise level threshold] |
+| **NoiseLevelThr** | --noise-level-thr | [-2,0-INT32_MAX] | 16000 | Change encoder noise level threshold. Further explanations can be found below. [-2: print the noise level, >0: set the noise level threshold] |
 
 ### `--lineart-psy-bias`
 
 | `--lineart-psy-bias` level | `1` | `2` | `3` | `4` | `5` | `6` | `7` | Note |
 | :-- | :--: | :--: | :--: | :--: | :--: | :--: | :--: | :-- |
-| [global] `--tune 0` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overridden |
-| [global] `--scm 0` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overridden |
-| [global] `--noise-level-thr` | `16000` | `16000` | `16000` | `16000` | `16000` | `16000` | `16000` | Applied when `--crf [<= 30.00]`; Can be overridden |
-| [global] `--noise-level-thr` | `16000` | `22600` | `22600` | `22600` | `22600` | `22600` | `22600` | Applied when `--crf [> 30.00]`; Can be overridden |
-| [md quant] `--qm-min` | `8` | `8` | `8` | `8` | `8` | `8` | `8` | Can be overridden |
-| [md quant] `--chroma-qm-min` | `10` | `10` | `11` | `11` | `11` | `11` | `11` | Can be overridden |
-| [md quant] `--sharpness 2` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Default from original -PSY; Can be overridden |
+| [global] `--balancing-bias 1` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overridden |
+| [md quant] `--chroma-qm-min 11` | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overridden |
 | [md quant] `--noise-norm-strength 0` | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | Can be overridden |
 | [md search] use better `pic_obmc_level` | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | |
 | [md search] alternative tx search grouping | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | |
 | [md search] `NEARESTMV` rate adjustment | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | |
-| [fgs] `--photon-noise 200` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overridden by any FGS parameters |
+| [fgs] `--photon-noise 200` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overridden by applying FGS via any parameters or `--photon-noise 0` |
 
 <ins>To use `--lineart-psy-bias`</ins>, select a level based on how much effort you want to spend on lineart retention. Specifically:  
 * `--lineart-psy-bias 3` is generally good for all sources, especially sources without weak lineart and easier to handle.  
@@ -680,15 +676,12 @@ Please check [README](../README.md#usage) for the recommended parameters.
 
 | `--texture-psy-bias` level | `1` | `2` | `3` | `4` | `5` | `6` | `7` | Note |
 | :-- | :--: | :--: | :--: | :--: | :--: | :--: | :--: | :-- |
-| [global] `--tune 0` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overridden |
-| [global] `--scm 0` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overridden |
-| [global] `--noise-level-thr 16000` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overridden |
-| [md quant] `--qm-min` | `8` | `8` | `9` | `9` | `9` | `9` | `9` | Overrides `--lineart-psy-bias` default; Can be overridden |
-| [md quant] `--sharpness 2` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Default from original -PSY; Can be overridden |
-| [md quant] `--noise-norm-strength` | － | － | `1` | `1` | `4` | `4` | `4` | Overrides `--lineart-psy-bias` default; Can be overridden |
+| [global] `--balancing-bias 1` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overridden |
+| [md quant] `--qm-min 9` | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | Overrides `--lineart-psy-bias` default; Can be overridden |
+| [md quant] `--noise-norm-strength` | － | － | `1` | `2` | `4` | `4` | `4` | Overrides `--lineart-psy-bias` default; Can be overridden |
 | [md search] `NEARESTMV` rate adjustment | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | |
 | [md search] `GLOBALMV` bias | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | |
-| [fgs] `--photon-noise 200` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overridden by any FGS parameters |
+| [fgs] `--photon-noise 200` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overridden by applying FGS via any parameters or `--photon-noise 0` |
 
 <ins>To use `--texture-psy-bias`</ins>, select a level based on how much effort you want to spend on texture retention. Specifically:  
 * `--texture-psy-bias 2` is fine to use on sources with little texture.  
@@ -697,6 +690,38 @@ Please check [README](../README.md#usage) for the recommended parameters.
 * `--texture-psy-bias 5` and above is suitable for encodes where texture retention is a great priority, or when the source is very texture heavy.  
 * Additionally, `--texture-psy-bias 6` and above contains more settings to accommodate noisy sources.  
 * Black cat prevention also starts to be applied at `--texture-psy-bias 5` and above, which will trade efficiency for safety.  
+
+### 5fish/ Default Changes from Upstream -Tritium
+
+These default changes apply regardless of `--psy-bias` used.  
+
+| 5fish/ Default | Note |
+| :-- | :-- |
+| [global] `--preset 2` | Can be overridden |
+| [global] `--tune 0` | Can be overridden |
+| [global] `--scm 0` | Can be overridden |
+| [global] `VQ_NOISE_LVL_THR` changed to `16000` | Can be overridden by specifying `--noise-level-thr` |
+| [md quant] `--qm-min 8` | Can be overridden |
+| [md quant] `--qm-max 15` | Can be overridden |
+| [md quant] `--chroma-qm-min 10` | Can be overridden |
+| [md quant] `--chroma-qm-max 15` | Can be overridden |
+| [md quant] `--sharpness 2` | Default from original -PSY implementation; Can be overridden |
+
+### `--balancing-bias`
+
+`--balancing-bias` is enabled by default by the two main `--lineart-psy-bias` and `--texture-psy-bias`.  
+
+| `--balancing-bias 1` | Note |
+| :-- | :-- |
+| [global] `base_q_idx` based `--crf` threshold | |
+| [global] `--balancing` incomplete hierarchical structure handling | |
+| [pd] `--balancing` scd | |
+| [pd] `--psy-bias-dynamic-mg 1` | Can only be otherwise set to `-2` which is the print mode |
+| [intial_rc & src_ops & rc] full `r0` based qps qpm and `--balancing` `r0` `beta` | |
+| [rc] `--balancing` qstep based rc | |
+| [rc] `--luminance-qp-bias 0` | |
+| [rc] `--enable-variance-boost 0` | Can be overridden |
+| [rc] `--low-q-taper 0` | |
 
 ### `--crf-thr-offset`
 
