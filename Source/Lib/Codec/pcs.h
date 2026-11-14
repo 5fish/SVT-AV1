@@ -1210,6 +1210,10 @@ typedef struct PictureParentControlSet {
     int8_t  sframe_qp_offset;
     int     vmaf_sharpening_amount;
     int32_t vmaf_max_delta;
+
+    // `--psy-bias` & `--balancing` Global
+    uint64_t balancing_mg_dist;
+    int32_t balancing_noise_level;
 } PictureParentControlSet;
 
 typedef struct TplDispResults {

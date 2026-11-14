@@ -716,6 +716,7 @@ These default changes apply regardless of `--psy-bias` used.
 | :-- | :-- |
 | [global] `base_q_idx` based `--crf` threshold | |
 | [global] `--balancing` incomplete hierarchical structure handling | |
+| [global] `--balancing` noise level | |
 | [pd] `--balancing` scd | |
 | [pd] `--psy-bias-dynamic-mg 1` | Can only be otherwise set to `-2` which is the print mode |
 | [intial_rc & src_ops & rc] full `r0` based qps qpm and `--balancing` `r0` `beta` | |

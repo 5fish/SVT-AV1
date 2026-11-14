@@ -4173,6 +4173,8 @@ static void set_param_based_on_input(SequenceControlSet* scs) {
         if (scs->static_config.psy_bias_dynamic_mg != -2)
             scs->static_config.psy_bias_dynamic_mg = 1;
     }
+    if (!!scs->static_config.psy_bias_dynamic_mg)
+        scs->static_config.enable_dg = 1;
     // `--psy-bias` & `--balancing` MD Quant
     if (scs->static_config.min_qm_level == UINT8_DEFAULT)
         scs->static_config.min_qm_level =
@@ -4570,9 +4572,10 @@ static void set_param_based_on_input(SequenceControlSet* scs) {
 
     scs->list0_only_base = scs->static_config.enc_mode > ENC_M2;
 
-    if (scs->static_config.rate_control_mode == SVT_AV1_RC_MODE_VBR ||
-        scs->static_config.rate_control_mode == SVT_AV1_RC_MODE_CBR || scs->input_resolution >= INPUT_SIZE_4K_RANGE ||
-        scs->static_config.pred_structure != RANDOM_ACCESS || scs->static_config.pass != ENC_SINGLE_PASS) {
+    if (!scs->static_config.psy_bias_dynamic_mg &&
+        (scs->static_config.rate_control_mode == SVT_AV1_RC_MODE_VBR ||
+         scs->static_config.rate_control_mode == SVT_AV1_RC_MODE_CBR || scs->input_resolution >= INPUT_SIZE_4K_RANGE ||
+         scs->static_config.pred_structure != RANDOM_ACCESS || scs->static_config.pass != ENC_SINGLE_PASS)) {
         scs->enable_dg = 0;
     } else {
         scs->enable_dg = scs->static_config.enable_dg;
