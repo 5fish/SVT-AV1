@@ -757,6 +757,83 @@ static void eval_sub_mini_gop(PictureDecisionContext* ctx, EncodeContext* enc_ct
                            mv_in_out_count_mid_start);
 }
 
+#define PSY_BIAS_DYNAMIC_MG_L6_THR 16 * 16 * 6
+#define PSY_BIAS_DYNAMIC_MG_L5_THR 16 * 16 * 10
+
+static const uint8_t psy_bias_dynamic_mg_index_array[] = {
+    L6_INDEX,
+    L5_0_INDEX, L5_1_INDEX,
+    L4_0_INDEX, L4_1_INDEX, L4_2_INDEX, L4_3_INDEX,
+    L3_0_INDEX, L3_1_INDEX, L3_2_INDEX, L3_3_INDEX, L3_4_INDEX, L3_5_INDEX, L3_6_INDEX, L3_7_INDEX,
+};
+#define PSY_BIAS_DYNAMIC_MG_L6_INDEX 0
+#define PSY_BIAS_DYNAMIC_MG_L5_0_INDEX 1
+#define PSY_BIAS_DYNAMIC_MG_L5_1_INDEX 2
+#define PSY_BIAS_DYNAMIC_MG_L4_0_INDEX 3
+#define PSY_BIAS_DYNAMIC_MG_L4_1_INDEX 4
+#define PSY_BIAS_DYNAMIC_MG_L4_2_INDEX 5
+#define PSY_BIAS_DYNAMIC_MG_L4_3_INDEX 6
+#define PSY_BIAS_DYNAMIC_MG_L3_0_INDEX 7
+#define PSY_BIAS_DYNAMIC_MG_L3_1_INDEX 8
+#define PSY_BIAS_DYNAMIC_MG_L3_2_INDEX 9
+#define PSY_BIAS_DYNAMIC_MG_L3_3_INDEX 10
+#define PSY_BIAS_DYNAMIC_MG_L3_4_INDEX 11
+#define PSY_BIAS_DYNAMIC_MG_L3_5_INDEX 12
+#define PSY_BIAS_DYNAMIC_MG_L3_6_INDEX 13
+#define PSY_BIAS_DYNAMIC_MG_L3_7_INDEX 14
+
+// Return TRUE if all done
+static bool psy_bias_dynamic_mg_l6_l5(EncodeContext *enc_ctx, PictureDecisionContext *ctx, uint8_t top_index, uint8_t sub_index, uint64_t thr) {
+    if (ctx->mini_gop_activity_array[psy_bias_dynamic_mg_index_array[top_index]] == FALSE) {
+        early_hme(ctx, (PictureParentControlSet *)enc_ctx->pre_assignment_buffer[svt_aom_get_mini_gop_stats(psy_bias_dynamic_mg_index_array[top_index])->end_index - 1]->object_ptr,
+                       (PictureParentControlSet *)enc_ctx->pre_assignment_buffer[svt_aom_get_mini_gop_stats(psy_bias_dynamic_mg_index_array[top_index])->start_index]->object_ptr);
+        if (ctx->norm_dist > thr) {
+            // fprintf(stderr, "%llu ", ctx->norm_dist);
+            ctx->mini_gop_activity_array[psy_bias_dynamic_mg_index_array[top_index]] = TRUE;
+            ctx->mini_gop_activity_array[psy_bias_dynamic_mg_index_array[sub_index]] = FALSE;
+            ctx->mini_gop_activity_array[psy_bias_dynamic_mg_index_array[sub_index + 1]] = FALSE;
+        }
+        else {
+            for (uint8_t i = svt_aom_get_mini_gop_stats(psy_bias_dynamic_mg_index_array[top_index])->start_index; i <= svt_aom_get_mini_gop_stats(psy_bias_dynamic_mg_index_array[top_index])->end_index; i++)
+                ((PictureParentControlSet *)enc_ctx->pre_assignment_buffer[i]->object_ptr)->balancing_mg_dist = ctx->norm_dist;
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+static bool psy_bias_dynamic_mg_l4(EncodeContext *enc_ctx, PictureDecisionContext *ctx, uint8_t top_index, uint8_t sub_index) {
+    if (ctx->mini_gop_activity_array[psy_bias_dynamic_mg_index_array[top_index]] == FALSE) {
+        early_hme(ctx, (PictureParentControlSet *)enc_ctx->pre_assignment_buffer[svt_aom_get_mini_gop_stats(psy_bias_dynamic_mg_index_array[top_index])->end_index - 1]->object_ptr,
+                       (PictureParentControlSet *)enc_ctx->pre_assignment_buffer[svt_aom_get_mini_gop_stats(psy_bias_dynamic_mg_index_array[top_index])->start_index]->object_ptr);
+        for (uint8_t i = svt_aom_get_mini_gop_stats(psy_bias_dynamic_mg_index_array[top_index])->start_index; i <= svt_aom_get_mini_gop_stats(psy_bias_dynamic_mg_index_array[top_index])->end_index; i++)
+            ((PictureParentControlSet *)enc_ctx->pre_assignment_buffer[i]->object_ptr)->balancing_mg_dist = ctx->norm_dist;
+        return TRUE;
+    }
+    else {
+        if (ctx->mini_gop_activity_array[psy_bias_dynamic_mg_index_array[sub_index]] == FALSE)
+            early_hme(ctx, (PictureParentControlSet *)enc_ctx->pre_assignment_buffer[enc_ctx->pre_assignment_buffer_count - 1]->object_ptr,
+                           (PictureParentControlSet *)enc_ctx->pre_assignment_buffer[svt_aom_get_mini_gop_stats(psy_bias_dynamic_mg_index_array[top_index])->start_index]->object_ptr);
+        else
+            ctx->norm_dist = 0;
+        for (uint8_t i = svt_aom_get_mini_gop_stats(psy_bias_dynamic_mg_index_array[top_index])->start_index; i <= enc_ctx->pre_assignment_buffer_count - 1; i++)
+            ((PictureParentControlSet *)enc_ctx->pre_assignment_buffer[i]->object_ptr)->balancing_mg_dist = ctx->norm_dist;
+        return TRUE;
+    }
+}
+static void psy_bias_dynamic_mg(EncodeContext *enc_ctx, PictureDecisionContext *ctx) {
+    // fprintf(stderr, "\n%03u / C / ", enc_ctx->intra_period_position);
+    if (!psy_bias_dynamic_mg_l6_l5(enc_ctx, ctx, PSY_BIAS_DYNAMIC_MG_L6_INDEX, PSY_BIAS_DYNAMIC_MG_L5_0_INDEX, PSY_BIAS_DYNAMIC_MG_L6_THR)) {
+        if (!psy_bias_dynamic_mg_l6_l5(enc_ctx, ctx, PSY_BIAS_DYNAMIC_MG_L5_0_INDEX, PSY_BIAS_DYNAMIC_MG_L4_0_INDEX, PSY_BIAS_DYNAMIC_MG_L5_THR)) {
+            psy_bias_dynamic_mg_l4(enc_ctx, ctx, PSY_BIAS_DYNAMIC_MG_L4_0_INDEX, PSY_BIAS_DYNAMIC_MG_L3_0_INDEX);
+            psy_bias_dynamic_mg_l4(enc_ctx, ctx, PSY_BIAS_DYNAMIC_MG_L4_1_INDEX, PSY_BIAS_DYNAMIC_MG_L3_2_INDEX);
+        }
+        if (!psy_bias_dynamic_mg_l6_l5(enc_ctx, ctx, PSY_BIAS_DYNAMIC_MG_L5_1_INDEX, PSY_BIAS_DYNAMIC_MG_L4_2_INDEX, PSY_BIAS_DYNAMIC_MG_L5_THR)) {
+            psy_bias_dynamic_mg_l4(enc_ctx, ctx, PSY_BIAS_DYNAMIC_MG_L4_2_INDEX, PSY_BIAS_DYNAMIC_MG_L3_4_INDEX);
+            psy_bias_dynamic_mg_l4(enc_ctx, ctx, PSY_BIAS_DYNAMIC_MG_L4_3_INDEX, PSY_BIAS_DYNAMIC_MG_L3_6_INDEX);
+        }
+    }
+}
+
 /***************************************************************************************************
 * Initializes mini GOP activity array
 *
@@ -836,8 +913,23 @@ static void initialize_mini_gop_activity_array(SequenceControlSet* scs, PictureP
         ctx->mini_gop_activity_array[L2_0_INDEX] = false;
     }
 
+    // `--psy-bias` & `--balancing` Global
+    if (scs->enable_dg && scs->static_config.psy_bias_dynamic_mg) {
+        psy_bias_dynamic_mg(enc_ctx, ctx);
+        if (scs->static_config.psy_bias_dynamic_mg == -2) {
+            if (ctx->prev_delayed_intra && ctx->prev_delayed_intra->picture_number == 0) {
+                fprintf(stderr, "\nSvt[info]: -------------------------------------------");
+                fprintf(stderr, "\nSvt[info]: psy-bias-dynamic-mg has been set to print mode");
+                fprintf(stderr, "\nSvt[info]: It will now print the dist for each mini-gop here");
+                fprintf(stderr, "\nSvt[info]: -------------------------------------------");
+            }
+            fprintf(stderr, "\nSvt[info]: Mini-gop dist / Mini-gop %3u / ", enc_ctx->intra_period_position);
+            for (uint8_t i = 0; i <= enc_ctx->pre_assignment_buffer_count - 1; i++)
+                fprintf(stderr, "%4llu ", ((PictureParentControlSet *)enc_ctx->pre_assignment_buffer[i]->object_ptr)->balancing_mg_dist);
+        }
+    }
     // 6L vs. 5L
-    if (scs->enable_dg && ctx->mini_gop_activity_array[L6_INDEX] == false) {
+    else if (scs->enable_dg && ctx->mini_gop_activity_array[L6_INDEX] == false) {
         PictureParentControlSet* start_pcs = (PictureParentControlSet*)enc_ctx->pre_assignment_buffer[0]->object_ptr;
         PictureParentControlSet* mid_pcs =
             (PictureParentControlSet*)enc_ctx
@@ -3758,6 +3850,32 @@ static int ref_pics_modulation(PictureParentControlSet* pcs, int32_t noise_level
 }
 #endif // CONFIG_ENABLE_TEMPORAL_FILTERING
 
+static int32_t get_noise_level_thr(PictureParentControlSet *pcs, PictureDecisionContext *pd_ctx, const bool print) {
+    const int32_t default_noise_level_thr = VQ_NOISE_LVL_TH;
+    
+    if (pcs->scs->static_config.noise_level_thr == DEFAULT)
+        return default_noise_level_thr;
+    else if (pcs->scs->static_config.noise_level_thr == -2) {
+        if (print) {
+            if (pcs->picture_number == 0) {
+                fprintf(stderr, "\nSvt[info]: -------------------------------------------");
+                fprintf(stderr, "\nSvt[info]: noise-level-thr has been set to print mode");
+                fprintf(stderr, "\nSvt[info]: It will now print the noise level of each frame here");
+                fprintf(stderr, "\nSvt[info]: The current default noise level thr is %5d", default_noise_level_thr);
+                fprintf(stderr, "\nSvt[info]: -------------------------------------------");
+            }
+            if (pcs->scs->static_config.balancing_bias)
+                fprintf(stderr, "\nSvt[info]: balancing noise level / Frame %3llu / %5d", pcs->picture_number, pcs->balancing_noise_level);
+            else
+                fprintf(stderr, "\nSvt[info]: Noise level / Frame %3llu / %5d", pcs->picture_number, pd_ctx->last_i_noise_levels_log1p_fp16[0]);
+        }
+
+        return default_noise_level_thr;
+    }
+    else
+        return pcs->scs->static_config.noise_level_thr;
+}
+
 #if CONFIG_ENABLE_TEMPORAL_FILTERING
 static EbErrorType derive_tf_window_params(SequenceControlSet* scs, EncodeContext* enc_ctx,
                                            PictureParentControlSet* pcs, PictureDecisionContext* pd_ctx) {
@@ -3861,7 +3979,15 @@ static EbErrorType derive_tf_window_params(SequenceControlSet* scs, EncodeContex
         noise_levels_log1p_fp16[0] = pd_ctx->last_i_noise_levels_log1p_fp16[0];
     }
     // Set is_noise_level for the tf off case
-    pcs->is_noise_level = (pd_ctx->last_i_noise_levels_log1p_fp16[0] >= VQ_NOISE_LVL_TH);
+    if (scs->static_config.balancing_bias) {
+        pcs->balancing_noise_level = svt_aom_noise_log1p_fp16(svt_estimate_noise_fp16(central_picture_ptr->y_buffer,
+                                                                                      central_picture_ptr->width,
+                                                                                      central_picture_ptr->height,
+                                                                                      central_picture_ptr->y_stride));
+        pcs->is_noise_level = pcs->balancing_noise_level >= get_noise_level_thr(pcs, pd_ctx, false);
+    }
+    else
+        pcs->is_noise_level = (pd_ctx->last_i_noise_levels_log1p_fp16[0] >= get_noise_level_thr(pcs, pd_ctx, false));
     // Adjust the number of filtering frames
     int offset = pcs->tf_ctrls.modulate_pics ? ref_pics_modulation(pcs, noise_levels_log1p_fp16[0]) : 0;
     if (scs->static_config.pred_structure != RANDOM_ACCESS) {
@@ -4285,7 +4411,15 @@ static void mctf_frame(SequenceControlSet* scs, PictureParentControlSet* pcs, Pi
     pcs->do_tf = false; // temporal filtering compiled out
 #endif
 
-    pcs->is_noise_level = (pd_ctx->last_i_noise_levels_log1p_fp16[0] >= VQ_NOISE_LVL_TH);
+    if (scs->static_config.balancing_bias) {
+        pcs->balancing_noise_level = svt_aom_noise_log1p_fp16(svt_estimate_noise_fp16(pcs->enhanced_pic->y_buffer,
+                                                                                      pcs->enhanced_pic->width,
+                                                                                      pcs->enhanced_pic->height,
+                                                                                      pcs->enhanced_pic->y_stride));
+        pcs->is_noise_level = pcs->balancing_noise_level >= get_noise_level_thr(pcs, pd_ctx, true);
+    }
+    else
+        pcs->is_noise_level = (pd_ctx->last_i_noise_levels_log1p_fp16[0] >= get_noise_level_thr(pcs, pd_ctx, true));
 
 #if CONFIG_ENABLE_TEMPORAL_FILTERING
     if (scs->static_config.pred_structure != RANDOM_ACCESS && scs->tf_params_per_type[1].enabled &&

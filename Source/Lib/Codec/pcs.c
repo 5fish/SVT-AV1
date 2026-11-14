@@ -1390,6 +1390,11 @@ static EbErrorType picture_parent_control_set_ctor(PictureParentControlSet* obje
     object_ptr->undershoot_seen = 0;
     object_ptr->low_cr_seen     = 0;
     EB_NEW(object_ptr->dg_detector, svt_aom_dg_detector_seg_ctor);
+
+    // `--psy-bias` & `--balancing` Global
+    object_ptr->balancing_mg_dist = 0;
+    object_ptr->balancing_noise_level = 0;
+
     return return_error;
 }
 
