@@ -312,6 +312,9 @@ void svt_compute_interm_var_four8x8_c(uint8_t* input_samples, uint16_t input_str
         input_samples + block_index, input_stride, 8, 8);
 }
 
+static int balancing_comp_uint64(const void *a, const void *b) {
+    return (*(const uint64_t *)a > *(const uint64_t *)b) - (*(const uint64_t *)a < *(const uint64_t *)b);
+}
 /*******************************************
 * computes and stores the variance of the passed 64x64 block (and subblocks, if required)
 *******************************************/
@@ -410,6 +413,30 @@ static void compute_b64_variance(SequenceControlSet* scs, PictureParentControlSe
                                           mean_of32x32_squared_values_blocks[2] +
                                           mean_of32x32_squared_values_blocks[3]) >>
         2;
+
+    // `--psy-bias` & `--balancing` Global
+    uint64_t sorted_16x16_block[16];
+    memcpy(&sorted_16x16_block, mean_of_16x16_blocks, sizeof(uint64_t) * 16);
+    qsort(&sorted_16x16_block, 16, sizeof(uint64_t), balancing_comp_uint64);
+    pcs->balancing_luminance[b64_idx] = (double)(sorted_16x16_block[0] +
+                                                 sorted_16x16_block[1] +
+                                                 sorted_16x16_block[2] +
+                                                 sorted_16x16_block[3]) / (4 << (VARIANCE_PRECISION >> 1));
+
+    uint64_t mean_of_16x16_block = 0;
+    for (int i = 0; i < 16; i++)
+        mean_of_16x16_block      += sorted_16x16_block[i];
+    const double shifted_mean_of_16x16_block = (double)mean_of_16x16_block / (16 << (VARIANCE_PRECISION >> 1));
+
+    double shifted_mean_of_squared_of_16x16_block = 0;
+    for (int i = 0; i < 16; i++) {
+        const double shifted_16x16_block          = (double)sorted_16x16_block[i] / (1 << (VARIANCE_PRECISION >> 1));
+        shifted_mean_of_squared_of_16x16_block    += shifted_16x16_block * shifted_16x16_block;
+    }
+    shifted_mean_of_squared_of_16x16_block        /= 16;
+
+    pcs->balancing_variance[b64_idx] = AOMMAX(shifted_mean_of_squared_of_16x16_block -
+                                              shifted_mean_of_16x16_block * shifted_mean_of_16x16_block, 0.0);
 
     double* sb_var = pcs->variance[b64_idx];
     if (scs->allintra || scs->static_config.aq_mode == 1 || scs->static_config.variance_octile) {

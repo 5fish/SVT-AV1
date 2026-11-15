@@ -1214,6 +1214,8 @@ typedef struct PictureParentControlSet {
     // `--psy-bias` & `--balancing` Global
     uint64_t balancing_mg_dist;
     int32_t  balancing_noise_level;
+    double  *balancing_luminance;
+    double  *balancing_variance;
 } PictureParentControlSet;
 
 typedef struct TplDispResults {
