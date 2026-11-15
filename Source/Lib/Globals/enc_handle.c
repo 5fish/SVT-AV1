@@ -4353,7 +4353,8 @@ static void set_param_based_on_input(SequenceControlSet* scs) {
     const uint8_t sb_qp = svt_av1_get_effective_qp(scs, 0).qp;
     if ((scs->static_config.fast_decode && sb_qp <= 56 && !(scs->input_resolution <= INPUT_SIZE_360p_RANGE)) ||
         scs->static_config.resize_mode > RESIZE_NONE || scs->static_config.rtc ||
-        (scs->input_resolution == INPUT_SIZE_240p_RANGE) || scs->static_config.enable_variance_boost) {
+        (scs->input_resolution == INPUT_SIZE_240p_RANGE) || scs->static_config.enable_variance_boost ||
+        scs->static_config.lineart_psy_bias >= 1 || scs->static_config.texture_psy_bias >= 1 || scs->static_config.balancing_bias) {
         scs->super_block_size = 64;
     } else if (allintra) {
         if (scs->static_config.enc_mode <= ENC_M1) {
@@ -4643,7 +4644,8 @@ static void set_param_based_on_input(SequenceControlSet* scs) {
     // set to 1 if multipass and less than 200 frames in resourcecordination
     scs->is_short_clip = scs->static_config.gop_constraint_rc ? 1 : 0;
     if (allintra || scs->static_config.aq_mode == 1 || scs->static_config.scene_change_detection == 1 ||
-        scs->vq_ctrls.sharpness_ctrls.tf == 1 || scs->static_config.enable_variance_boost || scs->static_config.rtc) {
+        scs->vq_ctrls.sharpness_ctrls.tf == 1 || scs->static_config.enable_variance_boost || scs->static_config.rtc ||
+        scs->static_config.lineart_psy_bias >= 1 || scs->static_config.texture_psy_bias >= 1 || scs->static_config.balancing_bias) {
         scs->calculate_variance = 1;
     } else {
         scs->calculate_variance = 0;

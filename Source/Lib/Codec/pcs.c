@@ -1195,6 +1195,12 @@ static void picture_parent_control_set_dctor(EbPtr ptr) {
     if (obj->dg_detector) {
         EB_DELETE(obj->dg_detector);
     }
+
+    // `--psy-bias` & `--balancing` Global
+    if (obj->balancing_luminance)
+        EB_FREE_ARRAY(obj->balancing_luminance);
+    if (obj->balancing_variance)
+        EB_FREE_ARRAY(obj->balancing_variance);
 }
 
 /*
@@ -1402,6 +1408,10 @@ static EbErrorType picture_parent_control_set_ctor(PictureParentControlSet* obje
     // `--psy-bias` & `--balancing` Global
     object_ptr->balancing_mg_dist = 0;
     object_ptr->balancing_noise_level = 0;
+    if (init_data_ptr->calculate_variance) {
+        EB_MALLOC_ARRAY(object_ptr->balancing_luminance, object_ptr->b64_total_count);
+        EB_MALLOC_ARRAY(object_ptr->balancing_variance, object_ptr->b64_total_count);
+    }
 
     return return_error;
 }
