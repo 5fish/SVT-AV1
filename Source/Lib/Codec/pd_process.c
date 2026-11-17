@@ -282,9 +282,27 @@ static bool scene_transition_detector(PictureDecisionContext* pd_ctx, SequenceCo
     uint32_t is_abrupt_change_count = 0;
     uint32_t is_scene_change_count  = 0;
 
+    // `--balancing` PD
+    uint8_t   region_count_threshold_base;
+    if (scs->static_config.balancing_bias) {
+        if (scs->enc_ctx->intra_period_position % 32 == 0)
+            region_count_threshold_base = 45;
+        else if (scs->enc_ctx->intra_period_position % 16 == 0)
+            region_count_threshold_base = 47;
+        else if (scs->enc_ctx->intra_period_position % 8 == 0)
+            region_count_threshold_base = 50;
+        else if (scs->enc_ctx->intra_period_position % 4 == 0)
+            region_count_threshold_base = 54;
+        else if (scs->enc_ctx->intra_period_position % 2 == 0)
+            region_count_threshold_base = 59;
+        else
+            region_count_threshold_base = 65;
+    }
+    else
+        region_count_threshold_base = 50;
     uint32_t region_count_threshold = (uint32_t)(((float)((scs->picture_analysis_number_of_regions_per_width *
                                                            scs->picture_analysis_number_of_regions_per_height) *
-                                                          50) /
+                                                          region_count_threshold_base) /
                                                   100) +
                                                  0.5);
 

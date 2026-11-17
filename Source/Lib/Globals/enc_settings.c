@@ -1265,6 +1265,12 @@ EbErrorType svt_av1_verify_settings(SequenceControlSet* scs) {
         SVT_ERROR("psy-bias-dynamic-mg must be -2, 0 or 1\n");
         return_error = EB_ErrorBadParameter;
     }
+    // `--psy-bias` & `--balancing` RC
+    if (!(config->balancing_r0_dampening_layer >= -5 && config->balancing_r0_dampening_layer <= 1) &&
+        config->balancing_r0_dampening_layer != INT8_ALT_DEFAULT) {
+        SVT_ERROR("balancing-r0-dampening-layer must be between -5 and 1\n");
+        return_error = EB_ErrorBadParameter;
+    }
 
     return return_error;
 }
@@ -1436,7 +1442,7 @@ EbErrorType svt_av1_set_default_params(EbSvtAv1EncConfiguration* config_ptr) {
     config_ptr->fgs_seeds                         = NULL;
     config_ptr->fgs_seed_count                    = 0;
     config_ptr->fgs_multiplier                    = 1.0f;
-    config_ptr->enable_variance_boost             = true;
+    config_ptr->enable_variance_boost             = DEFAULT;
     config_ptr->variance_boost_strength           = 2;
     config_ptr->variance_octile                   = 5;
     config_ptr->tf_strength                       = 1;
@@ -1502,7 +1508,13 @@ EbErrorType svt_av1_set_default_params(EbSvtAv1EncConfiguration* config_ptr) {
     config_ptr->psy_bias_dynamic_mg = 0;
     config_ptr->noise_level_thr     = DEFAULT;
     // `--psy-bias` & `--balancing` RC
-    config_ptr->balancing_crf       = INVALID_BALANCING_CRF;
+    config_ptr->balancing_crf                      = INVALID_BALANCING_CRF;
+    config_ptr->balancing_mg_dist_r0_bias          = pow(2, 3.5) - 1;
+    config_ptr->balancing_noise_level_r0_bias      = pow(2, 1.5) - 1;
+    config_ptr->balancing_luminance_beta_bias      = pow(2, 3) - 1;
+    config_ptr->balancing_variance_beta_bias       = pow(2, 2.5) - 1;
+    config_ptr->balancing_tpl_intra_mode_beta_bias = pow(2, 3) - 1;
+    config_ptr->balancing_r0_dampening_layer       = INT8_ALT_DEFAULT;
 
     return return_error;
 }
@@ -2869,6 +2881,22 @@ static EbErrorType str_to_crf_thr_offset(const char* nptr, EbSvtAv1EncConfigurat
     return EB_ErrorNone;
 }
 
+static EbErrorType str_to_balancing_r0_beta_bias(const char *nptr, double *target) {
+    double      balancing_bias;
+    EbErrorType return_error;
+
+    return_error = str_to_double(nptr, &balancing_bias, NULL);
+
+    if (return_error == EB_ErrorBadParameter)
+        return return_error;
+    if (!(balancing_bias >= 0))
+        return EB_ErrorBadParameter;
+
+    *target = pow(2, balancing_bias) - 1;
+
+    return EB_ErrorNone;
+}
+
 #if CONFIG_ENABLE_FAST_DECODE_3
 static EbErrorType enc_parse_parameter(EbSvtAv1EncConfiguration* config_struct, const char* name, const char* value) {
 #else
@@ -3075,6 +3103,18 @@ EB_API EbErrorType svt_av1_enc_parse_parameter(EbSvtAv1EncConfiguration* config_
         return str_to_crf_thr_offset(value, config_struct);
     }
 
+    // `--psy-bias` & `--balancing` RC
+    if (!strcmp(name, "balancing-mg-dist-r0-bias"))
+        return str_to_balancing_r0_beta_bias(value, &config_struct->balancing_mg_dist_r0_bias);
+    if (!strcmp(name, "balancing-noise-level-r0-bias"))
+        return str_to_balancing_r0_beta_bias(value, &config_struct->balancing_noise_level_r0_bias);
+    if (!strcmp(name, "balancing-luminance-beta-bias"))
+        return str_to_balancing_r0_beta_bias(value, &config_struct->balancing_luminance_beta_bias);
+    if (!strcmp(name, "balancing-variance-beta-bias"))
+        return str_to_balancing_r0_beta_bias(value, &config_struct->balancing_variance_beta_bias);
+    if (!strcmp(name, "balancing-tpl-intra-mode-beta-bias"))
+        return str_to_balancing_r0_beta_bias(value, &config_struct->balancing_tpl_intra_mode_beta_bias);
+
     // uint32_t fields
     const struct {
         const char* name;
@@ -3275,6 +3315,7 @@ EB_API EbErrorType svt_av1_enc_parse_parameter(EbSvtAv1EncConfiguration* config_
         int8_t*     out;
     } int8_opts[] = {
         {"preset", &config_struct->enc_mode},
+        {"enable-variance-boost", &config_struct->enable_variance_boost},
         {"sharpness", &config_struct->sharpness},
         {"startup-qp-offset", &config_struct->startup_qp_offset},
         {"noise-size", &config_struct->noise_size},
@@ -3286,6 +3327,8 @@ EB_API EbErrorType svt_av1_enc_parse_parameter(EbSvtAv1EncConfiguration* config_
         {"balancing-bias", &config_struct->balancing_bias},
         // `--psy-bias` & `--balancing` Global
         {"psy-bias-dynamic-mg", &config_struct->psy_bias_dynamic_mg},
+        // `--psy-bias` & `--balancing` RC
+        {"balancing-r0-dampening-layer", &config_struct->balancing_r0_dampening_layer},
     };
 
     const size_t int8_opts_size = sizeof(int8_opts) / sizeof(int8_opts[0]);
@@ -3318,7 +3361,6 @@ EB_API EbErrorType svt_av1_enc_parse_parameter(EbSvtAv1EncConfiguration* config_
 #endif
         {"enable-dg", &config_struct->enable_dg},
         {"gop-constraint-rc", &config_struct->gop_constraint_rc},
-        {"enable-variance-boost", &config_struct->enable_variance_boost},
         {"lossless", &config_struct->lossless},
         {"avif", &config_struct->avif},
         {"rtc", &config_struct->rtc},

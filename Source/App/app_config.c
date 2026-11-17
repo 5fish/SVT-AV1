@@ -287,6 +287,13 @@
 #define CRF_THR_OFFSET_TOKEN "--crf-thr-offset"
 #define PSY_BIAS_DYNAMIC_MG_TOKEN "--psy-bias-dynamic-mg"
 #define NOISE_LEVEL_THR_TOKEN "--noise-level-thr"
+// `--psy-bias` & `--balancing` RC
+#define BALANCING_MG_DIST_R0_BIAS_TOKEN "--balancing-mg-dist-r0-bias"
+#define BALANCING_NOISE_LEVEL_R0_BIAS_TOKEN "--balancing-noise-level-r0-bias"
+#define BALANCING_LUMINANCE_BETA_BIAS_TOKEN "--balancing-luminance-beta-bias"
+#define BALANCING_VARIANCE_BETA_BIAS_TOKEN "--balancing-variance-beta-bias"
+#define BALANCING_TPL_INTRA_MODE_BETA_BIAS_TOKEN "--balancing-tpl-intra-mode-beta-bias"
+#define BALANCING_R0_DAMPENING_LAYER_TOKEN "--balancing-r0-dampening-layer"
 
 static EbErrorType validate_error(EbErrorType err, const char* token, const char* value) {
     switch (err) {
@@ -1386,6 +1393,13 @@ ConfigDescription config_entry_psy_bias_balancing[] = {
     {CRF_THR_OFFSET_TOKEN, "Offset crf threshold used in various decisions."},
     {PSY_BIAS_DYNAMIC_MG_TOKEN, "psy-bias dynamic mini-gop"},
     {NOISE_LEVEL_THR_TOKEN, "Change encoder noise level threshold"},
+    // `--psy-bias` & `--balancing` RC
+    {BALANCING_MG_DIST_R0_BIAS_TOKEN, "Boost rate control via r0 in frames with high mini-gop dist"},
+    {BALANCING_NOISE_LEVEL_R0_BIAS_TOKEN, "Boost rate control via r0 in frames with high balancing noise level"},
+    {BALANCING_LUMINANCE_BETA_BIAS_TOKEN, "Boost rate control via beta in dark super blocks"},
+    {BALANCING_VARIANCE_BETA_BIAS_TOKEN, "Boost rate control via beta in super blocks with low variance"},
+    {BALANCING_TPL_INTRA_MODE_BETA_BIAS_TOKEN, "Boost rate control via beta in super blocks where TPL search favours intra instead of inter prediction modes"},
+    {BALANCING_R0_DAMPENING_LAYER_TOKEN, "Dampen r0-based rate control in frames with temporal layer higher than or equal to hierarchical levels + balancing-r0-dampening-layer."},
 };
 
 ConfigEntry config_entry[] = {
@@ -1697,6 +1711,13 @@ ConfigEntry config_entry[] = {
     {CRF_THR_OFFSET_TOKEN, "CrfThrOffset", set_cfg_generic_token},
     {PSY_BIAS_DYNAMIC_MG_TOKEN, "PsyBiasDyamicMG", set_cfg_generic_token},
     {NOISE_LEVEL_THR_TOKEN, "NoiseLevelThr", set_cfg_generic_token},
+    // `--psy-bias` & `--balancing` RC
+    {BALANCING_MG_DIST_R0_BIAS_TOKEN, "BalancingMGDistR0Bias", set_cfg_generic_token},    
+    {BALANCING_NOISE_LEVEL_R0_BIAS_TOKEN, "BalancingNoiseLevelR0Bias", set_cfg_generic_token},
+    {BALANCING_LUMINANCE_BETA_BIAS_TOKEN, "BalancingLuminanceBetaBias", set_cfg_generic_token},
+    {BALANCING_VARIANCE_BETA_BIAS_TOKEN, "BalancingVarianceBetaBias", set_cfg_generic_token},
+    {BALANCING_TPL_INTRA_MODE_BETA_BIAS_TOKEN, "BalancingTPLIntraModeBetaBias", set_cfg_generic_token},
+    {BALANCING_R0_DAMPENING_LAYER_TOKEN, "BalancingR0DampeningLayer", set_cfg_generic_token},
 
     // Termination
     {NULL, NULL, NULL}};

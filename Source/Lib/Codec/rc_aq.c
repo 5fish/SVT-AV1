@@ -476,7 +476,7 @@ void svt_av1_generate_b64_me_qindex_map(PictureControlSet* pcs) {
     }
 }
 
-static int svt_av1_get_deltaq_offset(EbBitDepth bit_depth, int qindex, double beta, bool is_intra, double balancing_sb_qstep) {
+static int svt_av1_get_deltaq_offset(EbBitDepth bit_depth, int qindex, double beta, bool is_intra, double balancing_sb_qstep, int8_t balancing_bias) {
     assert(beta > 0.0);
     double q;
     if (balancing_sb_qstep != INVALID_BALANCING_QSTEP)
@@ -484,8 +484,11 @@ static int svt_av1_get_deltaq_offset(EbBitDepth bit_depth, int qindex, double be
     else
         q = svt_aom_dc_quant_qtx(qindex, 0, bit_depth);
     double newq;
+    // `--balancing` RC
+    if (balancing_bias) {
+        newq = q / sqrt(sqrt(beta));
     // use a less aggressive action when lowering the q for non I_slice
-    if (!is_intra && beta > 1) {
+    } else if (!is_intra && beta > 1) {
         // newq = (int)rint(q / sqrt(sqrt(beta)));
         newq = q / sqrt(sqrt(beta));
     } else {
@@ -601,7 +604,7 @@ void svt_aom_sb_qp_derivation_tpl_la(PictureControlSet* pcs) {
                 balancing_sb_qstep *= svt_aom_dc_quant_qtx(sb_ptr->qindex, 0, scs->static_config.encoder_bit_depth) /
                                       svt_aom_dc_quant_qtx(ppcs->frm_hdr.quantization_params.base_q_idx, 0, scs->static_config.encoder_bit_depth);
             int         offset = svt_av1_get_deltaq_offset(
-                scs->static_config.encoder_bit_depth, sb_ptr->qindex, beta, ppcs->slice_type == I_SLICE, balancing_sb_qstep);
+                scs->static_config.encoder_bit_depth, sb_ptr->qindex, beta, ppcs->slice_type == I_SLICE, balancing_sb_qstep, scs->static_config.balancing_bias);
             offset = AOMMIN(offset, 9 * 4 - 1);
             offset = AOMMAX(offset, -9 * 4 + 1);
 

@@ -737,7 +737,12 @@ EbErrorType svt_aom_initial_rate_control_kernel_iter(void* context) {
             pcs->r0_qps            = 0;
             pcs->r0_delta_qp_md    = 0;
             pcs->r0_delta_qp_quant = 0;
-
+        // `--balancing` RC
+        } else if (scs->static_config.balancing_bias) {
+            pcs->r0_gen            = 1;
+            pcs->r0_qps            = 1;
+            pcs->r0_delta_qp_md    = 1;
+            pcs->r0_delta_qp_quant = 1;
         } else {
             // When another delta-QP modulator (e.g., Variance Boost) is active alongside TPL,
             // r0_delta_qp_quant has no effect and is assumed equal to r0_delta_qp_md

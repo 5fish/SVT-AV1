@@ -882,7 +882,7 @@ typedef struct EbSvtAv1EncConfiguration {
      * false = disable Variance Boost
      * true = enable Variance Boost
      * Default is true in SVT-AV1-HDR. */
-    bool enable_variance_boost;
+    int8_t enable_variance_boost;
     /* @brief Selects the curve strength to boost low variance regions according to a fast-growing formula
      * Default is 2 */
     uint8_t variance_boost_strength;
@@ -1474,6 +1474,12 @@ typedef struct EbSvtAv1EncConfiguration {
     int32_t noise_level_thr;
     // `--psy-bias` & `--balancing` RC
     double balancing_crf;
+    double balancing_mg_dist_r0_bias;
+    double balancing_noise_level_r0_bias;
+    double balancing_luminance_beta_bias;
+    double balancing_variance_beta_bias;
+    double balancing_tpl_intra_mode_beta_bias;
+    int8_t balancing_r0_dampening_layer;
 
     /* The trailing 128-byte padding reserve is fully consumed by the film-grain
      * and mc-denoise fields above, so this struct now grows with new fields.
