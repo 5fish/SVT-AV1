@@ -1667,6 +1667,42 @@ void tpl_mc_flow_synthesizer(PictureParentControlSet* pcs_array[MAX_TPL_LA_SW], 
     return;
 }
 
+// Copied from `get_sb_tpl_intra_stats` from `enc_mode_config.c`
+static double get_sb_tpl_intra_mode_ratio(PictureParentControlSet *pcs, uint32_t sb_index) {
+    const int      aligned16_width = (pcs->aligned_width + 15) >> 4;
+    const int      tpl_blk_size    = pcs->tpl_ctrls.dispenser_search_level == 0 ? 16
+        : pcs->tpl_ctrls.dispenser_search_level == 1                            ? 32
+                                                                                : 64;
+    // tpl_src_stats_buffer is created for 16x16 always, so TPL dispenser is for larger block sizes
+    // the step between blocks must be adjusted
+    const int tpl_blk_step = pcs->tpl_ctrls.dispenser_search_level == 0 ? 1
+        : pcs->tpl_ctrls.dispenser_search_level == 1                    ? 2
+                                                                        : 4;
+
+    // Get actual SB width (for cases of incomplete SBs)
+    SbGeom        *sb_geom     = &pcs->sb_geom[sb_index];
+    const int      sb_cols     = MAX(1, sb_geom->width / tpl_blk_size);
+    const int      sb_rows     = MAX(1, sb_geom->height / tpl_blk_size);
+    const uint32_t mb_origin_x = sb_geom->org_x;
+    const uint32_t mb_origin_y = sb_geom->org_y;
+
+    int intra_count = 0;
+
+    // Loop over all blocks in the SB
+    for (int i = 0; i < sb_rows; i++) {
+        TplSrcStats *tpl_src_stats_buffer =
+            &pcs->pa_me_data->tpl_src_stats_buffer[((mb_origin_y >> 4) + (i * tpl_blk_step)) * aligned16_width +
+                                                   (mb_origin_x >> 4)];
+        for (int j = 0; j < sb_cols; j++) {
+            if (is_intra_mode(tpl_src_stats_buffer->best_mode))
+                intra_count++;
+            tpl_src_stats_buffer += tpl_blk_step;
+        }
+    }
+
+    return (double)intra_count / (sb_rows * sb_cols);
+}
+
 void svt_aom_generate_r0beta(PictureParentControlSet* pcs) {
     Av1Common*          cm                    = pcs->av1_cm;
     SequenceControlSet* scs                   = pcs->scs;
@@ -1701,12 +1737,29 @@ void svt_aom_generate_r0beta(PictureParentControlSet* pcs) {
         }
     }
 
-    mc_dep_cost_base = (recrf_dist_base_sum << RDDIV_BITS) + mc_dep_delta_base_sum;
+    // `--balancing` RC
+    double balancing_mc_dep_delta_base_sum = mc_dep_delta_base_sum;
+    if (scs->static_config.balancing_bias) {
+        const double balancing_r0_bias = (double)(recrf_dist_base_sum << 8) *
+                                         AOMMAX(scs->static_config.balancing_mg_dist_r0_bias *
+                                                ((double)pcs->balancing_mg_dist * pcs->balancing_mg_dist) /
+                                                ((double)pcs->balancing_mg_dist * pcs->balancing_mg_dist + (double)16 * 16 * 8 * 16 * 16 * 8),
+                                                scs->static_config.balancing_noise_level_r0_bias *
+                                                ((double)pcs->balancing_noise_level * pcs->balancing_noise_level) /
+                                                ((double)pcs->balancing_noise_level * pcs->balancing_noise_level + (double)VQ_NOISE_LVL_TH * VQ_NOISE_LVL_TH));
+        balancing_mc_dep_delta_base_sum = AOMMAX(balancing_mc_dep_delta_base_sum, balancing_r0_bias);
+
+        const double balancing_mc_dep_delta_base_sum_dampening = balancing_mc_dep_delta_base_sum - (recrf_dist_base_sum << 9);
+        if (balancing_mc_dep_delta_base_sum_dampening > 0)
+            balancing_mc_dep_delta_base_sum = balancing_mc_dep_delta_base_sum_dampening * 0.75 + (recrf_dist_base_sum << 9);
+    }
+
+    mc_dep_cost_base = (recrf_dist_base_sum << RDDIV_BITS) + balancing_mc_dep_delta_base_sum;
     if (mc_dep_cost_base != 0) {
         pcs->r0 = ((double)(recrf_dist_base_sum << (RDDIV_BITS))) / mc_dep_cost_base;
         // If there are outlier blocks responsible for most of the propagation, set r0 to 1.0 to indicate
         // no error propagation, as the result may not be reliable.
-        if (max_dist > (mc_dep_delta_base_sum / count) * 100 && max_dist > (mc_dep_delta_base_sum * 9 / 10)) {
+        if (max_dist > (balancing_mc_dep_delta_base_sum / count) * 100 && max_dist > (balancing_mc_dep_delta_base_sum * 9 / 10)) {
             pcs->r0 = 1.0;
         }
         pcs->tpl_is_valid = 1;
@@ -1728,6 +1781,7 @@ void svt_aom_generate_r0beta(PictureParentControlSet* pcs) {
     const uint32_t picture_sb_height = (uint32_t)((pcs->aligned_height + scs->sb_size - 1) / scs->sb_size);
     const int32_t  mi_high           = sb_mi_sz; // sb size in 4x4 units
     const int32_t  mi_wide           = sb_mi_sz;
+    const double balancing_mean_mc_dep_delta_base_sum = balancing_mc_dep_delta_base_sum / (picture_sb_width * picture_sb_height);
 
     if (!tpl_stats_valid) {
         // nothing to accumulate, so every SB would keep the neutral beta
@@ -1762,10 +1816,44 @@ void svt_aom_generate_r0beta(PictureParentControlSet* pcs) {
                     mc_dep_delta_sum += mc_dep_delta;
                 }
             }
+
+            double balancing_mc_dep_delta_sum = mc_dep_delta_sum;
+            if (scs->static_config.balancing_bias) {
+                const uint32_t sb_index = sb_y * picture_sb_width + sb_x;
+                const double balancing_luminance_thr = 0x80;
+                const double balancing_luminance_max = 0xFF;
+                const double balancing_luminance_a   = balancing_luminance_thr * (balancing_luminance_max - pcs->balancing_luminance[sb_index]);
+                const double balancing_luminance_b   = pcs->balancing_luminance[sb_index] * (balancing_luminance_max - balancing_luminance_thr);
+                const double balancing_luminance_aa  = balancing_luminance_a * sqrt(balancing_luminance_a);
+                const double balancing_luminance_bb  = balancing_luminance_b * sqrt(balancing_luminance_b);
+                const double balancing_variance_thr = 0x10;
+                const double tpl_intra_mode_ratio        = get_sb_tpl_intra_mode_ratio(pcs, sb_index);
+                const double tpl_intra_mode_ratio_thr    = 0.5;
+                const double tpl_intra_mode_ratio_max    = 1.0;
+                const double balancing_tpl_intra_mode_a  = tpl_intra_mode_ratio_thr * (tpl_intra_mode_ratio_max - tpl_intra_mode_ratio);
+                const double balancing_tpl_intra_mode_b  = tpl_intra_mode_ratio * (tpl_intra_mode_ratio_max - tpl_intra_mode_ratio_thr);
+                const double balancing_tpl_intra_mode_aa = balancing_tpl_intra_mode_a * sqrt(balancing_tpl_intra_mode_a);
+                const double balancing_tpl_intra_mode_bb = balancing_tpl_intra_mode_b * sqrt(balancing_tpl_intra_mode_b);
+                const double balancing_beta_bias = (double)(recrf_dist_sum << 8) *
+                                                   AOMMAX(AOMMAX(scs->static_config.balancing_luminance_beta_bias *
+                                                                 balancing_luminance_aa / (balancing_luminance_aa + balancing_luminance_bb),
+                                                                 scs->static_config.balancing_variance_beta_bias *
+                                                                 (balancing_variance_thr * balancing_variance_thr) /
+                                                                 (balancing_variance_thr * balancing_variance_thr + pcs->balancing_variance[sb_index] * pcs->balancing_variance[sb_index])),
+                                                                 scs->static_config.balancing_tpl_intra_mode_beta_bias *
+                                                                 balancing_tpl_intra_mode_bb / (balancing_tpl_intra_mode_aa + balancing_tpl_intra_mode_bb));
+                balancing_mc_dep_delta_sum = AOMMAX(balancing_mc_dep_delta_sum,
+                                                    AOMMAX(balancing_mean_mc_dep_delta_base_sum, balancing_beta_bias));
+
+                const double balancing_mc_dep_delta_sum_dampening = balancing_mc_dep_delta_sum - (recrf_dist_sum << 9);
+                if (balancing_mc_dep_delta_sum_dampening > 0)
+                    balancing_mc_dep_delta_sum = balancing_mc_dep_delta_sum_dampening * 0.75 + (recrf_dist_sum << 9);
+            }
+
             double beta = 1.0;
             if (recrf_dist_sum > 0) {
                 double rk = ((double)(recrf_dist_sum << (RDDIV_BITS))) /
-                    ((recrf_dist_sum << RDDIV_BITS) + mc_dep_delta_sum);
+                    ((recrf_dist_sum << RDDIV_BITS) + balancing_mc_dep_delta_sum);
                 beta = (pcs->r0 / rk);
                 assert(beta > 0.0);
             }

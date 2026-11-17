@@ -653,6 +653,12 @@ Please check [README](../README.md#usage) for the recommended usage.
 | **CrfThrOffset** | --crf-thr-offset | [-64.0-64.0] | 0.0 | Offset `--crf` threshold used in various decisions. Further explanations can be found below. |
 | **PsyBiasDyamicMG** | --psy-bias-dynamic-mg | [-2,0-1] | 0 | `--psy-bias` dynamic mini-gop. Sets `--dynamic-dg 1`. [-2: print out mini-gop dist for split decision and for `--balancing-mg-dist-r0-bias`] |
 | **NoiseLevelThr** | --noise-level-thr | [-2,0-INT32_MAX] | 16000 | Change encoder noise level threshold. Further explanations can be found below. [-2: print the noise level, >0: set the noise level threshold] |
+| **BalancingMGDistR0Bias** | --balancing-mg-dist-r0-bias | [0.0-8.0] | 3.5 | Boost rate control via r0 in frames with high mini-gop dist |
+| **BalancingNoiseLevelR0Bias** | --balancing-noise-level-r0-bias | [0.0-8.0] | 1.5 | Boost rate control via r0 in frames with high `--balancing` noise level |
+| **BalancingLuminanceBetaBias**  | --balancing-luminance-beta-bias | [0.0-8.0] | 3.0 | Boost rate control via beta in dark super blocks |
+| **BalancingVarianceBetaBias**  | --balancing-variance-beta-bias | [0.0-8.0] | 2.5 | Boost rate control via beta in super blocks with low variance |
+| **BalancingTPLIntraModeBetaBias** | --balancing-tpl-intra-mode-beta-bias | [0.0-8.0] | 3.0 | Boost rate control via beta in super blocks where TPL search favours intra instead of inter prediction modes |
+| **BalancingR0DampeningLayer** | --balancing-r0-dampening-layer | [-5-1] | 1 | Dampen r0-based rate control in frames with temporal layer higher than or equal to hierarchical levels + `--balancing-r0-dampening-layer`. This affects a wide range of features and applies with or without `--balancing-bias`. |
 
 ### `--lineart-psy-bias`
 
@@ -677,6 +683,7 @@ Please check [README](../README.md#usage) for the recommended usage.
 | `--texture-psy-bias` level | `1` | `2` | `3` | `4` | `5` | `6` | `7` | Note |
 | :-- | :--: | :--: | :--: | :--: | :--: | :--: | :--: | :-- |
 | [global] `--balancing-bias 1` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overridden |
+| [rc] `--balancing-r0-dampening-layer -3` | ✕ | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | Only applies when `--balancing-bias 1`; Overrides `--balancing-bias` default; Can be overridden |
 | [md quant] `--qm-min 9` | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | Overrides `--lineart-psy-bias` default; Can be overridden |
 | [md quant] `--noise-norm-strength` | － | － | `1` | `2` | `4` | `4` | `4` | Overrides `--lineart-psy-bias` default; Can be overridden |
 | [md search] alternative tx search grouping | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | |
@@ -719,8 +726,10 @@ These default changes apply regardless of `--psy-bias` used.
 | [global] `--balancing` noise level | |
 | [pd] `--balancing` scd | |
 | [pd] `--psy-bias-dynamic-mg 1` | Can only be otherwise set to `-2` which is the print mode |
-| [intial_rc & src_ops & rc] full `r0` based qps qpm and `--balancing` `r0` `beta` | |
+| [rc / src_ops] full `r0` based qps qpm and `--balancing` `r0` `beta` | |
+| [rc] `--balancing-r0-dampening-layer -2` | Can be overridden |
 | [rc] `--balancing` qstep based rc | |
+| [rc] `--qp-scale-compress-strength 0` | |
 | [rc] `--luminance-qp-bias 0` | |
 | [rc] `--enable-variance-boost 0` | Can be overridden |
 | [rc] `--low-q-taper 0` | |

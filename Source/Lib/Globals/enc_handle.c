@@ -4175,6 +4175,29 @@ static void set_param_based_on_input(SequenceControlSet* scs) {
     }
     if (!!scs->static_config.psy_bias_dynamic_mg)
         scs->static_config.enable_dg = 1;
+    // `--psy-bias` & `--balancing` RC
+    if (scs->static_config.balancing_bias) {
+        scs->static_config.qp_scale_compress_strength = 0;
+        scs->static_config.luminance_qp_bias = 0;
+    }
+    if (scs->static_config.enable_variance_boost == DEFAULT) {
+        if (scs->static_config.balancing_bias)
+            scs->static_config.enable_variance_boost = 0;
+        else
+            scs->static_config.enable_variance_boost = 1;
+    }
+    if (scs->static_config.balancing_bias)
+        scs->static_config.low_q_taper = 0;
+    if (scs->static_config.balancing_r0_dampening_layer == INT8_ALT_DEFAULT) {
+        if (scs->static_config.balancing_bias) {
+            if (scs->static_config.texture_psy_bias >= 5)
+                scs->static_config.balancing_r0_dampening_layer = -3;
+            else
+                scs->static_config.balancing_r0_dampening_layer = -2;
+        }
+        else
+            scs->static_config.balancing_r0_dampening_layer     = 1;
+    }
     // `--psy-bias` & `--balancing` MD Quant
     if (scs->static_config.min_qm_level == UINT8_DEFAULT)
         scs->static_config.min_qm_level =
@@ -5326,7 +5349,13 @@ static void copy_api_from_app(SequenceControlSet* scs, EbSvtAv1EncConfiguration*
     scs->static_config.psy_bias_dynamic_mg = config_struct->psy_bias_dynamic_mg;
     scs->static_config.noise_level_thr     = config_struct->noise_level_thr;
     // `--psy-bias` & `--balancing` RC
-    scs->static_config.balancing_crf       = config_struct->balancing_crf;
+    scs->static_config.balancing_crf                      = config_struct->balancing_crf;
+    scs->static_config.balancing_noise_level_r0_bias      = config_struct->balancing_noise_level_r0_bias;
+    scs->static_config.balancing_mg_dist_r0_bias          = config_struct->balancing_mg_dist_r0_bias;
+    scs->static_config.balancing_luminance_beta_bias      = config_struct->balancing_luminance_beta_bias;
+    scs->static_config.balancing_variance_beta_bias       = config_struct->balancing_variance_beta_bias;
+    scs->static_config.balancing_tpl_intra_mode_beta_bias = config_struct->balancing_tpl_intra_mode_beta_bias;
+    scs->static_config.balancing_r0_dampening_layer       = config_struct->balancing_r0_dampening_layer;
 
     // Override settings for Still IQ tune
     if (scs->static_config.tune == TUNE_IQ) {
