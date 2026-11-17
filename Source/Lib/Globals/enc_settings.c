@@ -1333,11 +1333,11 @@ EbErrorType svt_av1_verify_settings(SequenceControlSet *scs) {
         SVT_ERROR("Instance %u: balancing-q-bias must be between 0 and 1\n", channel_number + 1);
         return_error = EB_ErrorBadParameter;
     }
-    if (!(config->balancing_mg_dist_q_bias >= 0.0)) {
+    if (!(config->balancing_mg_dist_r0_bias >= 0.0)) {
         SVT_ERROR("Instance %u: balancing-mg-dist-q-bias must be between 0.0 and 8.0 or -2\n", channel_number + 1);
         return_error = EB_ErrorBadParameter;
     }
-    if (!(config->balancing_noise_level_q_bias >= 0.0)) {
+    if (!(config->balancing_noise_level_r0_bias >= 0.0)) {
         SVT_ERROR("Instance %u: balancing-noise-level-q-bias must be between 0.0 and 8.0 or -2\n", channel_number + 1);
         return_error = EB_ErrorBadParameter;
     }
@@ -1355,11 +1355,6 @@ EbErrorType svt_av1_verify_settings(SequenceControlSet *scs) {
     if ((config->balancing_r0_dampening_layer < -5 || config->balancing_r0_dampening_layer > 1) &&
         config->balancing_r0_dampening_layer != INT8_MAX) {
         SVT_ERROR("Instance %u: balancing-r0-dampening-layer must be between -5 and 1\n", channel_number + 1);
-        return_error = EB_ErrorBadParameter;
-    }
-
-    if (config->balancing_tpl_intra_mode_beta_bias > 1 && config->balancing_tpl_intra_mode_beta_bias != UINT8_DEFAULT) {
-        SVT_ERROR("Instance %u: balancing-tpl-intra-mode-beta-bias must be between 0 and 1\n", channel_number + 1);
         return_error = EB_ErrorBadParameter;
     }
 
@@ -1598,13 +1593,14 @@ EbErrorType svt_av1_set_default_params(EbSvtAv1EncConfiguration *config_ptr) {
     config_ptr->texture_cdef_bias_max_sec_cdef_rel = 0;
     config_ptr->cdef_bias_damping_offset          = 0;
     config_ptr->balancing_q_bias                  = UINT8_DEFAULT;
-    config_ptr->balancing_mg_dist_q_bias          = 8.0;
-    config_ptr->balancing_noise_level_q_bias      = 2.0;
-    config_ptr->balancing_luminance_q_bias        = UINT8_DEFAULT;
+    config_ptr->balancing_mg_dist_r0_bias         = pow(2, 3) - 1;
+    config_ptr->balancing_noise_level_r0_bias     = pow(2, 1.5) - 1;
+    config_ptr->balancing_luminance_beta_bias     = pow(2, 3) - 1;
+    config_ptr->balancing_variance_beta_bias      = pow(2, 3.5) - 1;
+    config_ptr->balancing_tpl_intra_mode_beta_bias = pow(2, 3) - 1;
     config_ptr->balancing_luminance_lambda_bias   = DEFAULT;
     config_ptr->balancing_texture_lambda_bias     = DEFAULT;
     config_ptr->balancing_r0_dampening_layer      = INT8_DEFAULT;
-    config_ptr->balancing_tpl_intra_mode_beta_bias = UINT8_DEFAULT;
     config_ptr->sharp_tx                          = 1;
     config_ptr->hbd_mds                           = 0;
     config_ptr->alt_ssim_tuning                   = FALSE;
@@ -1790,10 +1786,12 @@ void svt_av1_print_lib_params(SequenceControlSet *scs) {
         }
         else { // config->balancing_q_bias
             SVT_INFO("SVT [config]: balancing - mini-GOP dist r0 bias / noise level r0 bias \t: %.0f / %.0f\n",
-                     config->balancing_mg_dist_q_bias,
-                     config->balancing_noise_level_q_bias);
-            SVT_INFO("SVT [config]: balancing - luminance beta bias \t\t\t\t: %u\n",
-                     config->balancing_luminance_q_bias);
+                     config->balancing_mg_dist_r0_bias,
+                     config->balancing_noise_level_r0_bias);
+            SVT_INFO("SVT [config]: balancing - luminance / variance / TPL intra mode beta bias \t: %.0f / %.0f / %.0f\n",
+                     config->balancing_luminance_beta_bias,
+                     config->balancing_variance_beta_bias,
+                     config->balancing_tpl_intra_mode_beta_bias);
 
             if (config->balancing_r0_dampening_layer == 1)
                 SVT_INFO("SVT [config]: balancing - r0-based decision \t\t\t\t\t: full\n");
@@ -2891,23 +2889,7 @@ static EbErrorType str_to_variance_thr(const char *nptr, uint16_t *target) {
     return EB_ErrorNone;
 }
 
-static EbErrorType str_to_balancing_luminance_q_bias(const char *nptr, EbSvtAv1EncConfiguration *config_struct) {
-    double      balancing_luminance_q_bias;
-    EbErrorType return_error;
-
-    return_error = str_to_double(nptr, &balancing_luminance_q_bias, NULL);
-
-    if (return_error == EB_ErrorBadParameter)
-        return return_error;
-    if (!(balancing_luminance_q_bias >= 0 && balancing_luminance_q_bias <= 25))
-        return EB_ErrorBadParameter;
-
-    config_struct->balancing_luminance_q_bias = rint(balancing_luminance_q_bias * 10);
-
-    return EB_ErrorNone;
-}
-
-static EbErrorType str_to_balancing_mg_dist_noise_level_q_bias(const char *nptr, double *target) {
+static EbErrorType str_to_balancing_r0_beta_bias(const char *nptr, double *target) {
     double      balancing_bias;
     EbErrorType return_error;
 
@@ -2915,13 +2897,10 @@ static EbErrorType str_to_balancing_mg_dist_noise_level_q_bias(const char *nptr,
 
     if (return_error == EB_ErrorBadParameter)
         return return_error;
-    if (!(balancing_bias >= 0) && balancing_bias != -2)
+    if (!(balancing_bias >= 0))
         return EB_ErrorBadParameter;
 
-    if (balancing_bias == -2)
-        *target = 0;
-    else
-        *target = pow(2, balancing_bias);
+    *target = pow(2, balancing_bias) - 1;
 
     return EB_ErrorNone;
 }
@@ -3059,13 +3038,16 @@ EB_API EbErrorType svt_av1_enc_parse_parameter(EbSvtAv1EncConfiguration *config_
     if (!strcmp(name, "texture-variance-thr"))
         return str_to_variance_thr(value, &config_struct->texture_variance_thr);
 
-    if (!strcmp(name, "balancing-luminance-q-bias"))
-        return str_to_balancing_luminance_q_bias(value, config_struct);
-
-    if (!strcmp(name, "balancing-mg-dist-q-bias"))
-        return str_to_balancing_mg_dist_noise_level_q_bias(value, &config_struct->balancing_mg_dist_q_bias);
-    if (!strcmp(name, "balancing-noise-level-q-bias"))
-        return str_to_balancing_mg_dist_noise_level_q_bias(value, &config_struct->balancing_noise_level_q_bias);
+    if (!strcmp(name, "balancing-mg-dist-r0-bias"))
+        return str_to_balancing_r0_beta_bias(value, &config_struct->balancing_mg_dist_r0_bias);
+    if (!strcmp(name, "balancing-noise-level-r0-bias"))
+        return str_to_balancing_r0_beta_bias(value, &config_struct->balancing_noise_level_r0_bias);
+    if (!strcmp(name, "balancing-luminance-beta-bias"))
+        return str_to_balancing_r0_beta_bias(value, &config_struct->balancing_luminance_beta_bias);
+    if (!strcmp(name, "balancing-variance-beta-bias"))
+        return str_to_balancing_r0_beta_bias(value, &config_struct->balancing_variance_beta_bias);
+    if (!strcmp(name, "balancing-tpl-intra-mode-beta-bias"))
+        return str_to_balancing_r0_beta_bias(value, &config_struct->balancing_tpl_intra_mode_beta_bias);
 
     // uint32_t fields
     const struct {
@@ -3139,7 +3121,6 @@ EB_API EbErrorType svt_av1_enc_parse_parameter(EbSvtAv1EncConfiguration *config_
         {"use-fixed-qindex-offsets", &config_struct->use_fixed_qindex_offsets},
         {"startup-mg-size", &config_struct->startup_mg_size},
         {"balancing-q-bias", &config_struct->balancing_q_bias},
-        {"balancing-tpl-intra-mode-beta-bias", &config_struct->balancing_tpl_intra_mode_beta_bias},
         {"variance-boost-strength", &config_struct->variance_boost_strength},
         {"variance-octile", &config_struct->variance_octile},
         {"frame-luma-bias", &config_struct->frame_luma_bias},

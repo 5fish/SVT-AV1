@@ -1130,8 +1130,11 @@ static void picture_parent_control_set_dctor(EbPtr ptr) {
 
     if (obj->variance)
         EB_FREE_2D(obj->variance);
+    // `--psy-bias` & `--balancing` Global
     if (obj->balancing_luminance)
         EB_FREE_ARRAY(obj->balancing_luminance);
+    if (obj->balancing_variance)
+        EB_FREE_ARRAY(obj->balancing_variance);
 
     if (obj->picture_histogram) {
         for (int region_in_picture_width_index = 0; region_in_picture_width_index < MAX_NUMBER_OF_REGIONS_IN_WIDTH;
@@ -1315,6 +1318,7 @@ static EbErrorType picture_parent_control_set_ctor(PictureParentControlSet *obje
             block_count = 1;
         EB_MALLOC_2D(object_ptr->variance, object_ptr->b64_total_count, block_count);
         EB_MALLOC_ARRAY(object_ptr->balancing_luminance, object_ptr->b64_total_count);
+        EB_MALLOC_ARRAY(object_ptr->balancing_variance, object_ptr->b64_total_count);
     }
     object_ptr->balancing_mg_dist = 0;
     if (init_data_ptr->calc_hist) {

@@ -1582,6 +1582,38 @@ void tpl_mc_flow_synthesizer(PictureParentControlSet *pcs_array[MAX_TPL_LA_SW], 
     }
     return;
 }
+// Copied from `get_sb_tpl_intra_stats` from `enc_mode_config.c`
+static double get_sb_tpl_intra_mode_ratio(PictureParentControlSet *pcs, uint32_t sb_index) {
+    const int aligned16_width = (pcs->aligned_width + 15) >> 4;
+    const int tpl_blk_size    = pcs->tpl_ctrls.dispenser_search_level == 0 ? 16
+                                    : pcs->tpl_ctrls.dispenser_search_level == 1 ? 32
+                                                                                 : 64;
+
+    // Get actual SB width (for cases of incomplete SBs)
+    SbGeom *sb_geom = &pcs->sb_geom[sb_index];
+    int     sb_cols = MAX(1, sb_geom->width / tpl_blk_size);
+    int     sb_rows = MAX(1, sb_geom->height / tpl_blk_size);
+    const uint32_t mb_origin_x = sb_geom->org_x;
+    const uint32_t mb_origin_y = sb_geom->org_y;
+
+    int intra_count = 0;
+
+    // Loop over all blocks in the SB
+    for (int i = 0; i < sb_rows; i++) {
+        TplSrcStats *tpl_src_stats_buffer =
+            &pcs->pa_me_data
+                ->tpl_src_stats_buffer[((mb_origin_y >> 4) + i) * aligned16_width + (mb_origin_x >> 4)];
+
+        for (int j = 0; j < sb_cols; j++) {
+            if (is_intra_mode(tpl_src_stats_buffer->best_mode))
+                intra_count++;
+
+            tpl_src_stats_buffer++;
+        }
+    }
+
+    return (double)intra_count / (sb_rows * sb_cols);
+}
 void svt_aom_generate_r0beta(PictureParentControlSet *pcs) {
     Av1Common          *cm                    = pcs->av1_cm;
     SequenceControlSet *scs                   = pcs->scs;
@@ -1621,22 +1653,22 @@ void svt_aom_generate_r0beta(PictureParentControlSet *pcs) {
                 (double)mc_dep_delta_base_sum / recrf_dist_base_sum);
 #endif
         int64_t balancing_q_bias_base;
-        if (scs->static_config.balancing_mg_dist_q_bias || scs->static_config.balancing_noise_level_q_bias)
+        if (scs->static_config.balancing_mg_dist_r0_bias || scs->static_config.balancing_noise_level_r0_bias)
             balancing_q_bias_base = (double)(recrf_dist_base_sum << 8) *
-                                    AOMMAX(scs->static_config.balancing_mg_dist_q_bias *
+                                    AOMMAX(scs->static_config.balancing_mg_dist_r0_bias *
                                            ((double)pcs->balancing_mg_dist * pcs->balancing_mg_dist) /
                                            ((double)pcs->balancing_mg_dist * pcs->balancing_mg_dist + (double)16 * 16 * 8 * 16 * 16 * 8),
-                                           scs->static_config.balancing_noise_level_q_bias *
+                                           scs->static_config.balancing_noise_level_r0_bias *
                                            ((double)pcs->noise_level * pcs->noise_level) /
                                            ((double)pcs->noise_level * pcs->noise_level + (double)16000 * 16000));
         else
             balancing_q_bias_base = recrf_dist_base_sum << 9;
-        mean_mc_dep_delta_base_sum = 
         mc_dep_delta_base_sum      = AOMMAX(mc_dep_delta_base_sum, balancing_q_bias_base);
         if (mc_dep_delta_base_sum > recrf_dist_base_sum << 9)
             mc_dep_delta_base_sum  = ((mc_dep_delta_base_sum - (recrf_dist_base_sum << 9)) >> 1) +
                                      ((mc_dep_delta_base_sum - (recrf_dist_base_sum << 9)) >> 2) +
                                      (recrf_dist_base_sum << 9);
+        mean_mc_dep_delta_base_sum = mc_dep_delta_base_sum;
     }
 
     mc_dep_cost_base = (recrf_dist_base_sum << RDDIV_BITS) + mc_dep_delta_base_sum;
@@ -1668,8 +1700,6 @@ void svt_aom_generate_r0beta(PictureParentControlSet *pcs) {
     const int32_t  mi_wide           = sb_mi_sz;
     if (scs->static_config.balancing_q_bias)
         mean_mc_dep_delta_base_sum   /= (double)picture_sb_width * picture_sb_height;
-    const int32_t  balancing_luminance_q_bias_base = CLIP3(0x50, 0x70, pcs->avg_luma);
-    int64_t        balancing_luminance_q_bias;
     for (uint32_t sb_y = 0; sb_y < picture_sb_height; ++sb_y) {
         for (uint32_t sb_x = 0; sb_x < picture_sb_width; ++sb_x) {
             uint16_t  mi_row           = pcs->sb_geom[sb_y * picture_sb_width + sb_x].org_y >> 2;
@@ -1696,16 +1726,32 @@ void svt_aom_generate_r0beta(PictureParentControlSet *pcs) {
                 }
             }
 
-            if (scs->static_config.balancing_luminance_q_bias) {
-                balancing_luminance_q_bias = mc_dep_delta_sum *
-                                             ((scs->static_config.balancing_luminance_q_bias *
-                                               CLIP3(0, 0x40, balancing_luminance_q_bias_base - pcs->balancing_luminance[sb_y * picture_sb_width + sb_x])) >>
-                                              6);
-                balancing_luminance_q_bias = AOMMIN(balancing_luminance_q_bias, (recrf_dist_sum << (9 - 3)) * AOMMAX(scs->static_config.balancing_luminance_q_bias, 10));
-                mc_dep_delta_sum += balancing_luminance_q_bias;
+            // fprintf(stderr, "%.02f %.02f\n", pcs->balancing_luminance[sb_y * picture_sb_width + sb_x], pcs->balancing_variance[sb_y * picture_sb_width + sb_x]);
+            double balancing_q_bias_base;
+            if (scs->static_config.balancing_luminance_beta_bias || scs->static_config.balancing_variance_beta_bias) {
+                const double balancing_luminance_a = 0x80 * (0xFF - pcs->balancing_luminance[sb_y * picture_sb_width + sb_x]);
+                const double balancing_luminance_b = pcs->balancing_luminance[sb_y * picture_sb_width + sb_x] * (0xFF - 0x80);
+                const double balancing_luminance_aa = balancing_luminance_a * sqrt(balancing_luminance_a);
+                const double balancing_luminance_bb = balancing_luminance_b * sqrt(balancing_luminance_b);
+                const double tpl_intra_mode_ratio = get_sb_tpl_intra_mode_ratio(pcs, sb_y * picture_sb_width + sb_x);
+                const double balancing_tpl_intra_mode_a = 0.5 * (1.0 - tpl_intra_mode_ratio);
+                const double balancing_tpl_intra_mode_b = tpl_intra_mode_ratio * (1.0 - 0.5);
+                const double balancing_tpl_intra_mode_aa = balancing_tpl_intra_mode_a * sqrt(balancing_tpl_intra_mode_a);
+                const double balancing_tpl_intra_mode_bb = balancing_tpl_intra_mode_b * sqrt(balancing_tpl_intra_mode_b);
+                balancing_q_bias_base = (double)(recrf_dist_sum << 8) *
+                                        AOMMAX(AOMMAX(scs->static_config.balancing_luminance_beta_bias *
+                                                      balancing_luminance_aa / (balancing_luminance_aa + balancing_luminance_bb),
+                                                      scs->static_config.balancing_variance_beta_bias *
+                                                      ((double)0x10 * 0x10) /
+                                                      ((double)0x10 * 0x10 + pcs->balancing_variance[sb_y * picture_sb_width + sb_x] * pcs->balancing_variance[sb_y * picture_sb_width + sb_x])),
+                                                      scs->static_config.balancing_tpl_intra_mode_beta_bias *
+                                                      balancing_tpl_intra_mode_bb / (balancing_tpl_intra_mode_aa + balancing_tpl_intra_mode_bb));
             }
+            else
+                balancing_q_bias_base = 0;
 
             if (scs->static_config.balancing_q_bias) {
+                mc_dep_delta_sum = AOMMAX(mc_dep_delta_sum, balancing_q_bias_base);
                 mc_dep_delta_sum = AOMMAX(mc_dep_delta_sum,
                                           AOMMIN(mean_mc_dep_delta_base_sum, recrf_dist_sum << 15));
                 if (mc_dep_delta_sum > recrf_dist_sum << 9)

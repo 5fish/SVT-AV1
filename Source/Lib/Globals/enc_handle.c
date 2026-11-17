@@ -4022,27 +4022,10 @@ static void set_param_based_on_input(SequenceControlSet *scs)
             scs->static_config.balancing_r0_dampening_layer     = 1;
     }
 
-    if (scs->static_config.balancing_luminance_q_bias == UINT8_DEFAULT) {
-        if (scs->static_config.balancing_q_bias) {
-            if (scs->static_config.lineart_psy_bias >= 5.0)
-                scs->static_config.balancing_luminance_q_bias = 60;
-            else
-                scs->static_config.balancing_luminance_q_bias = 40;
-        }
-        else
-            scs->static_config.balancing_luminance_q_bias     = 0;
-    }
     if (scs->static_config.balancing_luminance_lambda_bias == DEFAULT)
         scs->static_config.balancing_luminance_lambda_bias = 0.0;
     if (scs->static_config.balancing_texture_lambda_bias == DEFAULT)
         scs->static_config.balancing_texture_lambda_bias = 0.0;
-
-    if (scs->static_config.balancing_tpl_intra_mode_beta_bias == UINT8_DEFAULT) {
-        if (scs->static_config.noise_psy_bias >= 1.0)
-            scs->static_config.balancing_tpl_intra_mode_beta_bias = 1;
-        else
-            scs->static_config.balancing_tpl_intra_mode_beta_bias = 0;
-    }
 
     if (scs->static_config.enable_variance_boost == UINT8_DEFAULT) {
         if ((scs->static_config.lineart_psy_bias >= 1.0) || (scs->static_config.texture_psy_bias >= 1.0))
@@ -4302,7 +4285,8 @@ static void set_param_based_on_input(SequenceControlSet *scs)
         scs->static_config.balancing_q_bias                  ||
         scs->static_config.lineart_psy_bias >= 1.0           ||
         scs->static_config.texture_psy_bias >= 1.0           ||
-        scs->static_config.balancing_luminance_q_bias        ||
+        scs->static_config.balancing_luminance_beta_bias     ||
+        scs->static_config.balancing_variance_beta_bias      ||
         scs->static_config.balancing_luminance_lambda_bias   ||
         scs->static_config.balancing_texture_lambda_bias     ||
         scs->static_config.texture_ac_bias != scs->static_config.ac_bias ||
@@ -4546,7 +4530,7 @@ static void set_param_based_on_input(SequenceControlSet *scs)
         scs->enable_dg = 0;
     else
         scs->enable_dg = scs->static_config.enable_dg;
-    if (scs->static_config.balancing_mg_dist_q_bias) {
+    if (scs->static_config.balancing_mg_dist_r0_bias) {
         if (scs->static_config.psy_bias_dg != -2)
             scs->static_config.psy_bias_dg = 1;
         scs->static_config.enable_dg = 1;
@@ -4608,7 +4592,8 @@ static void set_param_based_on_input(SequenceControlSet *scs)
         scs->static_config.enable_variance_boost             ||
         scs->static_config.lineart_psy_bias >= 1.0           ||
         scs->static_config.texture_psy_bias >= 1.0           ||
-        scs->static_config.balancing_luminance_q_bias        ||
+        scs->static_config.balancing_luminance_beta_bias     ||
+        scs->static_config.balancing_variance_beta_bias      ||
         scs->static_config.balancing_luminance_lambda_bias   ||
         scs->static_config.balancing_texture_lambda_bias     ||
         scs->static_config.texture_ac_bias != scs->static_config.ac_bias ||
@@ -4818,14 +4803,14 @@ static void copy_api_from_app(
 
     // Balancing Q bias
     scs->static_config.balancing_q_bias = config_struct->balancing_q_bias;
-    scs->static_config.balancing_luminance_q_bias = config_struct->balancing_luminance_q_bias;
-    scs->static_config.balancing_noise_level_q_bias = config_struct->balancing_noise_level_q_bias;
-    scs->static_config.balancing_mg_dist_q_bias = config_struct->balancing_mg_dist_q_bias;
+    scs->static_config.balancing_noise_level_r0_bias = config_struct->balancing_noise_level_r0_bias;
+    scs->static_config.balancing_mg_dist_r0_bias = config_struct->balancing_mg_dist_r0_bias;
+    scs->static_config.balancing_luminance_beta_bias = config_struct->balancing_luminance_beta_bias;
+    scs->static_config.balancing_variance_beta_bias = config_struct->balancing_variance_beta_bias;
+    scs->static_config.balancing_tpl_intra_mode_beta_bias = config_struct->balancing_tpl_intra_mode_beta_bias;
     scs->static_config.balancing_luminance_lambda_bias = config_struct->balancing_luminance_lambda_bias;
     scs->static_config.balancing_texture_lambda_bias = config_struct->balancing_texture_lambda_bias;
     scs->static_config.balancing_r0_dampening_layer = config_struct->balancing_r0_dampening_layer;
-
-    scs->static_config.balancing_tpl_intra_mode_beta_bias = config_struct->balancing_tpl_intra_mode_beta_bias;
 
     // `-psy-bias`
     scs->static_config.lineart_psy_bias = config_struct->lineart_psy_bias;

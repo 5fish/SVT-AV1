@@ -1238,23 +1238,35 @@ typedef struct EbSvtAv1EncConfiguration {
      */
     uint8_t balancing_q_bias;
     /**
-     * @brief balancing mg dist Q bias
+     * @brief balancing mg dist r0 bias
      * 0: disabled
-     * Calculated from `--baluancing-mg-dist-q-bias` commandline parameter via `pow(2, "balancing-mg-dist-q-bias")`
+     * Calculated from `--baluancing-mg-dist-r0-bias` commandline parameter via `pow(2, "balancing-mg-dist-r0-bias") - 1`
      */
-    double balancing_mg_dist_q_bias;
+    double balancing_mg_dist_r0_bias;
     /**
-     * @brief balancing noise level Q bias
+     * @brief balancing noise level r0 bias
      * 0: disabled
-     * Calculated from `--baluancing-noise-level-q-bias` commandline parameter via `pow(2, "balancing-noise-level-q-bias")`
+     * Calculated from `--baluancing-noise-level-r0-bias` commandline parameter via `pow(2, "balancing-noise-level-r0-bias") - 1`
      */
-    double balancing_noise_level_q_bias;
+    double balancing_noise_level_r0_bias;
     /**
-     * @brief Enable balancing luminance Q bias
+     * @brief Enable balancing luminance beta bias
      * 0: disabled
-     * Calculated from `--balancing-luminance-q-bias` commandline parameter via `"balancing-luminance-q-bias" * 10`.
+     * Calculated from `--baluancing-luminance-beta-bias` commandline parameter via `pow(2, "balancing-luminance-beta-bias") - 1`
      */
-    uint8_t balancing_luminance_q_bias;
+    double balancing_luminance_beta_bias;
+    /**
+     * @brief Enable balancing variance beta bias
+     * 0: disabled
+     * Calculated from `--baluancing-variance-beta-bias` commandline parameter via `pow(2, "balancing-variance-beta-bias") - 1`
+     */
+    double balancing_variance_beta_bias;
+    /**
+     * @brief Enable balancing tpl intra mode beta bias
+     * 0: disabled
+     * Calculated from `--baluancing-tpl-intra-mode-beta-bias` commandline parameter via `pow(2, "balancing-tpl-intra-mode-beta-bias") - 1`
+     */
+    double balancing_tpl_intra_mode_beta_bias;
     /**
      * @brief Enable balancing luminance lambda bias
      * Min value is 0.0
@@ -1276,14 +1288,6 @@ typedef struct EbSvtAv1EncConfiguration {
      * Max value when enabled is 0.
      */
     int8_t balancing_r0_dampening_layer;
-
-    /**
-     * @brief Boost a Super Block if TPL search result favours intra instead of inter prediction modes.
-     * 0: disabled
-     * 1: enabled
-     * Default is 1
-     */
-    uint8_t balancing_tpl_intra_mode_beta_bias;
 
     /**
      * @brief Enable sharp-tx, a toggle that enables much sharper transforms decisions for higher fidelity output,
