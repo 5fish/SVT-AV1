@@ -294,6 +294,8 @@
 #define BALANCING_VARIANCE_BETA_BIAS_TOKEN "--balancing-variance-beta-bias"
 #define BALANCING_TPL_INTRA_MODE_BETA_BIAS_TOKEN "--balancing-tpl-intra-mode-beta-bias"
 #define BALANCING_R0_DAMPENING_LAYER_TOKEN "--balancing-r0-dampening-layer"
+// `--psy-bias` & `--balancing` MD Quant
+#define PSY_BIAS_SHARPNESS_ROUNDING_TOKEN "--psy-bias-sharpness-rounding"
 
 static EbErrorType validate_error(EbErrorType err, const char* token, const char* value) {
     switch (err) {
@@ -1400,6 +1402,8 @@ ConfigDescription config_entry_psy_bias_balancing[] = {
     {BALANCING_VARIANCE_BETA_BIAS_TOKEN, "Boost rate control via beta in super blocks with low variance"},
     {BALANCING_TPL_INTRA_MODE_BETA_BIAS_TOKEN, "Boost rate control via beta in super blocks where TPL search favours intra instead of inter prediction modes"},
     {BALANCING_R0_DAMPENING_LAYER_TOKEN, "Dampen r0-based rate control in frames with temporal layer higher than or equal to hierarchical levels + balancing-r0-dampening-layer."},
+    // `--psy-bias` & `--balancing` MD Quant
+    {PSY_BIAS_SHARPNESS_ROUNDING_TOKEN, "Quantisation rounding factor"},
 };
 
 ConfigEntry config_entry[] = {
@@ -1718,6 +1722,8 @@ ConfigEntry config_entry[] = {
     {BALANCING_VARIANCE_BETA_BIAS_TOKEN, "BalancingVarianceBetaBias", set_cfg_generic_token},
     {BALANCING_TPL_INTRA_MODE_BETA_BIAS_TOKEN, "BalancingTPLIntraModeBetaBias", set_cfg_generic_token},
     {BALANCING_R0_DAMPENING_LAYER_TOKEN, "BalancingR0DampeningLayer", set_cfg_generic_token},
+    // `--psy-bias` & `--balancing` MD Quant
+    {PSY_BIAS_SHARPNESS_ROUNDING_TOKEN, "PsyBiasSharpnessRounding", set_cfg_generic_token},
 
     // Termination
     {NULL, NULL, NULL}};

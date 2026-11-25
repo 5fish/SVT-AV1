@@ -1480,6 +1480,8 @@ typedef struct EbSvtAv1EncConfiguration {
     double balancing_variance_beta_bias;
     double balancing_tpl_intra_mode_beta_bias;
     int8_t balancing_r0_dampening_layer;
+    // `--psy-bias` & `--balancing` MD Quant
+    int32_t psy_bias_sharpness_rounding;
 
     /* The trailing 128-byte padding reserve is fully consumed by the film-grain
      * and mc-denoise fields above, so this struct now grows with new fields.

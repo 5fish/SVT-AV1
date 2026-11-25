@@ -715,6 +715,7 @@ Please check [README](../README.md#usage) for the recommended usage.
 | **BalancingVarianceBetaBias**  | --balancing-variance-beta-bias | [0.0-8.0] | 2.5 | Boost rate control via beta in super blocks with low variance |
 | **BalancingTPLIntraModeBetaBias** | --balancing-tpl-intra-mode-beta-bias | [0.0-8.0] | 3.0 | Boost rate control via beta in super blocks where TPL search favours intra instead of inter prediction modes |
 | **BalancingR0DampeningLayer** | --balancing-r0-dampening-layer | [-5-1] | 1 | Dampen r0-based rate control in frames with temporal layer higher than or equal to hierarchical levels + `--balancing-r0-dampening-layer`. This affects a wide range of features and applies with or without `--balancing-bias`. |
+| **PsyBiasSharpnessRounding** | --psy-bias-sharpness-rounding | [1-256] | 64 | Quantisation rounding factor |
 
 ### `--lineart-psy-bias`
 
@@ -722,6 +723,7 @@ Please check [README](../README.md#usage) for the recommended usage.
 | :-- | :--: | :--: | :--: | :--: | :--: | :--: | :--: | :-- |
 | [global] `--balancing-bias 1` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overridden |
 | [md quant] `--chroma-qm-min 11` | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overridden |
+| [md quant] `--psy-bias-sharpness-rounding 54` | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overridden |
 | [md quant] `--noise-norm-strength 0` | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | Can be overridden |
 | [md search] use better `pic_obmc_level` | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | |
 | [md search] alternative tx search grouping | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | |
@@ -741,6 +743,7 @@ Please check [README](../README.md#usage) for the recommended usage.
 | [global] `--balancing-bias 1` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overridden |
 | [rc] `--balancing-r0-dampening-layer -3` | ✕ | ✕ | ✕ | ✕ | ◯ | ◯ | ◯ | Only applies when `--balancing-bias 1`; Overrides `--balancing-bias` default; Can be overridden |
 | [md quant] `--qm-min 9` | ✕ | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | Overrides `--lineart-psy-bias` default; Can be overridden |
+| [md quant] `--psy-bias-sharpness-rounding 54` | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overridden |
 | [md quant] `--noise-norm-strength` | － | － | `1` | `2` | `4` | `4` | `4` | Overrides `--lineart-psy-bias` default; Can be overridden |
 | [md search] alternative tx search grouping | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | |
 | [md search] `NEARESTMV` rate adjustment | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | |

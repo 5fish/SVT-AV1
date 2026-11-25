@@ -4238,6 +4238,10 @@ static void set_param_based_on_input(SequenceControlSet* scs) {
                     : scs->static_config.texture_psy_bias >= 3 ? 1
                         : scs->static_config.lineart_psy_bias >= 4 ? 0
                                                                    : 1;
+    if (scs->static_config.psy_bias_sharpness_rounding == DEFAULT)
+        scs->static_config.psy_bias_sharpness_rounding =
+            scs->static_config.lineart_psy_bias >= 2 || scs->static_config.texture_psy_bias >= 2 ? 54
+                                                                                                 : 64;
     // `--psy-bias` & `--balancing` FGS
     if (scs->static_config.photon_noise_iso == UINT32_DEFAULT)
         scs->static_config.photon_noise_iso =
@@ -5437,6 +5441,8 @@ static void copy_api_from_app(SequenceControlSet* scs, EbSvtAv1EncConfiguration*
     scs->static_config.balancing_variance_beta_bias       = config_struct->balancing_variance_beta_bias;
     scs->static_config.balancing_tpl_intra_mode_beta_bias = config_struct->balancing_tpl_intra_mode_beta_bias;
     scs->static_config.balancing_r0_dampening_layer       = config_struct->balancing_r0_dampening_layer;
+    // `--psy-bias` & `--balancing` MD Quant
+    scs->static_config.psy_bias_sharpness_rounding = config_struct->psy_bias_sharpness_rounding;
 
     // Override settings for Still IQ tune
     if (scs->static_config.tune == TUNE_IQ) {

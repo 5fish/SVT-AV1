@@ -1271,6 +1271,12 @@ EbErrorType svt_av1_verify_settings(SequenceControlSet* scs) {
         SVT_ERROR("balancing-r0-dampening-layer must be between -5 and 1\n");
         return_error = EB_ErrorBadParameter;
     }
+    // `--psy-bias` & `--balancing` MD Quant
+    if (!(config->psy_bias_sharpness_rounding >= 1 && config->psy_bias_sharpness_rounding <= 256) &&
+        config->psy_bias_sharpness_rounding != DEFAULT) {
+        SVT_ERROR("psy-bias-sharpness-rounding must be between 1 and 256\n");
+        return_error = EB_ErrorBadParameter;
+    }
 
     return return_error;
 }
@@ -1515,6 +1521,8 @@ EbErrorType svt_av1_set_default_params(EbSvtAv1EncConfiguration* config_ptr) {
     config_ptr->balancing_variance_beta_bias       = pow(2, 2.5) - 1;
     config_ptr->balancing_tpl_intra_mode_beta_bias = pow(2, 3) - 1;
     config_ptr->balancing_r0_dampening_layer       = INT8_ALT_DEFAULT;
+    // `--psy-bias` & `--balancing` MD Quant
+    config_ptr->psy_bias_sharpness_rounding        = DEFAULT;
 
     return return_error;
 }
@@ -3299,6 +3307,8 @@ EB_API EbErrorType svt_av1_enc_parse_parameter(EbSvtAv1EncConfiguration* config_
         {"noise-chroma", &config_struct->noise_strength_chroma},
         // `--psy-bias` & `--balancing` Global
         {"noise-level-thr", &config_struct->noise_level_thr},
+        // `--psy-bias` & `--balancing` MD Quant
+        {"psy-bias-sharpness-rounding", &config_struct->psy_bias_sharpness_rounding},
     };
 
     const size_t int_opts_size = sizeof(int_opts) / sizeof(int_opts[0]);

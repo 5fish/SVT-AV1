@@ -127,6 +127,9 @@ void svt_av1_build_quantizer(PictureParentControlSet* pcs, EbBitDepth bit_depth,
 
         for (i = 0; i < 2; ++i) {
             int32_t qrounding_factor_fp = 64;
+            // `--psy-bias` MD Quant
+            if (pcs->scs->static_config.psy_bias_sharpness_rounding != DEFAULT)
+                qrounding_factor_fp     = pcs->scs->static_config.psy_bias_sharpness_rounding;
             quant_qtx                   = i == 0 ? svt_aom_dc_quant_qtx(q, y_dc_delta_q, bit_depth)
                                                  : svt_aom_ac_quant_qtx(q, 0, bit_depth);
             svt_aom_invert_quant(&quants->y_quant[q][i], &quants->y_quant_shift[q][i], quant_qtx);
