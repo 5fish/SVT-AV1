@@ -777,8 +777,6 @@ These default changes apply regardless of `--psy-bias` used.
 
 | `--balancing-bias 1` | Note |
 | :-- | :-- |
-| [global] `base_q_idx` based `--crf` threshold | |
-| [global] `--balancing` incomplete hierarchical structure handling | |
 | [global] `--balancing` noise level | |
 | [pd] `--balancing` scd | |
 | [pd] `--psy-bias-dynamic-mg 1` | Can only be otherwise set to `-2` which is the print mode |
@@ -789,6 +787,7 @@ These default changes apply regardless of `--psy-bias` used.
 | [rc] `--luminance-qp-bias 0` | |
 | [rc] `--enable-variance-boost 0` | Can be overridden |
 | [rc] `--low-q-taper 0` | |
+| [md search] `base_q_idx` based `--crf` threshold | |
 
 ### `--crf-thr-offset`
 

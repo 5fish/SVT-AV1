@@ -1589,6 +1589,9 @@ void set_md_stage_counts(PictureControlSet* pcs, ModeDecisionContext* ctx) {
                      ctx->md_stage_2_count,
                      ctx->md_stage_3_count,
                      pic_type,
+                     // `--balancing` MD Search
+                     pcs->scs->static_config.balancing_bias ?
+                     pcs->ppcs->frm_hdr.quantization_params.base_q_idx >> 2 :
                      svt_av1_get_effective_qp(pcs->scs, pcs->ppcs->picture_number).qp);
 
     // Step 2: derive bypass_stage1 flags
@@ -3454,6 +3457,9 @@ static void pme_search(PictureControlSet* pcs, ModeDecisionContext* ctx, EbPictu
         svt_aom_get_qp_based_th_scaling_factors(pcs->scs->qp_based_th_scaling_ctrls.pme_qp_based_th_scaling,
                                                 &q_weight,
                                                 &q_weight_denom,
+                                                // `--balancing` MD Search
+                                                pcs->scs->static_config.balancing_bias ?
+                                                pcs->ppcs->frm_hdr.quantization_params.base_q_idx >> 2 :
                                                 svt_av1_get_effective_qp(pcs->scs, pcs->ppcs->picture_number).qp);
         full_pel_search_width  = MAX(3, DIVIDE_AND_ROUND(full_pel_search_width * q_weight, q_weight_denom));
         full_pel_search_height = MAX(3, DIVIDE_AND_ROUND(full_pel_search_height * q_weight, q_weight_denom));
@@ -4895,6 +4901,9 @@ static void tx_type_search(PictureControlSet* pcs, ModeDecisionContext* ctx, Mod
         svt_aom_get_qp_based_th_scaling_factors(pcs->scs->qp_based_th_scaling_ctrls.txt_qp_based_th_scaling,
                                                 &q_weight,
                                                 &q_weight_denom,
+                                                // `--balancing` MD Search
+                                                pcs->scs->static_config.balancing_bias ?
+                                                pcs->ppcs->frm_hdr.quantization_params.base_q_idx >> 2 :
                                                 svt_av1_get_effective_qp(pcs->scs, pcs->ppcs->picture_number).qp);
         satd_early_exit_th = DIVIDE_AND_ROUND(satd_early_exit_th * q_weight, q_weight_denom);
     }
@@ -8459,6 +8468,9 @@ static void post_mds0_nic_pruning(PictureControlSet* pcs, ModeDecisionContext* c
     svt_aom_get_qp_based_th_scaling_factors(pcs->scs->qp_based_th_scaling_ctrls.nic_pruning_qp_based_th_scaling,
                                             &q_weight,
                                             &q_weight_denom,
+                                            // `--balancing` MD Search
+                                            pcs->scs->static_config.balancing_bias ?
+                                            pcs->ppcs->frm_hdr.quantization_params.base_q_idx >> 2 :
                                             svt_av1_get_effective_qp(pcs->scs, pcs->ppcs->picture_number).qp);
     uint64_t mds1_class_th            = (pcs->slice_type == I_SLICE || pruning_ctrls.mds1_class_th == (uint64_t)~0)
         ? (uint64_t)~0
@@ -8527,6 +8539,9 @@ static void post_mds1_nic_pruning(PictureControlSet* pcs, ModeDecisionContext* c
     svt_aom_get_qp_based_th_scaling_factors(pcs->scs->qp_based_th_scaling_ctrls.nic_pruning_qp_based_th_scaling,
                                             &q_weight,
                                             &q_weight_denom,
+                                            // `--balancing` MD Search
+                                            pcs->scs->static_config.balancing_bias ?
+                                            pcs->ppcs->frm_hdr.quantization_params.base_q_idx >> 2 :
                                             svt_av1_get_effective_qp(pcs->scs, pcs->ppcs->picture_number).qp);
     const uint64_t mds2_cand_th = (pruning_ctrls.mds2_cand_base_th == (uint64_t)~0)
         ? pruning_ctrls.mds2_cand_base_th
@@ -8608,6 +8623,9 @@ static void post_mds2_nic_pruning(PictureControlSet* pcs, ModeDecisionContext* c
     svt_aom_get_qp_based_th_scaling_factors(pcs->scs->qp_based_th_scaling_ctrls.nic_pruning_qp_based_th_scaling,
                                             &q_weight,
                                             &q_weight_denom,
+                                            // `--balancing` MD Search
+                                            pcs->scs->static_config.balancing_bias ?
+                                            pcs->ppcs->frm_hdr.quantization_params.base_q_idx >> 2 :
                                             svt_av1_get_effective_qp(pcs->scs, pcs->ppcs->picture_number).qp);
     const uint64_t mds3_cand_th = (pruning_ctrls.mds3_cand_base_th == (uint64_t)~0)
         ? pruning_ctrls.mds3_cand_base_th

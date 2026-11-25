@@ -5487,6 +5487,9 @@ static void set_nsq_search_ctrls(PictureControlSet* pcs, ModeDecisionContext* ct
     svt_aom_get_qp_based_th_scaling_factors(pcs->scs->qp_based_th_scaling_ctrls.nsq_qp_based_th_scaling,
                                             &q_weight,
                                             &q_weight_denom,
+                                            // `--balancing` MD Search
+                                            pcs->scs->static_config.balancing_bias ?
+                                            pcs->ppcs->frm_hdr.quantization_params.base_q_idx >> 2 :
                                             svt_av1_get_effective_qp(pcs->scs, pcs->ppcs->picture_number).qp);
     nsq_search_ctrls->component_multiple_th = DIVIDE_AND_ROUND(nsq_search_ctrls->component_multiple_th * q_weight,
                                                                q_weight_denom);
@@ -7250,6 +7253,9 @@ static void get_max_block_size_rtc(PictureControlSet* pcs, ModeDecisionContext* 
     svt_aom_get_qp_based_th_scaling_factors(pcs->scs->qp_based_th_scaling_ctrls.cap_max_size_qp_based_th_scaling,
                                             &q_weight,
                                             &q_weight_denom,
+                                            // `--balancing` MD Search
+                                            pcs->scs->static_config.balancing_bias ?
+                                            pcs->ppcs->frm_hdr.quantization_params.base_q_idx >> 2 :
                                             svt_av1_get_effective_qp(pcs->scs, pcs->ppcs->picture_number).qp);
 
     uint32_t me_var_th = (base_me_var_th == (uint32_t)~0) ? base_me_var_th
@@ -8864,7 +8870,10 @@ static void set_pic_pd0_lvl_default(PictureControlSet* pcs, EncMode enc_mode) {
     const uint8_t            ldp0_lvl_offset[4] = {2, 2, 1, 0};
     uint8_t                  qp_band_idx        = 0;
     const uint8_t            seq_qp_mod         = pcs->scs->seq_qp_mod;
-    const uint8_t            effective_qp       = svt_av1_get_effective_qp(pcs->scs, ppcs->picture_number).qp;
+    // `--balancing` MD Search
+    const uint8_t            effective_qp       = pcs->scs->static_config.balancing_bias ?
+                                                  ppcs->frm_hdr.quantization_params.base_q_idx >> 2 :
+                                                  svt_av1_get_effective_qp(pcs->scs, ppcs->picture_number).qp;
 
     if (effective_qp <= 27) {
         qp_band_idx = 0;
@@ -9190,7 +9199,10 @@ void svt_aom_sig_deriv_mode_decision_config_default(SequenceControlSet* scs, Pic
     const uint32_t           hierarchical_levels = ppcs->hierarchical_levels;
     const bool               transition_present  = (ppcs->transition_present == 1);
     const bool               is_not_last_layer   = !ppcs->is_highest_layer;
-    const uint32_t           sq_qp               = svt_av1_get_effective_qp(scs, ppcs->picture_number).qp;
+    // `--balancing` MD Search
+    const uint32_t           sq_qp               = scs->static_config.balancing_bias ?
+                                                   ppcs->frm_hdr.quantization_params.base_q_idx >> 2 :
+                                                   svt_av1_get_effective_qp(scs, ppcs->picture_number).qp;
 
     //MFMV
     uint8_t mfmv_level = 0;
@@ -9811,7 +9823,10 @@ void svt_aom_sig_deriv_mode_decision_config_rtc(SequenceControlSet* scs, Picture
     const uint8_t            sc_class5          = ppcs->sc_class5;
     const uint8_t            fast_decode        = scs->static_config.fast_decode;
     const bool               transition_present = (ppcs->transition_present == 1);
-    const uint32_t           sq_qp              = svt_av1_get_effective_qp(scs, ppcs->picture_number).qp;
+    // `--balancing` MD Search
+    const uint32_t           sq_qp              = scs->static_config.balancing_bias ?
+                                                  ppcs->frm_hdr.quantization_params.base_q_idx >> 2 :
+                                                  svt_av1_get_effective_qp(scs, ppcs->picture_number).qp;
     const bool               use_flat_ipp       = ppcs->hierarchical_levels == 0; // rtc path, so rtc is true
 #if FTR_RTC_INTER_PALETTE
     // Frame-idle gate for inter-frame palette. norm_me_dist is written post-ME (initial RC), so this
