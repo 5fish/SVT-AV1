@@ -115,8 +115,8 @@ For more information on valid values for specific keys, refer to the [EbEncSetti
 | **AcBias**                       | --ac-bias                        | [0.0-8.0]  | 1.0         | Sets the strength of the internal RD metric to bias toward high-frequency error (helps with texture preservation and film grain retention)           |
 | **TxBias**                       | --tx-bias                        | [0-3]      | 0           | Transform size/type bias mode [0: disabled, 1: full, 2: transform size only, 3: interpolation filter only]                                           |
 | **NoiseAdaptiveFiltering**       | --noise-adaptive-filtering       | [0-4]      | 2           | Controls noise detection which disables CDEF/restoration when noise level is high enough [0: off, 1: both CDEF and restoration noise-adaptive filtering are on, 2: default tune behavior, 3: noise-adaptive CDEF only, 4: noise-adaptive restoration only] |
-| **AltCDEF**                      | --enable-alt-cdef                | [0-3]      | 0           | Enable alternative CDEF biases                                                                                                                       |
-| **AltDLF**                       | --enable-alt-dlf                 | [0-3]      | 0           | Enable alternative DLF biases                                                                                                                        |
+| **CDEFBias**                     | --cdef-bias                      | [0-3]      | 3           | Enable CDEF bias                                                                                                                                     |
+| **DLFBias**                      | --dlf-bias                       | [0-3]      | 3           | Enable DLF bias                                                                                                                                      |
 | **UseFixedQIndexOffsets**        | --use-fixed-qindex-offsets       | [0-2]      | 0           | Overwrite the encoder default hierarchical layer based QP assignment and use fixed Q index offsets                                                   |
 | **KeyFrameQIndexOffset**         | --key-frame-qindex-offset        | [-64-63]   | 0           | Overwrite the encoder default keyframe Q index assignment                                                                                            |
 | **KeyFrameChromaQIndexOffset**   | --key-frame-chroma-qindex-offset | [-64-63]   | 0           | Overwrite the encoder default chroma keyframe Q index assignment                                                                                     |
@@ -728,6 +728,9 @@ Please check [README](../README.md#usage) for the recommended usage.
 | [md search] use better `pic_obmc_level` | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | |
 | [md search] alternative tx search grouping | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | |
 | [md search] `NEARESTMV` rate adjustment | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | |
+| [dlf] `--enable-dlf 0` | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overridden |
+| [cdef] `--enable-cdef 0` | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overridden |
+| [rest] `--enable-restoration 0` | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overridden |
 | [fgs] `--photon-noise 200` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overridden by applying FGS via any parameters or `--photon-noise 0` |
 
 <ins>To use `--lineart-psy-bias`</ins>, select a level based on how much effort you want to spend on lineart retention. Specifically:  
@@ -748,6 +751,9 @@ Please check [README](../README.md#usage) for the recommended usage.
 | [md search] alternative tx search grouping | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | |
 | [md search] `NEARESTMV` rate adjustment | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | |
 | [md search] `GLOBALMV` bias | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | |
+| [dlf] `--enable-dlf 0` | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overridden |
+| [cdef] `--enable-cdef 0` | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overridden |
+| [rest] `--enable-restoration 0` | ✕ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overridden |
 | [fgs] `--photon-noise 200` | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | ◯ | Can be overridden by applying FGS via any parameters or `--photon-noise 0` |
 
 <ins>To use `--texture-psy-bias`</ins>, select a level based on how much effort you want to spend on texture retention. Specifically:  
@@ -773,6 +779,8 @@ These default changes apply regardless of `--psy-bias` used.
 | [md quant] `--chroma-qm-min 10` | Can be overridden |
 | [md quant] `--chroma-qm-max 15` | Can be overridden |
 | [md quant] `--sharpness 2` | Default from original -PSY implementation; Can be overridden |
+| [dlf] `--dlf-bias 3` | Can be overridden |
+| [cdef] `--cdef-bias 3` | Can be overridden |
 
 ### `--balancing-bias`
 

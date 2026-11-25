@@ -586,7 +586,7 @@ typedef struct EbSvtAv1EncConfiguration {
      * 2: more accurate (slower)
      * 3: most accurate (very slow)
      */
-    uint8_t enable_dlf_flag;
+    int8_t enable_dlf_flag;
 
     /* Film grain analysis strength
     * -1: automatic, 0: off, 1-50: manual strength

@@ -413,7 +413,7 @@ EbErrorType svt_av1_verify_settings(SequenceControlSet* scs) {
             "be recommended in a chunked encoding scenario.\n");
     }
 
-    if (config->enable_dlf_flag > 3) {
+    if (!(config->enable_dlf_flag >= 0 && config->enable_dlf_flag <= 3) && config->enable_dlf_flag != DEFAULT) {
         SVT_ERROR("Invalid LoopFilterEnable. LoopFilterEnable must be [0 - 3]\n");
         return_error = EB_ErrorBadParameter;
     }
@@ -1219,12 +1219,12 @@ EbErrorType svt_av1_verify_settings(SequenceControlSet* scs) {
     }
 
     if (config->alt_cdef > 3) {
-        SVT_ERROR("enable-alt-cdef must be between 0 and 3\n");
+        SVT_ERROR("cdef-bias must be between 0 and 3\n");
         return_error = EB_ErrorBadParameter;
     }
 
     if (config->alt_dlf > 3) {
-        SVT_ERROR("enable-alt-dlf must be between 0 and 3\n");
+        SVT_ERROR("dlf-bias must be between 0 and 3\n");
         return_error = EB_ErrorBadParameter;
     }
 
@@ -1334,7 +1334,7 @@ EbErrorType svt_av1_set_default_params(EbSvtAv1EncConfiguration* config_ptr) {
     config_ptr->intra_refresh_type           = 2;
     config_ptr->hierarchical_levels          = HIERARCHICAL_LEVELS_AUTO;
     config_ptr->pred_structure               = RANDOM_ACCESS;
-    config_ptr->enable_dlf_flag              = 1;
+    config_ptr->enable_dlf_flag              = DEFAULT;
     config_ptr->cdef_level                   = DEFAULT;
     config_ptr->enable_restoration_filtering = DEFAULT;
     config_ptr->enable_mfmv                  = DEFAULT;
@@ -1496,8 +1496,8 @@ EbErrorType svt_av1_set_default_params(EbSvtAv1EncConfiguration* config_ptr) {
     config_ptr->auto_tiling              = true;
     config_ptr->quality_zones            = NULL;
     config_ptr->num_zones                = 0;
-    config_ptr->alt_cdef                 = 0;
-    config_ptr->alt_dlf                  = 0;
+    config_ptr->alt_cdef                 = 3;
+    config_ptr->alt_dlf                  = 3;
     config_ptr->enable_daala             = 0;
     config_ptr->enable_daala_rd          = 0;
     config_ptr->enable_daala_filtering   = 0;
@@ -3194,7 +3194,6 @@ EB_API EbErrorType svt_av1_enc_parse_parameter(EbSvtAv1EncConfiguration* config_
         {"noise", &config_struct->noise_strength},
         {"noise-chroma-from-luma", &config_struct->noise_chroma_from_luma},
         {"photon-noise-chroma", &config_struct->enable_photon_noise_chroma},
-        {"enable-dlf", &config_struct->enable_dlf_flag},
         {"resize-mode", &config_struct->resize_mode},
         {"resize-denom", &config_struct->resize_denom},
         {"resize-kf-denom", &config_struct->resize_kf_denom},
@@ -3221,8 +3220,8 @@ EB_API EbErrorType svt_av1_enc_parse_parameter(EbSvtAv1EncConfiguration* config_
         {"complex-hvs", &config_struct->complex_hvs},
         {"noise-adaptive-filtering", &config_struct->noise_adaptive_filtering},
         {"cdef-scaling", &config_struct->cdef_scaling},
-        {"enable-alt-cdef", &config_struct->alt_cdef},
-        {"enable-alt-dlf", &config_struct->alt_dlf},
+        {"cdef-bias", &config_struct->alt_cdef},
+        {"dlf-bias", &config_struct->alt_dlf},
         {"enable-daala", &config_struct->enable_daala},
         {"enable-daala-rd", &config_struct->enable_daala_rd},
         {"enable-daala-filtering", &config_struct->enable_daala_filtering},
@@ -3325,6 +3324,7 @@ EB_API EbErrorType svt_av1_enc_parse_parameter(EbSvtAv1EncConfiguration* config_
         int8_t*     out;
     } int8_opts[] = {
         {"preset", &config_struct->enc_mode},
+        {"enable-dlf", &config_struct->enable_dlf_flag},
         {"enable-variance-boost", &config_struct->enable_variance_boost},
         {"sharpness", &config_struct->sharpness},
         {"startup-qp-offset", &config_struct->startup_qp_offset},

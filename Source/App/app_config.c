@@ -271,8 +271,8 @@
 #define CDEF_SCALING_TOKEN "--cdef-scaling"
 #define AUTO_TILING_TOKEN "--auto-tiling"
 #define ZONES_TOKEN "--zones"
-#define ALT_CDEF_TOKEN "--enable-alt-cdef"
-#define ALT_DLF_TOKEN "--enable-alt-dlf"
+#define CDEF_BIAS_TOKEN "--cdef-bias"
+#define DLF_BIAS_TOKEN "--dlf-bias"
 #define ENABLE_DAALA_TOKEN "--enable-daala"
 #define ENABLE_DAALA_RD_TOKEN "--enable-daala-rd"
 #define ENABLE_DAALA_FILTERING_TOKEN "--enable-daala-filtering"
@@ -1372,12 +1372,12 @@ ConfigDescription config_entry_psychovisual[] = {
     // Zones
     {ZONES_TOKEN, "CRF/CQP zones, format: start,end,quality;start,end,quality;..., default is no zones"},
     // Alt CDEF
-    {ALT_CDEF_TOKEN,
-     "Enable alternative CDEF biases."
+    {CDEF_BIAS_TOKEN,
+     "Enable CDEF bias."
      "Default is 0 [0-3]."},
     // Alt DLF
-    {ALT_DLF_TOKEN,
-     "Enable alternative DLF biases."
+    {DLF_BIAS_TOKEN,
+     "Enable DLF bias."
      "Default is 0 [0-3]."},
     {ENABLE_DAALA_TOKEN, "Enable Daala distortion metric, default is 0 [0-4]"},
     {ENABLE_DAALA_RD_TOKEN, "Enable Daala distortion in model RD curvfit, default is 0 [0-1]"},
@@ -1696,10 +1696,10 @@ ConfigEntry config_entry[] = {
     {ZONES_TOKEN, "Zones", set_cfg_quality_zones},
 
     // Alt CDEF
-    {ALT_CDEF_TOKEN, "AltCDEF", set_cfg_generic_token},
+    {CDEF_BIAS_TOKEN, "CDEFBias", set_cfg_generic_token},
 
     // Alt DLF
-    {ALT_DLF_TOKEN, "AltDLF", set_cfg_generic_token},
+    {DLF_BIAS_TOKEN, "DLFBias", set_cfg_generic_token},
 
     // Daala
     {ENABLE_DAALA_TOKEN, "EnableDaala", set_cfg_generic_token},

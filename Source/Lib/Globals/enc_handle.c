@@ -4242,6 +4242,21 @@ static void set_param_based_on_input(SequenceControlSet* scs) {
         scs->static_config.psy_bias_sharpness_rounding =
             scs->static_config.lineart_psy_bias >= 2 || scs->static_config.texture_psy_bias >= 2 ? 54
                                                                                                  : 64;
+    // `--psy-bias` & `--balancing` DLF
+    if (scs->static_config.enable_dlf_flag == DEFAULT)
+        scs->static_config.enable_dlf_flag =
+            scs->static_config.lineart_psy_bias >= 2 || scs->static_config.texture_psy_bias >= 2 ? 0
+                                                                                                 : 1;
+    // `--psy-bias` & `--balancing` CDEF
+    if (scs->static_config.cdef_level == DEFAULT)
+        scs->static_config.cdef_level =
+            scs->static_config.lineart_psy_bias >= 2 || scs->static_config.texture_psy_bias >= 2 ? 0
+                                                                                                 : scs->static_config.cdef_level;
+    // `--psy-bias` & `--balancing` Rest
+    if (scs->static_config.enable_restoration_filtering == DEFAULT)
+        scs->static_config.enable_restoration_filtering =
+            scs->static_config.lineart_psy_bias >= 2 || scs->static_config.texture_psy_bias >= 2 ? 0
+                                                                                                 : scs->static_config.enable_restoration_filtering;
     // `--psy-bias` & `--balancing` FGS
     if (scs->static_config.photon_noise_iso == UINT32_DEFAULT)
         scs->static_config.photon_noise_iso =
